@@ -21,4 +21,4 @@
  *.sln
  *.userprefs
 
-/Temp
+Temp/
