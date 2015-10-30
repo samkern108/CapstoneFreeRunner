@@ -21,8 +21,8 @@ public class PlayerController : MonoBehaviour {
 	private float fallTime;
 	private bool fallTimeRunning = false;
 
-	private float climbingForce = 50;
-	private float maxClimbingSpeed = 2;
+	private float climbingForce = 100;
+	private float maxClimbingSpeed = 4;
 	//private float climbingSpeed = 0.05f;
 
 	// used to remove jump forces on first contact with wall
@@ -40,6 +40,13 @@ public class PlayerController : MonoBehaviour {
 	public Transform ceilingChecker;
 	private bool onCeiling = false;
 
+	private bool canWarpRight = false;
+	private bool canWarpLeft = false;
+	private bool canWarpTop = false;
+	private bool canWarpBottom = false;
+
+	private float warpAmount = 2;
+
 	void Awake(){
 		rb2d = GetComponent<Rigidbody2D> ();
 	}
@@ -56,6 +63,7 @@ public class PlayerController : MonoBehaviour {
 
 		if (playerInputEnabled){
 			MoveController();
+			WarpController();
 		}
 	}
 
@@ -153,7 +161,7 @@ public class PlayerController : MonoBehaviour {
 
 		float verticalInput = Input.GetAxis ("Vertical");
 
-		rb2d.drag = 5;
+		//rb2d.drag = 1;
 
 		float force = BoostController(climbingForce);
 		float max = BoostController(maxClimbingSpeed);
@@ -187,8 +195,30 @@ public class PlayerController : MonoBehaviour {
 			//onGround = false;
 		} else if (Input.GetButtonUp ("Jump") && rb2d.velocity.y > 0) {
 			// abort jump
-			Debug.Log ("Abort");
 			rb2d.velocity = new Vector2(rb2d.velocity.x, 0);
+		}
+	}
+
+	void WarpController(){
+		float warpInput = Input.GetAxis ("Fire2");
+		float horizontalInput = Input.GetAxis ("Horizontal");
+		float verticalInput = Input.GetAxis ("Vertical");
+
+		if (warpInput > 0){
+			Debug.Log ("Warp");
+			if (horizontalInput > 0 && Mathf.Abs(horizontalInput) > Mathf.Abs(verticalInput) && canWarpRight){
+				// Warp right
+				transform.position = new Vector3(transform.position.x + warpAmount, transform.position.y, transform.position.z);
+			} else if (horizontalInput < 0 && Mathf.Abs(horizontalInput) > Mathf.Abs(verticalInput) && canWarpLeft){
+				// Warp left
+				transform.position = new Vector3(transform.position.x - warpAmount, transform.position.y, transform.position.z);
+			} else if (verticalInput > 0 && Mathf.Abs(verticalInput) > Mathf.Abs(horizontalInput) && canWarpTop){
+				// Warp up
+				transform.position = new Vector3(transform.position.x, transform.position.y + warpAmount, transform.position.z);
+			} else if (verticalInput < 0 && Mathf.Abs(verticalInput) > Mathf.Abs(horizontalInput) && canWarpBottom){
+				// Warp down
+				transform.position = new Vector3(transform.position.x, transform.position.y - warpAmount, transform.position.z);
+			}
 		}
 	}
 
@@ -207,5 +237,40 @@ public class PlayerController : MonoBehaviour {
 		Vector3 scale = transform.localScale;
 		scale.x *= -1;
 		transform.localScale = scale;
+	}
+
+	void OnTriggerEnter2D(Collider2D collision) {
+		string tag = collision.tag;
+		switch (tag){
+		case "RightWarpZone":
+			canWarpRight = true;
+			break;
+		case "LeftWarpZone":
+			canWarpLeft = true;
+			break;
+		case "TopWarpZone":
+			canWarpTop = true;
+			break;
+		case "BottomWarpZone":
+			canWarpBottom = true;
+			break;
+		}
+	}
+	void OnTriggerExit2D(Collider2D collision) {
+		string tag = collision.tag;
+		switch (tag){
+		case "RightWarpZone":
+			canWarpRight = false;
+			break;
+		case "LeftWarpZone":
+			canWarpLeft = false;
+			break;
+		case "TopWarpZone":
+			canWarpTop = false;
+			break;
+		case "BottomWarpZone":
+			canWarpBottom = false;
+			break;
+		}
 	}
 }
