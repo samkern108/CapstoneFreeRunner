@@ -1,209 +1,259 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PlayerController : MonoBehaviour {
-
-	private Rigidbody2D rb2d;
-
+public class PlayerController : MonoBehaviour 
+{
 	[HideInInspector] public bool facingRight = true;
-
 	[HideInInspector] public bool playerInputEnabled = true;
 
-	private float boostMod = 1.5f;
-	//private bool boost = false;
+	//## RUNNING ##//
+	private Vector3 currentSpeedVector;
+	private float boostSpeed = .4f;
+	private float maxSpeed = .2f;
+	private float runAcceleration = .01f;
 
-	private float moveForce = 30;
-	private float maxSpeed = 5;
 
-	[HideInInspector] public bool jumping = false;
-	private float jumpForce = 800;
-	private float fallDelayInterval = 0.1f;
-	private float fallTime;
-	private bool fallTimeRunning = false;
-
-	private float climbingForce = 100;
-	private float maxClimbingSpeed = 4;
-	//private float climbingSpeed = 0.05f;
-
-	// used to remove jump forces on first contact with wall
-	private bool canTriggeronWallTopHit = true; 
-
+	//## COLLISION CHECKING ##//
 	public Transform groundChecker;
-	private bool onGround = false;
-
 	public Transform wallCheckerTop;
+	public Transform wallCheckerBottom;
+	public Transform ceilingChecker;
+
+	private bool onWallBottom = false;
+	private bool onCeiling = false;
+	private bool onGround = false;
 	private bool onWallTop = false;
 
-	public Transform wallCheckerBottom;
-	private bool onWallBottom = false;
-
-	public Transform ceilingChecker;
-	private bool onCeiling = false;
-
-	private bool canWarpRight = false;
-	private bool canWarpLeft = false;
-	private bool canWarpTop = false;
-	private bool canWarpBottom = false;
-
-	private float warpAmount = 2;
-
-	void Awake(){
-		rb2d = GetComponent<Rigidbody2D> ();
-	}
-
-	// Use this for initialization
-	void Start () {
-
-	}
+	private float terminalVelocity = -.8f;
 	
-	// Update is called once per frame
-	void Update () {
+	void FixedUpdate()
+	{
+		if(!onCeiling && !onGround)
+		{
+			currentSpeedVector.y -= gravityFactor;
+			if(currentSpeedVector.y < terminalVelocity) {
+				currentSpeedVector.y = terminalVelocity;
+			}
+		}
+		if (onGround && !(onWallTop || onWallBottom)) {
+			currentSpeedVector.y = 0;
+		}
+	}
 
-		CollisionCheck();
-
+	void Update () 
+	{
 		if (playerInputEnabled){
 			MoveController();
-			WarpController();
+	//		WarpController();
 		}
+		transform.position += currentSpeedVector;
+		CollisionCheck();
 	}
 
-	void FixedUpdate () {
-
-		//cancle out gravity
-		if (onWallTop || onCeiling){
-			//rb2d.gravityScale = 0;
-			Vector3 t = Physics.gravity * rb2d.mass;
-			rb2d.AddForce (-t);
-		}
-	}
-
-	void CollisionCheck(){
-
-		// TODO Ray casts should NOT go diagonally from the center of the player
-
-		// is the player on the ground
-		onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
-		
-		// is the player on a wall
-		onWallTop = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Ground"));
-		
-		// is the player on a wall
-		onWallBottom = Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Ground"));
-		
-		// is the player on a ceiling
-		onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
-	}
-
-	void MoveController () {
-
+	void MoveController () 
+	{
 		JumpController();
 
-		if (onWallTop){
+		Debug.Log ("c:  " + onCeiling + "  wt:  " + onWallTop + "  wb:  " + onWallBottom + " g:   " + onGround);
 
-			ClimbController();
-
+		if (onGround) {
+			RunOnFloor();
 		}
-
-		if (!onWallTop){
-
-			WalkController();
-
+		if (onWallTop || onWallBottom){
+			ClimbWalls();
 		}
-
-		if (onWallTop || onWallBottom || onCeiling){
-			//wait for jump before being pushed off wall
-			if (Input.GetAxis ("Horizontal") != 0){
-				if (!fallTimeRunning){
-					fallTime = Time.time + fallDelayInterval;
-					fallTimeRunning = true;
-				}
-			} else {
-				fallTimeRunning = false;
-			}
-			if (Time.time > fallTime){
-				WalkController();
-			}
+		if (onCeiling) {
+			ClimbCeiling();
 		}
 	}
 
-	void WalkController(){
-
-		//rb2d.gravityScale = 2;
-		rb2d.drag = 0;
-		canTriggeronWallTopHit = true;
-
+	void RunOnFloor()
+	{	
 		float horizontalInput = Input.GetAxis ("Horizontal");
-
-		float force = BoostController(moveForce);
-		float max = BoostController(maxSpeed);
-
-		// if player has not reached maxSpeed
-		if (horizontalInput * rb2d.velocity.x < max) {
-			//add force to player
-			rb2d.AddForce(Vector2.right * horizontalInput * force);
-		}
+		float boostingInput = Input.GetAxis ("Fire1");
 		
-		// if the player has exceeded maxSpeed
-		if (Mathf.Abs (rb2d.velocity.x) > max) {
-			//set the player's velocity to the maxSpeed in the x axis
-			rb2d.velocity = new Vector2 (Mathf.Sign (rb2d.velocity.x) * max, rb2d.velocity.y);
-		}
-		
-		// should the player be flipped
 		if (horizontalInput > 0 && !facingRight) {
 			FlipPlayer ();
 		} else if (horizontalInput < 0 && facingRight) {
 			FlipPlayer ();
 		}
+		else if (onWallBottom) {
+			currentSpeedVector.x = 0;
+			return;
+		}
+		
+		if (boostingInput != 0 && onGround) {
+			currentSpeedVector.x = horizontalInput * boostSpeed;
+		}
+		else {
+			currentSpeedVector.x = horizontalInput * maxSpeed;
+		}
 	}
 
-	void ClimbController(){
+	private bool leanOffWall = false;
 
+	void ClimbWalls()
+	{
+		float horizontalInput = Input.GetAxis ("Horizontal");
 		float verticalInput = Input.GetAxis ("Vertical");
+		float boostingInput = Input.GetAxis ("Fire1");
 
-		//rb2d.drag = 1;
-
-		float force = BoostController(climbingForce);
-		float max = BoostController(maxClimbingSpeed);
-		
-		//remove jump velocity on first contact
-		if (canTriggeronWallTopHit){
-			rb2d.velocity = new Vector2(rb2d.velocity.x, 0);
-			canTriggeronWallTopHit = false;
+		if (horizontalInput > 0 && !facingRight) {
+			leanOffWall = true;
+		} else if (horizontalInput < 0 && facingRight) {
+			leanOffWall = true;
+		}
+		else {
+			leanOffWall = false;
+			currentSpeedVector.x = 0;
 		}
 
-		// if player has not reached maxSpeed
-		if (verticalInput * rb2d.velocity.y < max) {
-			//add force to player
-			rb2d.AddForce(Vector2.up * verticalInput * force);
+		float speed = 0;
+
+		if(boostingInput != 0) {
+			speed = verticalInput * boostSpeed;
+		} 
+		else {
+			speed = verticalInput * maxSpeed;
+		}
+
+		if(onGround && speed < 0 || onCeiling && speed > 0) {
+			Debug.Log ("Oogle boogle!");
+			return;
+		}
+		Debug.Log (speed);
+		currentSpeedVector.y = speed;
+	}
+
+	void ClimbCeiling()
+	{
+		currentSpeedVector.y = 0;
+
+		float horizontalInput = Input.GetAxis ("Horizontal");
+		float boostingInput = Input.GetAxis ("Fire1");
+		
+		if (horizontalInput > 0 && !facingRight) {
+			FlipPlayer ();
+		} else if (horizontalInput < 0 && facingRight) {
+			FlipPlayer ();
+		}
+		else if (onWallBottom) {
+			currentSpeedVector.x = 0;
+			return;
 		}
 		
-		// if the player has exceeded maxSpeed
-		if (Mathf.Abs (rb2d.velocity.y) > max) {
-			//set the player's velocity to the maxSpeed in the x axis
-			rb2d.velocity = new Vector2 (rb2d.velocity.x, Mathf.Sign (rb2d.velocity.y) * max);
+		if (boostingInput != 0 && onGround) {
+			currentSpeedVector.x = horizontalInput * boostSpeed;
+		}
+		else {
+			currentSpeedVector.x = horizontalInput * maxSpeed;
 		}
 	}
 
-	void JumpController(){
 
-		if (Input.GetButtonDown ("Jump") && (onGround || onWallTop || onWallBottom) && !onCeiling) {
-			// jump
-			rb2d.AddForce(new Vector2(0f, jumpForce));
-			onWallTop = false;
-			onWallBottom = false;
-			//onGround = false;
-		} else if (Input.GetButtonUp ("Jump") && rb2d.velocity.y > 0) {
-			// abort jump
-			rb2d.velocity = new Vector2(rb2d.velocity.x, 0);
+	//##  JUMPING  ##//
+
+	[HideInInspector] public bool jumping = false;
+	private float jumpOffWallSpeedMod = .3f;
+	private float initialJumpSpeed = .6f;
+	private float boostJumpSpeed = .7f;
+	private float currentJumpSpeed;
+	private float gravityFactor = .025f;
+
+	void JumpController()
+	{
+		if(Input.GetButtonDown("Jump") && (onWallTop || onWallBottom))
+		{
+			if(leanOffWall) {
+				if(!jumping) {
+					if(Input.GetAxis ("Fire1") > 0) {
+						currentJumpSpeed = boostJumpSpeed - jumpOffWallSpeedMod;
+						currentSpeedVector.x = boostSpeed;
+					}
+					else {
+						currentJumpSpeed = initialJumpSpeed - jumpOffWallSpeedMod;
+						currentSpeedVector.x = maxSpeed;
+					}
+					jumping = true;
+				}
+			}
+			else {
+				//fall off wall
+			}
+		}
+
+		if (Input.GetButtonDown ("Jump") && onGround) {
+			if(!jumping) {
+				if(Input.GetAxis ("Fire1") > 0) {
+					currentJumpSpeed = boostJumpSpeed;
+				}
+				else {
+					currentJumpSpeed = initialJumpSpeed;
+				}
+				jumping = true;
+			}
+		}
+		else if(Input.GetButtonUp ("Jump") && currentJumpSpeed > 0) {
+			currentJumpSpeed -= gravityFactor;
+			if(currentJumpSpeed < 0) {
+				jumping = false;
+				currentJumpSpeed = 0;
+			}
+		}
+
+		if (jumping) {
+			currentJumpSpeed -= gravityFactor;
+			if (currentJumpSpeed < 0) {
+				jumping = false;
+				currentJumpSpeed = 0;
+			}
+			currentSpeedVector.y = currentJumpSpeed;
 		}
 	}
 
-	void WarpController(){
+	void FlipPlayer()
+	{
+		facingRight = !facingRight;
+		Vector3 scale = transform.localScale;
+		scale.x *= -1;
+		transform.localScale = scale;
+	}
+
+	// TODO Ray casts should NOT go diagonally from the center of the player
+	void CollisionCheck()
+	{
+		onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
+		onWallTop = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
+		onWallBottom = Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
+		onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
+	}
+
+
+
+
+
+
+
+
+
+
+
+	//## WARP ##
+
+	private bool canWarpRight = false;
+	private bool canWarpLeft = false;
+	private bool canWarpTop = false;
+	private bool canWarpBottom = false;
+	
+	private float warpAmount = 2;
+	
+
+	void WarpController()
+	{
 		float warpInput = Input.GetAxis ("Fire2");
 		float horizontalInput = Input.GetAxis ("Horizontal");
 		float verticalInput = Input.GetAxis ("Vertical");
-
+		
 		if (warpInput > 0){
 			Debug.Log ("Warp");
 			if (horizontalInput > 0 && Mathf.Abs(horizontalInput) > Mathf.Abs(verticalInput) && canWarpRight){
@@ -222,24 +272,8 @@ public class PlayerController : MonoBehaviour {
 		}
 	}
 
-	float BoostController(float val) {
-		float boostInput = Input.GetAxis ("Fire1");
-		if (boostInput <= 0 ){
-			return val * boostMod;
-		}else{
-			return val;
-		}
-	}
-
-	void FlipPlayer(){
-		facingRight = !facingRight;
-		// flip the players scale across the x axis
-		Vector3 scale = transform.localScale;
-		scale.x *= -1;
-		transform.localScale = scale;
-	}
-
-	void OnTriggerEnter2D(Collider2D collision) {
+	void OnTriggerEnter2D(Collider2D collision) 
+	{
 		string tag = collision.tag;
 		switch (tag){
 		case "RightWarpZone":
@@ -256,7 +290,9 @@ public class PlayerController : MonoBehaviour {
 			break;
 		}
 	}
-	void OnTriggerExit2D(Collider2D collision) {
+
+	void OnTriggerExit2D(Collider2D collision) 
+	{
 		string tag = collision.tag;
 		switch (tag){
 		case "RightWarpZone":
