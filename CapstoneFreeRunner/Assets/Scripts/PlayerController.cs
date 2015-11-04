@@ -28,12 +28,16 @@ public class PlayerController : MonoBehaviour
 	
 	void FixedUpdate()
 	{
-		if(!onCeiling && !onGround)
+		if((!onCeiling || fallOffCeiling) && !onGround)
 		{
 			currentSpeedVector.y -= gravityFactor;
 			if(currentSpeedVector.y < terminalVelocity) {
 				currentSpeedVector.y = terminalVelocity;
 			}
+
+			if (fallOffCeiling) {
+				fallOffCeiling = false;
+			} 
 		}
 		if (onGround && !(onWallTop || onWallBottom)) {
 			currentSpeedVector.y = 0;
@@ -53,8 +57,6 @@ public class PlayerController : MonoBehaviour
 	void MoveController () 
 	{
 		JumpController();
-
-		Debug.Log ("c:  " + onCeiling + "  wt:  " + onWallTop + "  wb:  " + onWallBottom + " g:   " + onGround);
 
 		if (onGround) {
 			RunOnFloor();
@@ -155,13 +157,20 @@ public class PlayerController : MonoBehaviour
 
 	[HideInInspector] public bool jumping = false;
 	private float jumpOffWallSpeedMod = .3f;
-	private float initialJumpSpeed = .6f;
+	private float initialJumpSpeed = .5f;
 	private float boostJumpSpeed = .7f;
 	private float currentJumpSpeed;
 	private float gravityFactor = .025f;
 
+	private bool fallOffCeiling = false;
+
 	void JumpController()
 	{
+		if (Input.GetButtonDown ("Jump") && onCeiling) {
+			fallOffCeiling = true;
+			return;
+		}
+
 		if(Input.GetButtonDown("Jump") && (onWallTop || onWallBottom))
 		{
 			if(leanOffWall) {
@@ -220,6 +229,7 @@ public class PlayerController : MonoBehaviour
 	}
 
 	// TODO Ray casts should NOT go diagonally from the center of the player
+	// Fix this when bored :)
 	void CollisionCheck()
 	{
 		onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
