@@ -10,7 +10,6 @@ public class PlayerController : MonoBehaviour
 	private Vector3 currentSpeedVector;
 	private float boostSpeed = .4f;
 	private float maxSpeed = .2f;
-	private float runAcceleration = .01f;
 
 
 	//## COLLISION CHECKING ##//
@@ -71,8 +70,8 @@ public class PlayerController : MonoBehaviour
 
 	void RunOnFloor()
 	{	
-		float horizontalInput = Input.GetAxis ("Horizontal");
-		float boostingInput = Input.GetAxis ("Fire1");
+		float horizontalInput = InputWrapper.GetHorizontalAxis ();
+		bool boostingInput = InputWrapper.GetBoost();
 		
 		if (horizontalInput > 0 && !facingRight) {
 			FlipPlayer ();
@@ -84,7 +83,7 @@ public class PlayerController : MonoBehaviour
 			return;
 		}
 		
-		if (boostingInput != 0 && onGround) {
+		if (boostingInput && onGround) {
 			currentSpeedVector.x = horizontalInput * boostSpeed;
 		}
 		else {
@@ -96,9 +95,9 @@ public class PlayerController : MonoBehaviour
 
 	void ClimbWalls()
 	{
-		float horizontalInput = Input.GetAxis ("Horizontal");
-		float verticalInput = Input.GetAxis ("Vertical");
-		float boostingInput = Input.GetAxis ("Fire1");
+		float horizontalInput = InputWrapper.GetHorizontalAxis ();
+		float verticalInput = InputWrapper.GetVerticalAxis ();
+		bool boostingInput = InputWrapper.GetBoost();
 
 		if (horizontalInput > 0 && !facingRight) {
 			leanOffWall = true;
@@ -112,7 +111,7 @@ public class PlayerController : MonoBehaviour
 
 		float speed = 0;
 
-		if(boostingInput != 0) {
+		if(boostingInput) {
 			speed = verticalInput * boostSpeed;
 		} 
 		else {
@@ -120,7 +119,6 @@ public class PlayerController : MonoBehaviour
 		}
 
 		if(onGround && speed < 0 || onCeiling && speed > 0) {
-			Debug.Log ("Oogle boogle!");
 			return;
 		}
 		Debug.Log (speed);
@@ -131,8 +129,8 @@ public class PlayerController : MonoBehaviour
 	{
 		currentSpeedVector.y = 0;
 
-		float horizontalInput = Input.GetAxis ("Horizontal");
-		float boostingInput = Input.GetAxis ("Fire1");
+		float horizontalInput = InputWrapper.GetHorizontalAxis ();
+		bool boostingInput = InputWrapper.GetBoost();
 		
 		if (horizontalInput > 0 && !facingRight) {
 			FlipPlayer ();
@@ -144,7 +142,7 @@ public class PlayerController : MonoBehaviour
 			return;
 		}
 		
-		if (boostingInput != 0 && onGround) {
+		if (boostingInput && onGround) {
 			currentSpeedVector.x = horizontalInput * boostSpeed;
 		}
 		else {
@@ -166,16 +164,17 @@ public class PlayerController : MonoBehaviour
 
 	void JumpController()
 	{
-		if (Input.GetButtonDown ("Jump") && onCeiling) {
+		bool jump = InputWrapper.GetJump ();
+		if (jump && onCeiling) {
 			fallOffCeiling = true;
 			return;
 		}
 
-		if(Input.GetButtonDown("Jump") && (onWallTop || onWallBottom))
+		if(jump && (onWallTop || onWallBottom))
 		{
 			if(leanOffWall) {
 				if(!jumping) {
-					if(Input.GetAxis ("Fire1") > 0) {
+					if(InputWrapper.GetBoost()) {
 						currentJumpSpeed = boostJumpSpeed - jumpOffWallSpeedMod;
 						currentSpeedVector.x = boostSpeed;
 					}
@@ -191,9 +190,9 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 
-		if (Input.GetButtonDown ("Jump") && onGround) {
+		if (jump && onGround) {
 			if(!jumping) {
-				if(Input.GetAxis ("Fire1") > 0) {
+				if(InputWrapper.GetBoost()) {
 					currentJumpSpeed = boostJumpSpeed;
 				}
 				else {
@@ -202,7 +201,7 @@ public class PlayerController : MonoBehaviour
 				jumping = true;
 			}
 		}
-		else if(Input.GetButtonUp ("Jump") && currentJumpSpeed > 0) {
+		else if(InputWrapper.GetAbortJump() && currentJumpSpeed > 0) {
 			currentJumpSpeed -= gravityFactor;
 			if(currentJumpSpeed < 0) {
 				jumping = false;
@@ -261,8 +260,8 @@ public class PlayerController : MonoBehaviour
 	void WarpController()
 	{
 		float warpInput = Input.GetAxis ("Fire2");
-		float horizontalInput = Input.GetAxis ("Horizontal");
-		float verticalInput = Input.GetAxis ("Vertical");
+		float horizontalInput = InputWrapper.GetHorizontalAxis ();
+		float verticalInput = InputWrapper.GetVerticalAxis ();
 		
 		if (warpInput > 0){
 			Debug.Log ("Warp");
