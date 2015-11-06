@@ -6,6 +6,9 @@ public class PlayerController : MonoBehaviour
 	[HideInInspector] public bool facingRight = true;
 	[HideInInspector] public bool playerInputEnabled = true;
 
+	//## Animation ##//
+	private Animator animator;
+
 	//## RUNNING ##//
 	private Vector3 currentSpeedVector;
 	private float boostSpeed = .4f;
@@ -24,7 +27,11 @@ public class PlayerController : MonoBehaviour
 	private bool onWallTop = false;
 
 	private float terminalVelocity = -.8f;
-	
+
+	void Start(){
+		animator = this.GetComponent<Animator>();
+	}
+
 	void FixedUpdate()
 	{
 		if (!onGround && !onCeiling && !(onWallTop || onWallBottom)) {
@@ -55,6 +62,28 @@ public class PlayerController : MonoBehaviour
 		}
 		transform.position += currentSpeedVector;
 		CollisionCheck();
+		Animate();
+	}
+
+	void Animate(){
+
+		float horizontalInput = InputWrapper.GetHorizontalAxis ();
+		bool boostingInput = InputWrapper.GetBoost();
+
+		if (onGround) {
+			if (horizontalInput != 0){
+				if (boostingInput == true){
+					animator.SetInteger("State", 2);
+				}else{
+					animator.SetInteger("State", 1);
+				}
+			}else{
+				animator.SetInteger("State",0);
+			}
+		} else if (onWallBottom) {
+			animator.SetInteger("State", 3);
+		}
+
 	}
 
 	void MoveController () 
