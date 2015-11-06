@@ -27,15 +27,19 @@ public class PlayerController : MonoBehaviour
 	
 	void FixedUpdate()
 	{
-		if((!onCeiling || fallOffCeiling) && !onGround)
+		if (!onGround && !onCeiling && !(onWallTop || onWallBottom)) {
+			isFalling = true;
+		}
+		if(isFalling)
 		{
 			currentSpeedVector.y -= gravityFactor;
 			if(currentSpeedVector.y < terminalVelocity) {
 				currentSpeedVector.y = terminalVelocity;
 			}
 
-			if (fallOffCeiling) {
-				fallOffCeiling = false;
+			if (!onCeiling && !onWallBottom || onGround) {
+				isFalling = false;
+				Debug.Log ("Not Falling.");
 			} 
 		}
 		if (onGround && !(onWallTop || onWallBottom)) {
@@ -99,9 +103,7 @@ public class PlayerController : MonoBehaviour
 		float verticalInput = InputWrapper.GetVerticalAxis ();
 		bool boostingInput = InputWrapper.GetBoost();
 
-		if (horizontalInput > 0 && !facingRight) {
-			leanOffWall = true;
-		} else if (horizontalInput < 0 && facingRight) {
+		if ((horizontalInput > 0 && !facingRight) || (horizontalInput < 0 && facingRight)) {
 			leanOffWall = true;
 		}
 		else {
@@ -119,15 +121,17 @@ public class PlayerController : MonoBehaviour
 		}
 
 		if(onGround && speed < 0 || onCeiling && speed > 0) {
+			Debug.Log (speed);
+			currentSpeedVector.y = 0;
 			return;
 		}
-		Debug.Log (speed);
+
 		currentSpeedVector.y = speed;
 	}
 
 	void ClimbCeiling()
 	{
-		currentSpeedVector.y = 0;
+//		currentSpeedVector.y = 0;
 
 		float horizontalInput = InputWrapper.GetHorizontalAxis ();
 		bool boostingInput = InputWrapper.GetBoost();
@@ -160,13 +164,14 @@ public class PlayerController : MonoBehaviour
 	private float currentJumpSpeed;
 	private float gravityFactor = .025f;
 
-	private bool fallOffCeiling = false;
+	private bool isFalling = false;
 
 	void JumpController()
 	{
 		bool jump = InputWrapper.GetJump ();
 		if (jump && onCeiling) {
-			fallOffCeiling = true;
+			isFalling = true;
+			Debug.Log ("Falling!");
 			return;
 		}
 
@@ -186,7 +191,8 @@ public class PlayerController : MonoBehaviour
 				}
 			}
 			else {
-				//fall off wall
+				isFalling = true;
+				Debug.Log ("Falling!");
 			}
 		}
 

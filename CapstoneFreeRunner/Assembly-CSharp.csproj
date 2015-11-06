@@ -51,11 +51,17 @@
      <Compile Include="Assets\XboxCtrlrInput\Example\Test Level Scripts\MoveLaser.cs" />
      <Compile Include="Assets\XboxCtrlrInput\Example\Test Level Scripts\MovePlayer.cs" />
      <Compile Include="Assets\XboxCtrlrInput\XboxCtrlrInput.cs" />
+ <Reference Include="UnityEngine.Advertisements">
+ <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/Advertisements/UnityEngine.Advertisements.dll</HintPath>
+ </Reference>
  <Reference Include="UnityEngine.UI">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
  <Reference Include="UnityEngine.Networking">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
+ </Reference>
+ <Reference Include="UnityEngine.Analytics">
+ <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/UnityAnalytics/UnityEngine.Analytics.dll</HintPath>
  </Reference>
  <Reference Include="XInputDotNetPure">
  <HintPath>/Users/samkern/Documents/Code/Capstone/Free Runner/CapstoneFreeRunner/Assets/Plugins/x86_64/XInputDotNetPure.dll</HintPath>
