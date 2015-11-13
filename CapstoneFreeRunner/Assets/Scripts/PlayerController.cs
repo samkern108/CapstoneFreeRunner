@@ -29,6 +29,11 @@ public class PlayerController : MonoBehaviour
 	public Transform wallCheckerBottomBack;
 	public Transform ceilingChecker;
 
+	//## WARPING ##//
+	public Transform wallWarpCheck;
+	float nextWarpTime = 0;
+	float warpDelay = 0.5f;
+
 	//## RAYCASTING ##//
 	private bool onWallBack = false;
 	private bool onWallFront = false;
@@ -105,6 +110,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (playerInputEnabled) {
 			JumpController ();
+			WarpController();
 
 			if ((onWallFront || onWallBack) && !jumping) {
 				ClimbWalls ();
@@ -318,9 +324,25 @@ public class PlayerController : MonoBehaviour
 	private void WarpController()
 	{
 		float warpInput = Input.GetAxis ("Fire2");
-
-		if (warpInput > 0){
-
+		if (warpInput > 0.5f && Time.time > nextWarpTime){
+			RaycastHit2D castRight = Physics2D.Linecast (transform.position, wallWarpCheck.position, 1 << LayerMask.NameToLayer ("Wall"));
+			Vector3 warpVector = new Vector3(0,0,0);
+			if (onWallFront){
+				if (castRight){
+					float warpAmount = castRight.transform.localScale.x;
+					Debug.Log(warpAmount);
+					if (facingRight){
+						warpVector.x = (warpAmount * 5.65f) + 1;
+					}else{
+						warpVector.x = (warpAmount* -5.65f) - 1;
+					}
+					nextWarpTime = Time.time + warpDelay;
+					FlipPlayer();
+					transform.position += warpVector;
+				}
+			}else{
+				
+			}
 		}
 	}
 }
