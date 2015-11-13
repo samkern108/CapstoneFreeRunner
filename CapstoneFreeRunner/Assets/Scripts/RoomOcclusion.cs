@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class RoomCollision : MonoBehaviour {
+public class RoomOcclusion : MonoBehaviour {
 
 	void OnTriggerEnter2D()
 	{
