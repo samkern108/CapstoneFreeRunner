@@ -1,8 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// THIS HAS VERY SLOWLY BUT SURELY BECOME SAM'S BABY.
+// SHE WILL KEEP WORKING ON IT UNTIL IT IS A PERFECT LITTLE HONOR STUDENT.
+
 public class PlayerController : MonoBehaviour 
 {
+	public static PlayerController self;
+
 	//## INPUT ##//
 	[HideInInspector] public bool playerInputEnabled = true;
 
@@ -19,13 +24,15 @@ public class PlayerController : MonoBehaviour
 	public Transform groundChecker;
 	public Transform wallCheckerTop;
 	public Transform wallCheckerBottom;
+	public Transform wallCheckerTopBack;
+	public Transform wallCheckerBottomBack;
 	public Transform ceilingChecker;
 
 	//## RAYCASTING ##//
-	private bool onWallBottom = false;
+	private bool onWallBack = false;
+	private bool onWallFront = false;
 	private bool onCeiling = false;
 	private bool onGround = false;
-	private bool onWallTop = false;
 
 	//## FALLING ##//
 	private float terminalVelocity = -.8f;
@@ -34,8 +41,8 @@ public class PlayerController : MonoBehaviour
 	
 	//##  JUMPING  ##//
 	[HideInInspector] public bool jumping = false;
-	private float jumpOffWallSpeedMod = .5f;
-	private float initialJumpSpeed = .4f;
+	private float jumpOffWallSpeedMod = .7f;
+	private float initialJumpSpeed = .45f;
 	private float boostJumpSpeed = .6f;
 	private float currentJumpSpeed;
 	private bool leanOffWall = false;
@@ -49,6 +56,7 @@ public class PlayerController : MonoBehaviour
 
 	void Start(){
 		animator = this.GetComponent<Animator>();
+		self = this;
 	}
 
 	void FixedUpdate()
@@ -57,7 +65,7 @@ public class PlayerController : MonoBehaviour
 		hAxis = InputWrapper.GetHorizontalAxis ();
 		boostButton = InputWrapper.GetBoost();
 		
-		if (!onGround && !onCeiling && !(onWallTop || onWallBottom)) {
+		if (!onGround && !onCeiling && !onWallFront) {
 			isFalling = true;
 		}
 		if(isFalling)
@@ -67,12 +75,11 @@ public class PlayerController : MonoBehaviour
 				currentSpeedVector.y = terminalVelocity;
 			}
 
-			if (!onCeiling && !onWallBottom || onGround) {
+			if (!onCeiling && !onWallFront || onGround) {
 				isFalling = false;
-				Debug.Log ("Not Falling.");
 			} 
 		}
-		if (onGround && !(onWallTop || onWallBottom)) {
+		if (onGround && !onWallFront) {
 			currentSpeedVector.y = 0;
 		}
 	}
@@ -81,13 +88,17 @@ public class PlayerController : MonoBehaviour
 	{
 		if (playerInputEnabled){
 			JumpController();
-			
-			if (onGround) {
-				RunOnFloor();
+
+			if(onGround) {
+				HorizontalMovement();
 			}
-			if (onWallTop || onWallBottom){
+			if (onWallFront || onWallBack){
 				ClimbWalls();
 			}
+			else if(!onGround){
+				HorizontalMovement();
+			}
+
 			if (onCeiling) {
 				ClimbCeiling();
 			}
@@ -97,37 +108,47 @@ public class PlayerController : MonoBehaviour
 		Animate();
 	}
 
+	private int animState = 0;
+
 	void Animate()
 	{
+		int newState = animState;
 		if (onGround) {
-			if (hAxis != 0){
-				if (boostButton){
-					animator.SetInteger("State", 2);
-				}else{
-					animator.SetInteger("State", 1);
+			if (hAxis != 0) {
+				if (boostButton) {
+					newState = 2;
+				} else {
+					newState = 1;
 				}
-			}else{
-				animator.SetInteger("State",0);
+			} else {
+				newState = 0;
 			}
-		} else if (onWallBottom || onWallTop) {
-			animator.SetInteger("State", 3);
+		} else if (onWallFront) {
+			newState = 3;
+		} else if (onWallBack) {
 		}
-
+		else if (onCeiling) {
+			newState = 4;
+		} else {
+			newState = 5;
+		}
+		if (animState != newState) {
+			animator.SetInteger ("State", newState);
+			animState = newState;
+		}
 	}
 
-	private void RunOnFloor()
+	private void HorizontalMovement()
 	{
-		if (hAxis > 0 && !facingRight) {
+		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
 			FlipPlayer ();
-		} else if (hAxis < 0 && facingRight) {
-			FlipPlayer ();
-		}
-		else if (onWallBottom) {
+		} 
+		else if (onWallFront || onWallBack) {
 			currentSpeedVector.x = 0;
 			return;
 		}
 		
-		if (boostButton && onGround) {
+		if (boostButton) {
 			currentSpeedVector.x = hAxis * boostSpeed;
 		}
 		else {
@@ -161,7 +182,7 @@ public class PlayerController : MonoBehaviour
 		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
 			FlipPlayer ();
 		} 
-		else if (onWallBottom || onWallTop) {
+		else if (onWallFront) {
 			currentSpeedVector.x = 0;
 			return;
 		}
@@ -177,18 +198,22 @@ public class PlayerController : MonoBehaviour
 		if (jumpButtonDown && onCeiling) {
 			isFalling = true;
 			return;
+		} else if (onCeiling) {
+			jumping = false;
+			currentJumpSpeed = 0;
+			return;
 		}
 
-		if(jumpButtonDown && (onWallTop || onWallBottom))
+		if(jumpButtonDown && onWallFront)
 		{
 			if(leanOffWall) {
 				if(!jumping) {
 					if(InputWrapper.GetBoost()) {
-						currentJumpSpeed = Mathf.Sign(hAxis) * (boostJumpSpeed - jumpOffWallSpeedMod);
+						currentJumpSpeed = boostJumpSpeed;
 						currentSpeedVector.x = Mathf.Sign(hAxis) * boostSpeed;
 					}
 					else {
-						currentJumpSpeed = Mathf.Sign(hAxis) * (initialJumpSpeed - jumpOffWallSpeedMod);
+						currentJumpSpeed = initialJumpSpeed;
 						currentSpeedVector.x = Mathf.Sign(hAxis) * maxSpeed;
 					}
 					jumping = true;
@@ -236,14 +261,12 @@ public class PlayerController : MonoBehaviour
 		transform.localScale = scale;
 	}
 
-	// TODO Ray casts should NOT go diagonally from the center of the player
-	// Fix this when bored :)
 	private void CollisionCheck()
 	{
 		onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
-		onWallTop = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
-		onWallBottom = Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
+		onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
 		onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
+		onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"));
 	}
 
 
