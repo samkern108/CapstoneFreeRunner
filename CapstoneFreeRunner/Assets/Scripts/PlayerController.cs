@@ -13,7 +13,8 @@ public class PlayerController : MonoBehaviour
 
 	//## ANIMATION ##//
 	private Animator animator;
-
+	private int animState = 0;
+	
 	//## RUNNING ##//
 	private bool facingRight = true;
 	private Vector3 currentSpeedVector;
@@ -41,11 +42,11 @@ public class PlayerController : MonoBehaviour
 	
 	//##  JUMPING  ##//
 	[HideInInspector] public bool jumping = false;
+	private bool leanOffWall = false;
 	private float jumpOffWallSpeedMod = .7f;
 	private float initialJumpSpeed = .45f;
 	private float boostJumpSpeed = .6f;
 	private float currentJumpSpeed;
-	private bool leanOffWall = false;
 	private float xJumpMod = .1f;
 	private float boostXJumpMod = .2f;
 
@@ -54,17 +55,36 @@ public class PlayerController : MonoBehaviour
 	private float vAxis = 0;
 	private bool boostButton = false;
 
+
 	void Start(){
 		animator = this.GetComponent<Animator>();
 		self = this;
 	}
 
+
+	//## UPDATE ##//
+
 	void FixedUpdate()
 	{
-		vAxis = InputWrapper.GetVerticalAxis ();
-		hAxis = InputWrapper.GetHorizontalAxis ();
-		boostButton = InputWrapper.GetBoost();
-		
+		if (playerInputEnabled) {
+			vAxis = InputWrapper.GetVerticalAxis ();
+			hAxis = InputWrapper.GetHorizontalAxis ();
+			boostButton = InputWrapper.GetBoost ();
+		}
+
+		ApplyGravity ();
+		CheckCollisons ();
+	}
+
+	private void CheckCollisons()
+	{
+		if (onGround && !onWallFront) {
+			currentSpeedVector.y = 0;
+		}
+	}
+
+	private void ApplyGravity()
+	{
 		if (!onGround && !onCeiling && !onWallFront) {
 			isFalling = true;
 		}
@@ -74,86 +94,51 @@ public class PlayerController : MonoBehaviour
 			if(currentSpeedVector.y < terminalVelocity) {
 				currentSpeedVector.y = terminalVelocity;
 			}
-
+			
 			if (!onCeiling && !onWallFront || onGround) {
 				isFalling = false;
 			} 
-		}
-		if (onGround && !onWallFront) {
-			currentSpeedVector.y = 0;
 		}
 	}
 
 	void Update () 
 	{
-		if (playerInputEnabled){
-			JumpController();
+		if (playerInputEnabled) {
+			JumpController ();
 
-			if(onGround) {
-				HorizontalMovement();
-			}
-			if (onWallFront || onWallBack){
-				ClimbWalls();
-			}
-			else if(!onGround){
-				HorizontalMovement();
-			}
-
-			if (onCeiling) {
-				ClimbCeiling();
-			}
-		}
-		transform.position += currentSpeedVector;
-		CollisionCheck();
-		Animate();
-	}
-
-	private int animState = 0;
-
-	void Animate()
-	{
-		int newState = animState;
-		if (onGround) {
-			if (hAxis != 0) {
-				if (boostButton) {
-					newState = 2;
-				} else {
-					newState = 1;
+			if ((onWallFront || onWallBack) && !jumping) {
+				ClimbWalls ();
+				JumpOffWalls();
+				if(onGround || onCeiling) {
+					HorizontalMovement ();
 				}
-			} else {
-				newState = 0;
 			}
-		} else if (onWallFront) {
-			newState = 3;
-		} else if (onWallBack) {
-		}
-		else if (onCeiling) {
-			newState = 4;
-		} else {
-			newState = 5;
-		}
-		if (animState != newState) {
-			animator.SetInteger ("State", newState);
-			animState = newState;
+			else {
+				HorizontalMovement ();
+			}
+
+			if(onCeiling) {
+				JumpOffCeiling();
+			}
+
+			Animate ();
+			transform.position += currentSpeedVector;
+			Linecasts();
 		}
 	}
-
+	
 	private void HorizontalMovement()
 	{
 		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
 			FlipPlayer ();
 		} 
-		else if (onWallFront || onWallBack) {
+
+		if (onWallFront || (onWallBack && !onGround) && !onCeiling) {
 			currentSpeedVector.x = 0;
 			return;
 		}
 		
-		if (boostButton) {
-			currentSpeedVector.x = hAxis * boostSpeed;
-		}
-		else {
-			currentSpeedVector.x = hAxis * maxSpeed;
-		}
+		currentSpeedVector.x = hAxis * (boostButton ? boostSpeed : maxSpeed);
 	}
 
 	private void ClimbWalls()
@@ -166,9 +151,7 @@ public class PlayerController : MonoBehaviour
 			currentSpeedVector.x = 0;
 		}
 
-		float verticalSpeed = 0;
-
-		verticalSpeed = vAxis * (boostButton ? boostSpeed : maxSpeed);
+		float verticalSpeed = vAxis * (boostButton ? boostSpeed : maxSpeed);
 
 		if(onGround && verticalSpeed < 0 || onCeiling && verticalSpeed > 0) {
 			verticalSpeed = 0;
@@ -177,33 +160,27 @@ public class PlayerController : MonoBehaviour
 		currentSpeedVector.y = verticalSpeed;
 	}
 
-	private void ClimbCeiling()
-	{
-		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
-			FlipPlayer ();
-		} 
-		else if (onWallFront) {
-			currentSpeedVector.x = 0;
-			return;
-		}
-
-		currentSpeedVector.x = hAxis * (boostButton ? boostSpeed : maxSpeed);
-	}
-
-	private void JumpController()
+	private void JumpOffCeiling()
 	{
 		bool jumpButtonDown = InputWrapper.GetJump ();
 		bool jumpButtonUp = InputWrapper.GetAbortJump ();
-
-		if (jumpButtonDown && onCeiling) {
+		
+		if (jumpButtonDown) {
 			isFalling = true;
+			jumping = true;
 			return;
-		} else if (onCeiling) {
+		} else {
 			jumping = false;
 			currentJumpSpeed = 0;
 			return;
 		}
+	}
 
+	private void JumpOffWalls()
+	{
+		bool jumpButtonDown = InputWrapper.GetJump ();
+		bool jumpButtonUp = InputWrapper.GetAbortJump ();
+		
 		if(jumpButtonDown && onWallFront)
 		{
 			if(leanOffWall) {
@@ -223,6 +200,14 @@ public class PlayerController : MonoBehaviour
 				isFalling = true;
 			}
 		}
+	}
+
+
+
+	private void JumpController()
+	{
+		bool jumpButtonDown = InputWrapper.GetJump ();
+		bool jumpButtonUp = InputWrapper.GetAbortJump ();
 
 		if (jumpButtonDown && onGround) {
 			if(!jumping) {
@@ -253,6 +238,8 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
+
+
 	private void FlipPlayer()
 	{
 		facingRight = !facingRight;
@@ -261,7 +248,12 @@ public class PlayerController : MonoBehaviour
 		transform.localScale = scale;
 	}
 
-	private void CollisionCheck()
+
+
+
+	//## LINECASTING ##//
+
+	private void Linecasts()
 	{
 		onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
 		onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
@@ -272,6 +264,39 @@ public class PlayerController : MonoBehaviour
 
 
 
+
+
+
+	//## ANIMATION ##//
+
+	void Animate()
+	{
+		int newState = animState;
+		if (onGround) {
+			if (hAxis != 0) {
+				if (boostButton) {
+					newState = 2;
+				} else {
+					newState = 1;
+				}
+			} else {
+				newState = 0;
+			}
+		} else if (onWallFront) {
+			newState = 3;
+		} else if (onWallBack) {
+		}
+		else if (onCeiling) {
+			newState = 4;
+		} else {
+			newState = 5;
+		}
+		if (animState != newState) {
+			animator.SetInteger ("State", newState);
+			animState = newState;
+		}
+	}
+	
 
 
 
