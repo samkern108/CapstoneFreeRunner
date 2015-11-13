@@ -113,6 +113,9 @@ public class PlayerController : MonoBehaviour
 			WarpController();
 
 			if ((onWallFront || onWallBack) && !jumping) {
+				if(onWallBack) {
+					FlipPlayer();
+				}
 				ClimbWalls ();
 				JumpOffWalls();
 				if(onGround || onCeiling) {
