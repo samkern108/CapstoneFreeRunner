@@ -133,7 +133,6 @@ public class PlayerController : MonoBehaviour
 	private void HorizontalMovement()
 	{
 		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
-			Debug.Log ("FLIP");
 			FlipPlayer ();
 		} 
 
