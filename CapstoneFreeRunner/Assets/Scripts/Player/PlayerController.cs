@@ -107,6 +107,9 @@ public class PlayerController : MonoBehaviour
 			JumpController ();
 
 			if ((onWallFront || onWallBack) && !jumping) {
+				if(onWallBack) {
+					FlipPlayer();
+				}
 				ClimbWalls ();
 				JumpOffWalls();
 				if(onGround || onCeiling) {
@@ -130,6 +133,7 @@ public class PlayerController : MonoBehaviour
 	private void HorizontalMovement()
 	{
 		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
+			Debug.Log ("FLIP");
 			FlipPlayer ();
 		} 
 
