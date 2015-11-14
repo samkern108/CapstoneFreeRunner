@@ -48,12 +48,9 @@ public class PlayerController : MonoBehaviour
 	//##  JUMPING  ##//
 	[HideInInspector] public bool jumping = false;
 	private bool leanOffWall = false;
-	private float jumpOffWallSpeedMod = .7f;
 	private float initialJumpSpeed = .45f;
 	private float boostJumpSpeed = .6f;
-	private float currentJumpSpeed;
-	private float xJumpMod = .1f;
-	private float boostXJumpMod = .2f;
+	private Vector3 currentJumpSpeed;
 
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0;
@@ -78,57 +75,37 @@ public class PlayerController : MonoBehaviour
 		}
 
 		ApplyGravity ();
-		CheckCollisons ();
-	}
-
-	private void CheckCollisons()
-	{
-		if (onGround && !onWallFront) {
-			currentSpeedVector.y = 0;
-		}
-	}
-
-	private void ApplyGravity()
-	{
-		if (!onGround && !onCeiling && !onWallFront) {
-			isFalling = true;
-		}
-		if(isFalling)
-		{
-			currentSpeedVector.y -= gravityFactor;
-			if(currentSpeedVector.y < terminalVelocity) {
-				currentSpeedVector.y = terminalVelocity;
-			}
-			
-			if (!onCeiling && !onWallFront || onGround) {
-				isFalling = false;
-			} 
-		}
 	}
 
 	void Update () 
 	{
 		if (playerInputEnabled) {
-			JumpController ();
+
 			WarpController();
 
 			if ((onWallFront || onWallBack) && !jumping) {
-				if(onWallBack) {
+
+				if(onWallBack) 
 					FlipPlayer();
-				}
+
 				ClimbWalls ();
 				JumpOffWalls();
-				if(onGround || onCeiling) {
+
+				if(onGround || onCeiling)
 					HorizontalMovement ();
-				}
 			}
-			else {
+			else if(!onCeiling) {
 				HorizontalMovement ();
+				Jump();
 			}
 
 			if(onCeiling) {
+				HorizontalMovement ();
 				JumpOffCeiling();
 			}
+
+			Boost();
+			ApplyJump();
 
 			Animate ();
 			transform.position += currentSpeedVector;
@@ -138,9 +115,11 @@ public class PlayerController : MonoBehaviour
 	
 	private void HorizontalMovement()
 	{
-		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
+		if (onGround && !onWallFront)
+			currentSpeedVector.y = 0;
+
+		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight))
 			FlipPlayer ();
-		} 
 
 		if (onWallFront || (onWallBack && !onGround) && !onCeiling) {
 			currentSpeedVector.x = 0;
@@ -162,9 +141,8 @@ public class PlayerController : MonoBehaviour
 
 		float verticalSpeed = vAxis * (boostButton ? boostSpeed : maxSpeed);
 
-		if(onGround && verticalSpeed < 0 || onCeiling && verticalSpeed > 0) {
+		if(onGround && verticalSpeed < 0 || onCeiling && verticalSpeed > 0)
 			verticalSpeed = 0;
-		}
 
 		currentSpeedVector.y = verticalSpeed;
 	}
@@ -172,78 +150,95 @@ public class PlayerController : MonoBehaviour
 	private void JumpOffCeiling()
 	{
 		bool jumpButtonDown = InputWrapper.GetJump ();
-		bool jumpButtonUp = InputWrapper.GetAbortJump ();
 		
 		if (jumpButtonDown) {
 			isFalling = true;
-			jumping = true;
-			return;
-		} else {
+		} 
+		else {
 			jumping = false;
-			currentJumpSpeed = 0;
-			return;
+
+			if(currentSpeedVector.y > 0)
+				currentSpeedVector.y = 0;
 		}
 	}
 
 	private void JumpOffWalls()
 	{
 		bool jumpButtonDown = InputWrapper.GetJump ();
-		bool jumpButtonUp = InputWrapper.GetAbortJump ();
 		
 		if(jumpButtonDown && onWallFront)
 		{
 			if(leanOffWall) {
 				if(!jumping) {
 					if(InputWrapper.GetBoost()) {
-						currentJumpSpeed = boostJumpSpeed;
+						currentJumpSpeed.y = boostJumpSpeed;
 						currentSpeedVector.x = Mathf.Sign(hAxis) * boostSpeed;
 					}
 					else {
-						currentJumpSpeed = initialJumpSpeed;
+						currentJumpSpeed.y = initialJumpSpeed;
 						currentSpeedVector.x = Mathf.Sign(hAxis) * maxSpeed;
 					}
 					jumping = true;
 				}
 			}
-			else {
+			else
 				isFalling = true;
-			}
 		}
 	}
 
 
-
-	private void JumpController()
+	private void Jump()
 	{
 		bool jumpButtonDown = InputWrapper.GetJump ();
-		bool jumpButtonUp = InputWrapper.GetAbortJump ();
-
+		
 		if (jumpButtonDown && onGround) {
 			if(!jumping) {
-				if(InputWrapper.GetBoost()) {
-					currentJumpSpeed = boostJumpSpeed;
-				}
-				else {
-					currentJumpSpeed = initialJumpSpeed;
-				}
+				currentJumpSpeed.y = boostButton ? boostJumpSpeed : initialJumpSpeed;
 				jumping = true;
 			}
 		}
-		else if(jumpButtonUp && currentJumpSpeed > 0) {
-			currentJumpSpeed -= gravityFactor;
-			if(currentJumpSpeed < 0) {
-				jumping = false;
-				currentJumpSpeed = 0;
-			}
+	}
+
+	private void Boost()
+	{
+//		bool jumpButtonDown = InputWrapper.GetJump ();
+	}
+
+	private void ApplyGravity()
+	{
+		if (!onGround && !onCeiling && !onWallFront) {
+			isFalling = true;
+		}
+		if(isFalling)
+		{
+			currentSpeedVector.y -= gravityFactor;
+
+			if(currentSpeedVector.y < terminalVelocity) 	
+				currentSpeedVector.y = terminalVelocity;
+			
+			if (!onCeiling && !onWallFront || onGround)
+				isFalling = false;
+		}
+	}
+	
+	private void ApplyJump()
+	{
+		bool jumpButtonUp = InputWrapper.GetAbortJump ();
+
+		if(jumpButtonUp && currentJumpSpeed.y > 0) {
+			currentJumpSpeed.y -= gravityFactor;
+			currentSpeedVector.y = currentJumpSpeed.y;
 		}
 
 		if (jumping) {
-			currentJumpSpeed -= gravityFactor;
-			if (currentJumpSpeed < 0) {
-				jumping = false;
-				currentJumpSpeed = 0;
-			}
-			currentSpeedVector.y = currentJumpSpeed;
+			currentJumpSpeed.y -= gravityFactor;
+			currentSpeedVector.y = currentJumpSpeed.y;
+		}
+
+		if (currentJumpSpeed.y < 0) {
+			jumping = false;
+			isFalling = true;
+			currentJumpSpeed.y = 0;
 		}
 	}
 
@@ -305,24 +300,9 @@ public class PlayerController : MonoBehaviour
 			animState = newState;
 		}
 	}
-	
-
-
-
-	//when we warp, we want to hide the player, move them one pixel at a time 
-	//very quickly until they are colliding with the opposite wall.  :)
-
 
 
 	//## WARP ##
-
-	private bool canWarpRight = false;
-	private bool canWarpLeft = false;
-	private bool canWarpTop = false;
-	private bool canWarpBottom = false;
-	
-	private float warpAmount = 2;
-	
 
 	private void WarpController()
 	{
