@@ -8,6 +8,25 @@ public class PlayerController : MonoBehaviour
 {
 	public static PlayerController self;
 
+	public PlayerState state;
+
+	public struct PlayerState
+	{
+		//## RAYCASTING ##//
+		public bool onWallBack;
+		public bool onWallFront;
+		public bool onCeiling;
+		public bool onGround;
+
+		//## JUMPING AND FALLING ##//
+		public bool isFalling;
+		public bool jumping ;
+		public bool leanOffWall;
+		public bool boostButton;
+
+		public bool facingRight;
+	}
+
 	//## INPUT ##//
 	[HideInInspector] public bool playerInputEnabled = true;
 
@@ -16,7 +35,6 @@ public class PlayerController : MonoBehaviour
 	private int animState = 0;
 	
 	//## RUNNING ##//
-	private bool facingRight = true;
 	private Vector3 currentSpeedVector;
 	private float boostSpeed = .4f;
 	private float maxSpeed = .2f;
@@ -30,24 +48,17 @@ public class PlayerController : MonoBehaviour
 	public Transform ceilingChecker;
 
 	//## WARPING ##//
+	private bool warpEnabled = false;
 	public Transform wallWarpCheck;
 	float nextWarpTime = 0;
 	float warpDelay = 0.5f;
-
-	//## RAYCASTING ##//
-	private bool onWallBack = false;
-	private bool onWallFront = false;
-	private bool onCeiling = false;
-	private bool onGround = false;
-
+	
 	//## FALLING ##//
 	private float terminalVelocity = -.8f;
-	private bool isFalling = false;
 	private float gravityFactor = .02f;	
+	private bool isFallingOffCeiling = false;
 	
 	//##  JUMPING  ##//
-	[HideInInspector] public bool jumping = false;
-	private bool leanOffWall = false;
 	private float initialJumpSpeed = .45f;
 	private float boostJumpSpeed = .6f;
 	private Vector3 currentJumpSpeed;
@@ -55,12 +66,13 @@ public class PlayerController : MonoBehaviour
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0;
 	private float vAxis = 0;
-	private bool boostButton = false;
 
 
 	void Start(){
 		animator = this.GetComponent<Animator>();
 		self = this;
+		state = new PlayerState ();
+		state.facingRight = true;
 	}
 
 
@@ -71,7 +83,7 @@ public class PlayerController : MonoBehaviour
 		if (playerInputEnabled) {
 			vAxis = InputWrapper.GetVerticalAxis ();
 			hAxis = InputWrapper.GetHorizontalAxis ();
-			boostButton = InputWrapper.GetBoost ();
+			state.boostButton = InputWrapper.GetBoost ();
 		}
 
 		ApplyGravity ();
@@ -81,95 +93,94 @@ public class PlayerController : MonoBehaviour
 	{
 		if (playerInputEnabled) {
 
+			Linecasts();
+			if(state.onWallBack) 
+				FlipPlayer();
+
 			WarpController();
 
-			if ((onWallFront || onWallBack) && !jumping) {
+			bool jumpButtonDown = InputWrapper.GetJump();
 
-				if(onWallBack) 
-					FlipPlayer();
+			if ((state.onWallFront || state.onWallBack) && !state.jumping) {
 
 				ClimbWalls ();
-				JumpOffWalls();
+				JumpOffWalls(jumpButtonDown);
 
-				if(onGround || onCeiling)
+				if(state.onGround || state.onCeiling)
 					HorizontalMovement ();
 			}
-			else if(!onCeiling) {
+			else if(!state.onCeiling) {
+				isFallingOffCeiling = false;
 				HorizontalMovement ();
-				Jump();
+				Jump(jumpButtonDown);
 			}
 
-			if(onCeiling) {
+			if(state.onCeiling) {
 				HorizontalMovement ();
-				JumpOffCeiling();
+				JumpOffCeiling(jumpButtonDown);
 			}
-
-			Boost();
+		
 			ApplyJump();
 
 			Animate ();
 			transform.position += currentSpeedVector;
-			Linecasts();
 		}
 	}
 	
 	private void HorizontalMovement()
 	{
-		if (onGround && !onWallFront)
+		if (state.onGround && !state.onWallFront)
 			currentSpeedVector.y = 0;
 
-		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight))
+		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight))
 			FlipPlayer ();
 
-		if (onWallFront || (onWallBack && !onGround) && !onCeiling) {
+		if (state.onWallFront || (state.onWallBack && !state.onGround) && !state.onCeiling) {
 			currentSpeedVector.x = 0;
 			return;
 		}
 		
-		currentSpeedVector.x = hAxis * (boostButton ? boostSpeed : maxSpeed);
+		currentSpeedVector.x = hAxis * (state.boostButton ? boostSpeed : maxSpeed);
 	}
 
 	private void ClimbWalls()
 	{
-		if ((hAxis > 0 && !facingRight) || (hAxis < 0 && facingRight)) {
-			leanOffWall = true;
+		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight)) {
+			state.leanOffWall = true;
 		}
 		else {
-			leanOffWall = false;
+			state.leanOffWall = false;
 			currentSpeedVector.x = 0;
 		}
 
-		float verticalSpeed = vAxis * (boostButton ? boostSpeed : maxSpeed);
+		float verticalSpeed = vAxis * (state.boostButton ? boostSpeed : maxSpeed);
 
-		if(onGround && verticalSpeed < 0 || onCeiling && verticalSpeed > 0)
+		if(state.onGround && verticalSpeed < 0 || state.onCeiling && verticalSpeed > 0)
 			verticalSpeed = 0;
 
 		currentSpeedVector.y = verticalSpeed;
 	}
 
-	private void JumpOffCeiling()
+	private void JumpOffCeiling(bool jumpButtonDown)
 	{
-		bool jumpButtonDown = InputWrapper.GetJump ();
-		
 		if (jumpButtonDown) {
-			isFalling = true;
+			isFallingOffCeiling = true;
+			state.isFalling = true;
 		} 
 		else {
-			jumping = false;
+			state.jumping = false;
 
 			if(currentSpeedVector.y > 0)
 				currentSpeedVector.y = 0;
 		}
 	}
 
-	private void JumpOffWalls()
+	private void JumpOffWalls(bool jumpButtonDown)
 	{
-		bool jumpButtonDown = InputWrapper.GetJump ();
-		
-		if(jumpButtonDown && onWallFront)
+		if(jumpButtonDown && state.onWallFront)
 		{
-			if(leanOffWall) {
-				if(!jumping) {
+			if(state.leanOffWall) {
+				if(!state.jumping) {
 					if(InputWrapper.GetBoost()) {
 						currentJumpSpeed.y = boostJumpSpeed;
 						currentSpeedVector.x = Mathf.Sign(hAxis) * boostSpeed;
@@ -178,66 +189,52 @@ public class PlayerController : MonoBehaviour
 						currentJumpSpeed.y = initialJumpSpeed;
 						currentSpeedVector.x = Mathf.Sign(hAxis) * maxSpeed;
 					}
-					jumping = true;
+					state.jumping = true;
 				}
 			}
 			else
-				isFalling = true;
+				state.isFalling = true;
 		}
 	}
 
 
-	private void Jump()
+	private void Jump(bool jumpButtonDown)
 	{
-		bool jumpButtonDown = InputWrapper.GetJump ();
-		
-		if (jumpButtonDown && onGround) {
-			if(!jumping) {
-				currentJumpSpeed.y = boostButton ? boostJumpSpeed : initialJumpSpeed;
-				jumping = true;
+		if (jumpButtonDown && state.onGround) {
+			if(!state.jumping) {
+				currentJumpSpeed.y = state.boostButton ? boostJumpSpeed : initialJumpSpeed;
+				state.jumping = true;
 			}
 		}
-	}
-
-	private void Boost()
-	{
-//		bool jumpButtonDown = InputWrapper.GetJump ();
 	}
 
 	private void ApplyGravity()
 	{
-		if (!onGround && !onCeiling && !onWallFront) {
-			isFalling = true;
+		if (!state.onGround && (!state.onCeiling && !isFallingOffCeiling) && !state.onWallFront) {
+			state.isFalling = true;
 		}
-		if(isFalling)
+		if(state.isFalling)
 		{
 			currentSpeedVector.y -= gravityFactor;
 
 			if(currentSpeedVector.y < terminalVelocity) 	
 				currentSpeedVector.y = terminalVelocity;
 			
-			if (!onCeiling && !onWallFront || onGround)
-				isFalling = false;
+			if (!state.onCeiling && !state.onWallFront || state.onGround)
+				state.isFalling = false;
 		}
 	}
 	
 	private void ApplyJump()
 	{
-		bool jumpButtonUp = InputWrapper.GetAbortJump ();
-
-		if(jumpButtonUp && currentJumpSpeed.y > 0) {
-			currentJumpSpeed.y -= gravityFactor;
-			currentSpeedVector.y = currentJumpSpeed.y;
-		}
-
-		if (jumping) {
+		if (state.jumping) {
 			currentJumpSpeed.y -= gravityFactor;
 			currentSpeedVector.y = currentJumpSpeed.y;
 		}
 
 		if (currentJumpSpeed.y < 0) {
-			jumping = false;
-			isFalling = true;
+			state.jumping = false;
+			state.isFalling = true;
 			currentJumpSpeed.y = 0;
 		}
 	}
@@ -246,7 +243,7 @@ public class PlayerController : MonoBehaviour
 
 	private void FlipPlayer()
 	{
-		facingRight = !facingRight;
+		state.facingRight = !state.facingRight;
 		Vector3 scale = transform.localScale;
 		scale.x *= -1;
 		transform.localScale = scale;
@@ -259,10 +256,10 @@ public class PlayerController : MonoBehaviour
 
 	private void Linecasts()
 	{
-		onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
-		onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
-		onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
-		onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"));
+		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
+		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
+		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
+		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"));
 	}
 
 
@@ -276,9 +273,9 @@ public class PlayerController : MonoBehaviour
 	void Animate()
 	{
 		int newState = animState;
-		if (onGround) {
+		if (state.onGround) {
 			if (hAxis != 0) {
-				if (boostButton) {
+				if (state.boostButton) {
 					newState = 2;
 				} else {
 					newState = 1;
@@ -286,11 +283,11 @@ public class PlayerController : MonoBehaviour
 			} else {
 				newState = 0;
 			}
-		} else if (onWallFront) {
+		} else if (state.onWallFront) {
 			newState = 3;
-		} else if (onWallBack) {
+		} else if (state.onWallBack) {
 		}
-		else if (onCeiling) {
+		else if (state.onCeiling) {
 			newState = 4;
 		} else {
 			newState = 5;
@@ -306,25 +303,24 @@ public class PlayerController : MonoBehaviour
 
 	private void WarpController()
 	{
-		float warpInput = Input.GetAxis ("Fire2");
-		if (warpInput > 0.5f && Time.time > nextWarpTime){
-			RaycastHit2D castRight = Physics2D.Linecast (transform.position, wallWarpCheck.position, 1 << LayerMask.NameToLayer ("Wall"));
-			Vector3 warpVector = new Vector3(0,0,0);
-			if (onWallFront){
-				if (castRight){
-					float warpAmount = castRight.transform.localScale.x;
-					Debug.Log(warpAmount);
-					if (facingRight){
-						warpVector.x = (warpAmount * 5.65f) + 1;
-					}else{
-						warpVector.x = (warpAmount* -5.65f) - 1;
+		if (warpEnabled) {
+			float warpInput = Input.GetAxis ("Fire2");
+			if (warpInput > 0.5f && Time.time > nextWarpTime) {
+				RaycastHit2D castRight = Physics2D.Linecast (transform.position, wallWarpCheck.position, 1 << LayerMask.NameToLayer ("Wall"));
+				Vector3 warpVector = new Vector3 (0, 0, 0);
+				if (state.onWallFront) {
+					if (castRight) {
+						float warpAmount = castRight.transform.localScale.x;
+						if (state.facingRight) {
+							warpVector.x = (warpAmount * 5.65f) + 1;
+						} else {
+							warpVector.x = (warpAmount * -5.65f) - 1;
+						}
+						nextWarpTime = Time.time + warpDelay;
+						FlipPlayer ();
+						transform.position += warpVector;
 					}
-					nextWarpTime = Time.time + warpDelay;
-					FlipPlayer();
-					transform.position += warpVector;
 				}
-			}else{
-				
 			}
 		}
 	}
