@@ -29,7 +29,7 @@ public class InputWrapper : MonoBehaviour {
 		return Input.GetAxis ("Boost") > 0;
 	}
 
-	public static bool GetWarpBack()
+	public static bool GetWarp()
 	{
 		return Input.GetButtonDown("WarpBack");
 	}

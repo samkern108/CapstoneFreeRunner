@@ -47,6 +47,7 @@
   <ItemGroup>
      <Compile Include="Assets\CameraController.cs" />
      <Compile Include="Assets\Scripts\Enemies\DamagePlayer.cs" />
+     <Compile Include="Assets\Scripts\Enemies\DrainPlayer.cs" />
      <Compile Include="Assets\Scripts\Enemies\Projectiles\Bullet.cs" />
      <Compile Include="Assets\Scripts\Enemies\Projectiles\HomingBullet.cs" />
      <Compile Include="Assets\Scripts\Enemies\Projectiles\Projectile.cs" />

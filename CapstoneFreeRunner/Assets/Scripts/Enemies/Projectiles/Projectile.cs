@@ -12,8 +12,8 @@ public class Projectile : MonoBehaviour {
 		this.speed = speed;
 		this.transform.localScale = new Vector3 (scale, scale, 1);
 
-		movementVector = PlayerController.self.transform.position - this.transform.position;
-		float distanceToPlayer = Mathf.Sqrt (Mathf.Pow (PlayerController.self.transform.position.x - this.transform.position.x,2) + Mathf.Pow(PlayerController.self.transform.position.y - this.transform.position.y,2));
+		movementVector = PlayerController.state.position - this.transform.position;
+		float distanceToPlayer = Mathf.Sqrt (Mathf.Pow (PlayerController.state.position.x - this.transform.position.x,2) + Mathf.Pow(PlayerController.state.position.y - this.transform.position.y,2));
 		movementVector = movementVector / distanceToPlayer;
 	}
 }

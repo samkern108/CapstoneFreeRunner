@@ -11,8 +11,8 @@ public class HomingBullet : Projectile {
 			self = this.GetComponent("Projectile") as Projectile;
 		}
 
-		movementVector = PlayerController.self.transform.position - this.transform.position;
-		float distanceToPlayer = Mathf.Sqrt (Mathf.Pow (PlayerController.self.transform.position.x - this.transform.position.x,2) + Mathf.Pow(PlayerController.self.transform.position.y - this.transform.position.y,2));
+		movementVector = PlayerController.state.position - this.transform.position;
+		float distanceToPlayer = Mathf.Sqrt (Mathf.Pow (PlayerController.state.position.x - this.transform.position.x,2) + Mathf.Pow(PlayerController.state.position.y - this.transform.position.y,2));
 		movementVector = movementVector / distanceToPlayer;
 
 		this.transform.position += movementVector * speed;

@@ -21,18 +21,18 @@ public class CameraController : MonoBehaviour {
 	}
 
 	void Update () {
-		bool facingRight = PlayerController.self.state.facingRight;
+		bool facingRight = PlayerController.state.facingRight;
 
-		if (PlayerController.self.state.onGround) {
+		if (PlayerController.state.onGround) {
 			targetY = (float)(size / 3);
-		} else if (PlayerController.self.state.onCeiling) {
+		} else if (PlayerController.state.onCeiling) {
 			targetY = (float)(-size / 3);
 		} else {
 			targetY = 0;
 		}
 
-		if (PlayerController.self.state.onWallFront) {
-			targetX = (facingRight ? -1 : 1) * (PlayerController.self.state.leanOffWall ? (float)(size/2) : (float)(size/4));
+		if (PlayerController.state.onWallFront) {
+			targetX = (facingRight ? -1 : 1) * (PlayerController.state.leanOffWall ? (float)(size/2) : (float)(size/4));
 		} else {
 			targetX = 0;
 		}
@@ -45,7 +45,7 @@ public class CameraController : MonoBehaviour {
 		offsetX += moveX;
 		offsetY += moveY;
 
-		transform.position = PlayerController.self.transform.position;
+		transform.position = PlayerController.state.position;
 		transform.position += new Vector3 (offsetX, offsetY, -9); //The -9 ensures that the camera is "in front of" the hero
 	}
 }
