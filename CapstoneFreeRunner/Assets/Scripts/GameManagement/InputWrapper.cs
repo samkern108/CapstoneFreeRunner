@@ -33,4 +33,9 @@ public class InputWrapper : MonoBehaviour {
 	{
 		return Input.GetButtonDown("WarpBack");
 	}
+
+	public static bool GetMenuOpen()
+	{
+		return Input.GetKeyDown (KeyCode.Escape);
+	}
 }

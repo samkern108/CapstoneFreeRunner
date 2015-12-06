@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class PauseMenuScript : MonoBehaviour {
+public class MenuManager : MonoBehaviour {
     bool IsPaused = false;
     Rect Menu = new Rect(10, 10, 200, 100); //makes the pop up window
                                             // Update is called once per frame
