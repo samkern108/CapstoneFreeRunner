@@ -75,7 +75,8 @@ public class PlayerController : MonoBehaviour
 	private float vAxis = 0;
 
 
-	void Start(){
+	void Start()
+	{
 		animator = this.GetComponent<Animator>();
 		state = new PlayerState ();
 		state.facingRight = true;
@@ -240,8 +241,6 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-
-
 	private void FlipPlayer()
 	{
 		state.facingRight = !state.facingRight;
@@ -250,11 +249,9 @@ public class PlayerController : MonoBehaviour
 		transform.localScale = scale;
 	}
 
-
-
+	
 
 	//## LINECASTING ##//
-
 	private void Linecasts()
 	{
 		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
@@ -265,15 +262,10 @@ public class PlayerController : MonoBehaviour
 		if(state.onWallBack) 
 			FlipPlayer();
 	}
-	
-
-
-
 
 
 
 	//## ANIMATION ##//
-
 	void Animate()
 	{
 		int newState = animState;
@@ -287,9 +279,8 @@ public class PlayerController : MonoBehaviour
 			} else {
 				newState = 0;
 			}
-		} else if (state.onWallFront) {
+		} else if (state.onWall ()) {
 			newState = 3;
-		} else if (state.onWallBack) {
 		}
 		else if (state.onCeiling) {
 			newState = 4;
