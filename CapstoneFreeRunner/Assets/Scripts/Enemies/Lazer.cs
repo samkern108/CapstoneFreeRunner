@@ -36,7 +36,7 @@ public class Lazer : MonoBehaviour {
 
 			//if player enters lazer
 			if (hit.collider.gameObject.tag == "Player"){
-				hit.collider.gameObject.SendMessage("KillPlayer");
+				hit.collider.gameObject.SendMessage("PlayerHit", 2);
 			}
 		}
 	}
