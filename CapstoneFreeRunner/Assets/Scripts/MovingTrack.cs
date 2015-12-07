@@ -17,6 +17,8 @@ public class MovingTrack : MonoBehaviour {
 	public bool completePath;
 	public bool inMotion;
 
+	public bool pathVisible;
+
 	public Transform movingObject;
 	
 
@@ -39,11 +41,11 @@ public class MovingTrack : MonoBehaviour {
 
 		for(int i = 1; i < trackPieces.Length; i++) {
 			track.Add(trackPieces[i].position);
-			lineRenderer.SetPosition(i-1, track[i-1]);
-
-
+			if(pathVisible) {
+				lineRenderer.SetPosition(i-1, track[i-1]);
+			}
 		}
-		if (completePath) {
+		if (completePath && pathVisible) {
 			lineRenderer.SetPosition (trackPieces.Length - 1, track [0]);
 			completePathInt = 0;
 		}
