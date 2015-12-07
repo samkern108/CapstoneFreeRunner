@@ -6,15 +6,15 @@ public class Lazer : MonoBehaviour {
 	LineRenderer LR;
 	Transform DirectionHandle;
 	bool active;
-	float maxLazerLength = 10000;
+	float maxLazerLength = 1000;
 	Color startColor = Color.red;
 	Color endColor = Color.red;
+
 	// Use this for initialization
 	void Start () {
 		LR = gameObject.GetComponent<LineRenderer>();
-		DirectionHandle = transform.Find("DirectionHandle");
+		DirectionHandle = FindDirectionHandle(this.transform, "DirectionHandle");
 		active = true;
-
 		LR.material = new Material(Shader.Find("Particles/Additive"));
 		LR.SetColors(startColor, endColor);
 	}
@@ -38,6 +38,22 @@ public class Lazer : MonoBehaviour {
 			if (hit.collider.gameObject.tag == "Player"){
 				hit.collider.gameObject.SendMessage("KillPlayer");
 			}
+		}
+	}
+
+	Transform FindDirectionHandle(Transform parent, string name){
+		Transform result = parent.Find(name);
+		if(result != null){
+			return result;
+		}else{
+			foreach(Transform child in parent)
+			{
+				result = FindDirectionHandle(child,name);
+				if (result != null){
+					return result;
+				}
+			}
+			return null;
 		}
 	}
 }
