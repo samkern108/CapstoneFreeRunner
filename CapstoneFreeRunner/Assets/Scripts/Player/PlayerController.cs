@@ -249,15 +249,30 @@ public class PlayerController : MonoBehaviour
 		transform.localScale = scale;
 	}
 
-	
+	private RaycastHit2D[] hit;
+	private float z;
 
 	//## LINECASTING ##//
 	private void Linecasts()
 	{
-		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
-		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
-		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
-		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"));
+		/*  Maybe I can get LinecastNonAlloc to work someday.
+		Debug.Log (Physics2D.LinecastNonAlloc (transform.position, groundChecker.position, hit, 1 << LayerMask.NameToLayer ("Ground")));
+		state.onGround = (Physics2D.LinecastNonAlloc (transform.position, groundChecker.position, hit, 1 << LayerMask.NameToLayer ("Ground"), -Mathf.Infinity, Mathf.Infinity) > 0);
+		state.onWallFront = (Physics2D.LinecastNonAlloc (transform.position, wallCheckerTop.position, hit, 1 << LayerMask.NameToLayer ("Wall"), -Mathf.Infinity, Mathf.Infinity) > 0) || (Physics2D.LinecastNonAlloc (transform.position, wallCheckerBottom.position, hit, 1 << LayerMask.NameToLayer ("Wall"), -Mathf.Infinity, Mathf.Infinity) > 0);
+		state.onCeiling = (Physics2D.LinecastNonAlloc (transform.position, ceilingChecker.position, hit, 1 << LayerMask.NameToLayer ("Ground"), -Mathf.Infinity, Mathf.Infinity) > 0);
+		state.onWallBack = (Physics2D.LinecastNonAlloc (transform.position, wallCheckerTopBack.position, hit, 1 << LayerMask.NameToLayer ("Wall"), -Mathf.Infinity, Mathf.Infinity) > 0) || (Physics2D.LinecastNonAlloc (transform.position, wallCheckerBottomBack.position, hit, 1 << LayerMask.NameToLayer ("Wall"), -Mathf.Infinity, Mathf.Infinity) > 0);
+		 */
+
+		if (transform.parent != null) {
+			z = transform.parent.position.z;
+		} else {
+			z = 15;
+		}
+
+		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"), z, z);
+		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), z, z) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), z, z);
+		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"), z, z);
+		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), z, z) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), z, z);
 
 		if(state.onWallBack) 
 			FlipPlayer();
@@ -299,6 +314,14 @@ public class PlayerController : MonoBehaviour
 	{
 		state.drained = false;
 	}
+	
+	void OnCollisionEnter2D (Collision2D collision) {
+		
+		if (collision.collider.transform.position.z != z) {
+			Physics2D.IgnoreCollision(collision.collider, GetComponent<Collider2D>());
+		}
+		
+	}
 
 	private Vector3 warpVector;
 
@@ -311,7 +334,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (!state.drained && InputWrapper.GetWarp()) {
 
-			if(state.onGround && vAxis < 0) {
+			if(state.onGround) {
 
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
 				Bounds hitBounds = hit.collider.bounds;
@@ -319,7 +342,7 @@ public class PlayerController : MonoBehaviour
 			
 				warpVector = new Vector3(0, -size.y*2, 0);
 			}
-			else if(state.onCeiling && vAxis > 0) {
+			else if(state.onCeiling) {
 
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"));
 				Bounds hitBounds = hit.collider.bounds;
@@ -327,7 +350,7 @@ public class PlayerController : MonoBehaviour
 
 				warpVector = new Vector3(0, size.y*2, 0);
 			}
-			else if(state.onWall() && state.facingRight && hAxis > 0) {
+			else if(state.onWall() && state.facingRight) {
 
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 				if(!hit) {
@@ -338,7 +361,7 @@ public class PlayerController : MonoBehaviour
 
 				warpVector = new Vector3(size.x*2,0,0);
 			}
-			else if(state.onWall() && !state.facingRight && hAxis < 0) {
+			else if(state.onWall() && !state.facingRight) {
 
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 				if(!hit) {

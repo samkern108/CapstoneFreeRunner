@@ -37,8 +37,6 @@ public class MovingTrack : MonoBehaviour {
 		Transform[] trackPieces = GetComponentsInChildren <Transform>();
 		lineRenderer.SetVertexCount (trackPieces.Length);
 
-		float trackLength;
-
 		for(int i = 1; i < trackPieces.Length; i++) {
 			track.Add(trackPieces[i].position);
 			if(pathVisible) {
@@ -125,5 +123,10 @@ public class MovingTrack : MonoBehaviour {
 		if (inMotion) {
 			MoveAlongTrack();
 		}
+	}
+
+	public void Activate()
+	{
+		inMotion = true;
 	}
 }
