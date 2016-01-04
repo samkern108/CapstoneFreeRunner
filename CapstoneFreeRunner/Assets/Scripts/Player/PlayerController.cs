@@ -263,10 +263,10 @@ public class PlayerController : MonoBehaviour
 		state.onWallBack = (Physics2D.LinecastNonAlloc (transform.position, wallCheckerTopBack.position, hit, 1 << LayerMask.NameToLayer ("Wall"), -Mathf.Infinity, Mathf.Infinity) > 0) || (Physics2D.LinecastNonAlloc (transform.position, wallCheckerBottomBack.position, hit, 1 << LayerMask.NameToLayer ("Wall"), -Mathf.Infinity, Mathf.Infinity) > 0);
 		 */
 
-		if (transform.parent != null) {
-			z = transform.parent.position.z;
-		} else {
+		if (transform.parent.name.Equals("Level")) {
 			z = 15;
+		} else {
+			z = transform.parent.position.z;
 		}
 
 		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"), z, z);
@@ -320,7 +320,6 @@ public class PlayerController : MonoBehaviour
 		if (collision.collider.transform.position.z != z) {
 			Physics2D.IgnoreCollision(collision.collider, GetComponent<Collider2D>());
 		}
-		
 	}
 
 	private Vector3 warpVector;

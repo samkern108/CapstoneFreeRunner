@@ -18,12 +18,14 @@ public class PlayerHealth : MonoBehaviour {
 	public void PlayerDrain(int timer)
 	{
 		PlayerController.state.drained = true;
-		Invoke("GetBetter", timer);
+		UIManager.self.DisplayDisableScreen ();
+		Invoke("ChargeUp", timer);
 	}
 
 	private void ChargeUp()
 	{
 		PlayerController.state.drained = false;
+		UIManager.self.ClearDisableScreen ();
 	}
 
 	private void GetBetter()
