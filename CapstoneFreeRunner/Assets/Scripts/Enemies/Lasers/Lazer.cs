@@ -9,8 +9,7 @@ public class Lazer : MonoBehaviour {
 	float maxLazerLength = 1000;
 	Color startColor = Color.red;
 	Color endColor = Color.red;
-
-	// Use this for initialization
+	
 	void Start () {
 		LR = gameObject.GetComponent<LineRenderer>();
 		DirectionHandle = FindDirectionHandle(this.transform, "DirectionHandle");
@@ -18,8 +17,7 @@ public class Lazer : MonoBehaviour {
 		LR.material = new Material(Shader.Find("Particles/Additive"));
 		LR.SetColors(startColor, endColor);
 	}
-	
-	// Update is called once per frame
+
 	void Update () {
 		Raycast ();
 	}
@@ -30,11 +28,11 @@ public class Lazer : MonoBehaviour {
 			Ray2D ray = new Ray2D(transform.position, dir);
 			RaycastHit2D[] hitList = Physics2D.RaycastAll(ray.origin, ray.direction, maxLazerLength);
 			
-			//draw lazer
+			//draw laser
 			LR.SetPosition(0, ray.origin);
 
 			foreach(RaycastHit2D hit in hitList) {
-				//if player enters lazer
+				//if player enters laser
 				if (hit.collider.gameObject.tag == "Player"){
 					hit.collider.gameObject.SendMessage("PlayerHit", 2);
 					return;
