@@ -16,4 +16,9 @@ public class Projectile : MonoBehaviour {
 		float distanceToPlayer = Mathf.Sqrt (Mathf.Pow (PlayerController.state.position.x - this.transform.position.x,2) + Mathf.Pow(PlayerController.state.position.y - this.transform.position.y,2));
 		movementVector = movementVector / distanceToPlayer;
 	}
+
+	public void Reset()
+	{
+		Destroy (this.gameObject);
+	}
 }

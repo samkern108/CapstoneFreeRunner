@@ -6,6 +6,7 @@ public class UIManager : MonoBehaviour {
 	public GameObject hurtScreen;
 	public GameObject disableScreen;
 	public GameObject gameOverScreen;
+	public GameObject victoryScreen;
 
 	public static UIManager self;
 
@@ -37,5 +38,28 @@ public class UIManager : MonoBehaviour {
 	public void DisplayGameOverScreen ()
 	{
 		gameOverScreen.SetActive (true);
+	}
+
+	public void ClearGameOverScreen ()
+	{
+		gameOverScreen.SetActive (false);
+	}
+
+	public void DisplayVictoryScreen ()
+	{
+		victoryScreen.SetActive (true);
+	}
+	
+	public void ClearVictoryScreen ()
+	{
+		victoryScreen.SetActive (false);
+	}
+
+	public void Reset()
+	{
+		ClearDisableScreen ();
+		ClearVictoryScreen ();
+		ClearHurtScreen ();
+		ClearGameOverScreen ();
 	}
 }

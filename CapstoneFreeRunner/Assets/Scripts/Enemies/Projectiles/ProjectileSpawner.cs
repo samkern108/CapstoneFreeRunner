@@ -19,4 +19,10 @@ public class ProjectileSpawner : MonoBehaviour {
 			countDown = 0;
 		}
 	}
+
+	public void Reset()
+	{
+		countDown = 0;
+	}
+
 }

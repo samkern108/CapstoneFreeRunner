@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// THIS HAS VERY SLOWLY BUT SURELY BECOME SAM'S BABY.
-// SHE WILL KEEP WORKING ON IT UNTIL IT IS A PERFECT LITTLE HONOR STUDENT.
-
 public class PlayerController : MonoBehaviour 
 {
+	public Transform playerStartPosition;
+
 	public static PlayerState state;
 
 	public struct PlayerState
@@ -37,14 +36,23 @@ public class PlayerController : MonoBehaviour
 	}
 
 	//## INPUT ##//
-	[HideInInspector] public bool playerInputEnabled = true;
+	private static bool playerInputEnabled = true;
+
+	public static void PlayerInputEnabled(bool enabled)
+	{
+		playerInputEnabled = enabled;
+		if(!playerInputEnabled) {
+			currentSpeedVector = new Vector3();
+			currentJumpSpeed = new Vector3();
+		}
+	}
 
 	//## ANIMATION ##//
 	private Animator animator;
 	private int animState = 0;
 	
 	//## RUNNING ##//
-	private Vector3 currentSpeedVector;
+	private static Vector3 currentSpeedVector;
 	private float boostSpeed = .4f;
 	private float maxSpeed = .2f;
 	
@@ -68,7 +76,7 @@ public class PlayerController : MonoBehaviour
 	private bool jumpButtonDown = false;
 	private float initialJumpSpeed = .45f;
 	private float boostJumpSpeed = .6f;
-	private Vector3 currentJumpSpeed;
+	private static Vector3 currentJumpSpeed;
 
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0;
@@ -80,52 +88,59 @@ public class PlayerController : MonoBehaviour
 		animator = this.GetComponent<Animator>();
 		state = new PlayerState ();
 		state.facingRight = true;
+		Reset ();
 	}
 
 
 	//## UPDATE ##//
 	void FixedUpdate()
 	{
-		if (warpVector.x != 0 || warpVector.y != 0) {
-			transform.position += warpVector;
-			warpVector = new Vector3();
-		} else {
-			ApplyJump ();
-			ApplyGravity ();
-			transform.position += currentSpeedVector;
+		if (playerInputEnabled) {
+			if (warpVector.x != 0 || warpVector.y != 0) {
+				transform.position += warpVector;
+				warpVector = new Vector3 ();
+			} else {
+				ApplyJump ();
+				ApplyGravity ();
+				transform.position += currentSpeedVector;
+			}
+			Animate ();
+			state.position = transform.position;
 		}
-		Animate ();
-		state.position = transform.position;
 	}
 
 	void Update () 
 	{
-		if (playerInputEnabled) {
+		if (playerInputEnabled) 
+		{
 			vAxis = InputWrapper.GetVerticalAxis ();
 			hAxis = InputWrapper.GetHorizontalAxis ();
 			state.boostButton = InputWrapper.GetBoost ();
-			jumpButtonDown = InputWrapper.GetJump();
+			jumpButtonDown = InputWrapper.GetJump ();
 
 			Linecasts();
-			WarpController();
+			WarpController ();
 
-			if ((state.onWallFront || state.onWallBack) && !state.jumping) {
-				
+			if ((state.onWallFront || state.onWallBack) && !state.jumping) 
+			{	
 				ClimbWalls ();
-				JumpOffWalls(jumpButtonDown);
+				JumpOffWalls (jumpButtonDown);
 				
-				if(state.onGround || state.onCeiling)
+				if (state.onGround || state.onCeiling) {
 					HorizontalMovement ();
-			}
-			else if(!state.onCeiling) {
+				}
+			} 
+			else if (!state.onCeiling) 
+			{
 				isFallingOffCeiling = false;
 				HorizontalMovement ();
-				Jump(jumpButtonDown);
+				Jump (jumpButtonDown);
 			}
 			
-			if(state.onCeiling) {
+			if (state.onCeiling) 
+			{
 				HorizontalMovement ();
-				JumpOffCeiling(jumpButtonDown);
+				JumpOffCeiling (jumpButtonDown);
 			}
 		}
 	}
@@ -250,7 +265,8 @@ public class PlayerController : MonoBehaviour
 	}
 
 	private RaycastHit2D[] hit;
-	private float z;
+	private float zMin;
+	private float zMax;
 
 	//## LINECASTING ##//
 	private void Linecasts()
@@ -264,15 +280,24 @@ public class PlayerController : MonoBehaviour
 		 */
 
 		if (transform.parent.name.Equals("Level")) {
-			z = 15;
+			zMin = 15;
+			zMax = Mathf.Infinity;
 		} else {
-			z = transform.parent.position.z;
+			float z = transform.parent.position.z;
+			if(z > 15) {
+				zMin = 6;
+				zMax = 14;
+			}
+			else {
+				zMin = 15;
+				zMax = Mathf.Infinity;
+			}
 		}
 
-		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"), z, z);
-		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), z, z) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), z, z);
-		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"), z, z);
-		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), z, z) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), z, z);
+		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"), zMin, zMax);
+		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"), zMin, zMax);
+		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 
 		if(state.onWallBack) 
 			FlipPlayer();
@@ -316,8 +341,8 @@ public class PlayerController : MonoBehaviour
 	}
 	
 	void OnCollisionEnter2D (Collision2D collision) {
-		
-		if (collision.collider.transform.position.z != z) {
+		float z = collision.collider.transform.position.z;
+		if (z < zMin || z > zMax) {
 			Physics2D.IgnoreCollision(collision.collider, GetComponent<Collider2D>());
 		}
 	}
@@ -373,5 +398,15 @@ public class PlayerController : MonoBehaviour
 				warpVector = new Vector3(-size.x*2,0,0);
 			}
 		}
+	}
+
+	public void Reset()
+	{
+		PlayerInputEnabled (true);
+		vAxis = 0;
+		hAxis = 0;
+		currentJumpSpeed = new Vector3 ();
+		currentSpeedVector = new Vector3 ();
+		transform.position = playerStartPosition.position;
 	}
 }
