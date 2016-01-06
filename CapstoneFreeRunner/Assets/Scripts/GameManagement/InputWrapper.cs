@@ -24,7 +24,7 @@ public class InputWrapper : MonoBehaviour {
 		return Input.GetButtonUp ("Jump");
 	}
 
-	public static bool GetBoost()
+	public static bool GetSprint()
 	{
 		return Input.GetAxis ("Boost") > 0;
 	}
