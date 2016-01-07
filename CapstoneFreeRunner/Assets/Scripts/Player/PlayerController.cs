@@ -16,8 +16,6 @@ public class PlayerController : MonoBehaviour
 		public bool onWallFront;
 		public bool onCeiling;
 		public bool onGround;
-		public bool hangingOff;
-		public bool peeringOver;
 		public bool fallingOffCeiling;
 		public bool fallingOffWall;
 
@@ -343,10 +341,10 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 
-		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Ground"), zMin, zMax);
-		state.onWallFront = Physics2D.Linecast (ceilingChecker.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (groundChecker.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Ground"), zMin, zMax);
-		state.onWallBack = Physics2D.Linecast (ceilingChecker.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (groundChecker.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 	}
 	
 	void OnCollisionEnter2D (Collision2D collision) {
