@@ -18,6 +18,8 @@ public class PlayerController : MonoBehaviour
 		public bool onGround;
 		public bool fallingOffCeiling;
 		public bool fallingOffWall;
+		public bool onCeilingCorner;
+		public bool onFloorCorner;
 
 		//## WARPING ##//
 		public bool drained;
@@ -56,6 +58,9 @@ public class PlayerController : MonoBehaviour
 				if(!boosting) {
 					ApplyJump ();
 					ApplyGravity ();
+					if (!canBoost && state.colliding()) {
+						canBoost = true;
+					}
 				}
 				transform.position += currentSpeedVector;
 			}
@@ -196,6 +201,7 @@ public class PlayerController : MonoBehaviour
 	private void JumpOffCeiling()
 	{
 		state.fallingOffCeiling = true;
+		canBoost = false;
 	}
 
 	private void JumpOffWalls()
@@ -264,6 +270,7 @@ public class PlayerController : MonoBehaviour
 
 	//## BOOSTING ##
 
+	private bool canBoost = true;
 	private bool boosting = false;
 	private float boostTimeMax = .30f;
 	private float boostTimer = 0f;
@@ -271,9 +278,10 @@ public class PlayerController : MonoBehaviour
 
 	private void BoostJump()
 	{
-		if (!boosting) {
+		if (canBoost) {
 			boostTimer = boostTimeMax;
 			boosting = true;
+			canBoost = false;
 		}
 	}
 
@@ -291,7 +299,7 @@ public class PlayerController : MonoBehaviour
 		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight))
 			FlipPlayer ();
 
-		currentSpeedVector = boostSpeed * new Vector3 (hAxis != 0 ? 1 * Mathf.Sign (hAxis) : 0, vAxis != 0 ? 1 * Mathf.Sign (vAxis) : 0, 0);
+		currentSpeedVector = boostSpeed * new Vector3 (hAxis != 0 ? 1 * Mathf.Sign (hAxis) : 0, vAxis != 0 ? 1 * Mathf.Sign (vAxis) : 0, 0).normalized;
 		if (boostTimer <= 0) {
 			boosting = false;
 		}
@@ -315,6 +323,8 @@ public class PlayerController : MonoBehaviour
 	public Transform wallCheckerTopBack;
 	public Transform wallCheckerBottomBack;
 	public Transform ceilingChecker;
+	public Transform floorCornerCheck;
+	public Transform ceilingCornerCheck;
 
 	private void Linecasts()
 	{
@@ -345,6 +355,9 @@ public class PlayerController : MonoBehaviour
 		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onFloorCorner = !state.onWallBack && !state.onGround && Physics2D.Linecast (groundChecker.position, floorCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onCeilingCorner = !state.onWallBack && !state.onCeiling && Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		Debug.Log (state.onFloorCorner);
 	}
 	
 	void OnCollisionEnter2D (Collision2D collision) {
@@ -433,7 +446,6 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 	}
-
 
 
 	//## GAME CONTROL ##//
