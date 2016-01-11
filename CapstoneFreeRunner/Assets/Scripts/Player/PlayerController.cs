@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-	private float playerWidth = .4f;
+	private float playerWidth = .6f;
 	private float playerHeight = 1f;
 
 	//## CURRENT INPUT VALUES ##//
@@ -416,29 +416,24 @@ public class PlayerController : MonoBehaviour
 		{
 			if(state.onWallFront) 
 			{
-				RaycastHit2D hit = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
-				if(!hit) {
-					hit = Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
-				}
+				RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 				Bounds hitBounds = hit.collider.bounds;
 				Vector3 size = hitBounds.size;
 
-				if(state.facingRight) {
-					warpVector = new Vector3(size.x*2 + playerWidth,0,0);
-					FlipPlayer ();
+				if (state.facingRight) {
+					warpVector = new Vector3 (size.x + playerWidth, 0, 0);
+				} else {
+					warpVector = new Vector3 (-(size.x + playerWidth), 0, 0);
 				}
-				else {
-					warpVector = new Vector3(-size.x*2  - playerWidth,0,0);
-					FlipPlayer ();
-				}
+				FlipPlayer ();
 			}
-			else if(state.onGround) 
+			if(state.onGround) 
 			{
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 				Bounds hitBounds = hit.collider.bounds;
 				Vector3 size = hitBounds.size;
 			
-				warpVector = new Vector3(0, -size.y*2 - playerHeight, 0);
+				warpVector = new Vector3(0, -size.y - playerHeight, 0);
 			}
 			else if(state.onCeiling) 
 			{
@@ -446,7 +441,7 @@ public class PlayerController : MonoBehaviour
 				Bounds hitBounds = hit.collider.bounds;
 				Vector3 size = hitBounds.size;
 
-				warpVector = new Vector3(0, size.y*2  + playerHeight, 0);
+				warpVector = new Vector3(0, size.y  + playerHeight, 0);
 			}
 		}
 	}
