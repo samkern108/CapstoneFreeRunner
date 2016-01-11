@@ -6,7 +6,7 @@ public class LinearObjectTrack : MonoBehaviour {
 	Transform obj;
 	Transform pointA;
 	Transform pointB;
-	float speed = 1;
+	public float speed = 1;
 
 	void Start () {
 		obj = transform.GetChild(2);
