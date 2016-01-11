@@ -20,7 +20,12 @@ public class CameraController : MonoBehaviour {
 		MoveCamera ();
 	}
 
-	void Update () {
+	void MoveCamera() 
+	{
+		transform.position = new Vector3(PlayerController.state.position.x, PlayerController.state.position.y, -9);
+	}
+
+	/*void Update () {
 		bool facingRight = PlayerController.state.facingRight;
 
 		if (PlayerController.state.onGround) {
@@ -47,5 +52,5 @@ public class CameraController : MonoBehaviour {
 
 		transform.position = PlayerController.state.position;
 		transform.position += new Vector3 (offsetX, offsetY, -9); //The -9 ensures that the camera is "in front of" the hero
-	}
+	}*/
 }
