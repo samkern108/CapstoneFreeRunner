@@ -14,6 +14,16 @@ public class InputWrapper : MonoBehaviour {
 		return Input.GetAxis ("Vertical");
 	}
 
+	public static float GetWarpHorizontalAxis()
+	{
+		return Input.GetAxis ("WarpHorizontal");
+	}
+
+	public static float GetWarpVerticalAxis()
+	{
+		return Input.GetAxis ("WarpVertical");
+	}
+
 	public static bool GetJump()
 	{
 		return Input.GetButtonDown ("Jump");
