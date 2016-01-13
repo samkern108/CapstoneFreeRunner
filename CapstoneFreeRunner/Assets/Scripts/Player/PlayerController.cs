@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 public class PlayerController : MonoBehaviour 
@@ -52,8 +52,7 @@ public class PlayerController : MonoBehaviour
 	private float warpHAxis = 0;
 	private float warpVAxis = 0;
 
-	private float hAxisNeededForWarp = 0.15f;
-	private float vAxisNeededForWarp = 0.15f;
+	private float axisActivationPoint = 0.15f; 
 
 	//## UPDATE ##//
 	void FixedUpdate()
@@ -98,7 +97,6 @@ public class PlayerController : MonoBehaviour
 			}
 
 			WarpController (hAxis, vAxis, warpHAxis, warpVAxis);
-			Debug.Log (hAxis+" : "+vAxis);
 
 			if (state.onWallFront) 
 			{	
@@ -119,7 +117,7 @@ public class PlayerController : MonoBehaviour
 			}
 			else if(state.onCeiling) {
 				MoveOnCeiling();
-				if(jumpButtonDown) {
+				if(jumpButtonDown && vAxis < -axisActivationPoint) {
 					JumpOffCeiling();
 				}
 			}
@@ -191,13 +189,17 @@ public class PlayerController : MonoBehaviour
 		}
 		else {
 			state.leanOffWall = false;
-			currentSpeedVector.x = 0;
+			currentSpeedVector.x = 0; // TODO figure out if this is nessesary
 		}
 
-		float verticalSpeed = vAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+		float verticalSpeed = vAxis * runSpeed; //(state.sprintButton ? sprintSpeed : runSpeed);
 
 		if(state.onGround && verticalSpeed < 0 || state.onCeiling && verticalSpeed > 0)
 			verticalSpeed = 0;
+
+		if (state.leanOffWall == true){
+			verticalSpeed = 0;
+		}
 
 		currentSpeedVector.y = verticalSpeed;
 	}
@@ -206,6 +208,9 @@ public class PlayerController : MonoBehaviour
 	private bool jumpButtonDown = false;
 	private float jumpSpeed = .45f;
 	private static Vector3 currentJumpSpeed;
+
+	private float wallJumpYVelocity = 0.5f;
+	private float wallJumpXVelocity = 0.5f; 
 
 	//## FALLING ##//
 	private float terminalVelocity = -.8f;
@@ -221,7 +226,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if(state.leanOffWall) {
 			if(!state.jumping) {
-				currentJumpSpeed.y = jumpSpeed * vAxis; //## This should allow us to jump sideways, up, or in a downward arc.
+				currentJumpSpeed.y = jumpSpeed + vAxis/2; //## This should allow us to jump sideways, up, or in a downward arc.
 				currentSpeedVector.x = Mathf.Sign(hAxis) * runSpeed;
 				state.jumping = true;
 			}
@@ -428,13 +433,13 @@ public class PlayerController : MonoBehaviour
 		{
 			if(state.onWallFront) 
 			{
-				if (state.facingRight && warpHAxis >= hAxisNeededForWarp) {
+				if (state.facingRight && warpHAxis >= axisActivationPoint) {
 					RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 					Bounds hitBounds = hit.collider.bounds;
 					Vector3 size = hitBounds.size;
 					warpVector = new Vector3 (size.x + playerWidth, 0, 0);
 					FlipPlayer ();
-				} else if (!state.facingRight && warpHAxis <= -hAxisNeededForWarp){
+				} else if (!state.facingRight && warpHAxis <= -axisActivationPoint){
 					RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 					Bounds hitBounds = hit.collider.bounds;
 					Vector3 size = hitBounds.size; 
@@ -442,7 +447,7 @@ public class PlayerController : MonoBehaviour
 					FlipPlayer ();
 				}
 			}
-			if(state.onGround && warpVAxis <= -vAxisNeededForWarp) 
+			if(state.onGround && warpVAxis <= -axisActivationPoint) 
 			{
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 				Bounds hitBounds = hit.collider.bounds;
@@ -450,7 +455,7 @@ public class PlayerController : MonoBehaviour
 			
 				warpVector = new Vector3(0, -size.y - playerHeight, 0);
 			}
-			else if(state.onCeiling && warpVAxis >= vAxisNeededForWarp) 
+			else if(state.onCeiling && warpVAxis >= axisActivationPoint) 
 			{
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 				Bounds hitBounds = hit.collider.bounds;
