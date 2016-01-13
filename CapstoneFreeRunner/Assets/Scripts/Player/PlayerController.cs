@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
 	{
 		//## POSITION ##//
 		public Vector3 position;
+		public Vector3 startPosition;
 
 		//## RAYCASTING ##//
 		public bool onWallBack;
@@ -464,6 +465,8 @@ public class PlayerController : MonoBehaviour
 		currentJumpSpeed = new Vector3 ();
 		currentSpeedVector = new Vector3 ();
 		transform.position = playerStartPosition.position;
+		state.startPosition = transform.position;
+		state.position = transform.position;
 	}
 
 	//## INPUT ##//
