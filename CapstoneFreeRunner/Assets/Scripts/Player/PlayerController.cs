@@ -50,6 +50,12 @@ public class PlayerController : MonoBehaviour
 	private float hAxis = 0;
 	private float vAxis = 0;
 
+	private float warpHAxis = 0;
+	private float warpVAxis = 0;
+
+	private float hAxisNeededForWarp = 0.15f;
+	private float vAxisNeededForWarp = 0.15f;
+
 	//## UPDATE ##//
 	void FixedUpdate()
 	{
@@ -78,6 +84,10 @@ public class PlayerController : MonoBehaviour
 		{
 			vAxis = InputWrapper.GetVerticalAxis ();
 			hAxis = InputWrapper.GetHorizontalAxis ();
+
+			warpVAxis = InputWrapper.GetWarpVerticalAxis();
+			warpHAxis = InputWrapper.GetWarpHorizontalAxis();
+
 			state.sprintButton = InputWrapper.GetSprint ();
 			jumpButtonDown = InputWrapper.GetJump ();
 
@@ -88,7 +98,8 @@ public class PlayerController : MonoBehaviour
 				return;
 			}
 
-			WarpController ();
+			WarpController (hAxis, vAxis, warpHAxis, warpVAxis);
+			Debug.Log (hAxis+" : "+vAxis);
 
 			if (state.onWallFront) 
 			{	
@@ -411,24 +422,28 @@ public class PlayerController : MonoBehaviour
 
 	private Vector3 warpVector;
 	
-	private void WarpController() 
+	private void WarpController(float hAxis, float vAxis, float warpHAxis, float warpVAxis) 
 	{
-		if (!state.drained && InputWrapper.GetWarp())
+		//if (!state.drained && InputWrapper.GetWarp())
+		if (!state.drained)
 		{
 			if(state.onWallFront) 
 			{
-				RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
-				Bounds hitBounds = hit.collider.bounds;
-				Vector3 size = hitBounds.size;
-
-				if (state.facingRight) {
+				if (state.facingRight && warpHAxis >= hAxisNeededForWarp) {
+					RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
+					Bounds hitBounds = hit.collider.bounds;
+					Vector3 size = hitBounds.size;
 					warpVector = new Vector3 (size.x + playerWidth, 0, 0);
-				} else {
+					FlipPlayer ();
+				} else if (!state.facingRight && warpHAxis <= -hAxisNeededForWarp){
+					RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
+					Bounds hitBounds = hit.collider.bounds;
+					Vector3 size = hitBounds.size; 
 					warpVector = new Vector3 (-(size.x + playerWidth), 0, 0);
+					FlipPlayer ();
 				}
-				FlipPlayer ();
 			}
-			if(state.onGround) 
+			if(state.onGround && warpVAxis <= -vAxisNeededForWarp) 
 			{
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 				Bounds hitBounds = hit.collider.bounds;
@@ -436,7 +451,7 @@ public class PlayerController : MonoBehaviour
 			
 				warpVector = new Vector3(0, -size.y - playerHeight, 0);
 			}
-			else if(state.onCeiling) 
+			else if(state.onCeiling && warpVAxis >= vAxisNeededForWarp) 
 			{
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 				Bounds hitBounds = hit.collider.bounds;
