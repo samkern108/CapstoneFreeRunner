@@ -20,7 +20,8 @@ public class PlayerController : MonoBehaviour
 		public bool onGround;
 		public bool fallingOffCeiling;
 		public bool fallingOffWall;
-		public bool onCeilingCorner;
+		public bool onCeilingCornerBack;
+		public bool onCeilingCornerFront;
 		public bool onFloorCorner;
 
 		//## WARPING ##//
@@ -40,9 +41,11 @@ public class PlayerController : MonoBehaviour
 
 		public bool inAir()
 		{
-			return !(onGround || (onCeiling && !fallingOffCeiling) || (onWallFront && !fallingOffWall));
+			return !(onGround || (onCeiling && !fallingOffCeiling) || onCeilingCornerFront || onCeilingCornerBack || (onWallFront && !fallingOffWall));
 		}
 	}
+
+	private bool lastOnSide = false; // esle on ceiling
 
 	private float playerWidth = .6f;
 	private float playerHeight = 1f;
@@ -108,9 +111,11 @@ public class PlayerController : MonoBehaviour
 					if(jumpButtonDown) {
 						JumpOffWalls ();
 					}
+					lastOnSide = true;
 				}
 				else if(state.onWallBack) {
 					HandleOnWallBack();
+					lastOnSide = true;
 				}
 				
 				if(state.onGround) {
@@ -121,6 +126,17 @@ public class PlayerController : MonoBehaviour
 				}
 				else if(state.onCeiling) {
 					MoveOnCeiling();
+					if(jumpButtonDown && vAxis < -axisActivationPoint) {
+						JumpOffCeiling();
+					}
+					lastOnSide = false;
+				}
+				else if(state.onCeilingCornerBack || state.onCeilingCornerFront){
+					if(lastOnSide){
+						MoveOnCornerSide();
+					}else{
+						MoveOnCornerBottom();
+					}
 					if(jumpButtonDown && vAxis < -axisActivationPoint) {
 						JumpOffCeiling();
 					}
@@ -176,12 +192,56 @@ public class PlayerController : MonoBehaviour
 		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight))
 			FlipPlayer ();
 
-		if (state.onWallFront) {
-			currentSpeedVector.x = 0;
-			return;
-		}
+		//if (state.onWallFront || state.onCeilingCornerBack) {
+		//	currentSpeedVector.x = 0;
+		//	return;
+		//}
 		
 		currentSpeedVector.x = hAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+	}
+
+	private void MoveOnCornerBottom(){
+		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight))
+			FlipPlayer ();
+		
+		if (state.onCeilingCornerBack) {
+			currentSpeedVector.x = 0;
+			if (vAxis > 0){
+				MoveOverCorner();
+			}
+		}else{
+			currentSpeedVector.x = hAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+		}
+	}
+	private void MoveOnCornerSide(){
+		if(state.onCeilingCornerFront){
+			if (state.facingRight && hAxis > 0){
+				MoveUnderCorner();
+			}else if (hAxis < 0) {
+				MoveUnderCorner();
+			}
+		}
+		if (vAxis > 0){
+			currentSpeedVector.y = vAxis * runSpeed;
+		}else{
+			currentSpeedVector.y = 0;
+		}
+	}
+
+	private void MoveOverCorner(){
+		float xOverCornerTransform = playerWidth / 2;
+		float yOverCornerTransform = playerHeight / 2;
+
+		transform.position += new Vector3(state.facingRight ? xOverCornerTransform : -xOverCornerTransform, yOverCornerTransform, 0);
+		FlipPlayer();
+	}
+
+	private void MoveUnderCorner(){
+		float xUnderCornerTransform = playerWidth * 0.83f;
+		float yUnderCornerTransform = playerHeight * 0.2f;
+
+		transform.position += new Vector3(state.facingRight ? xUnderCornerTransform : -xUnderCornerTransform, -yUnderCornerTransform, 0);
+		FlipPlayer();
 	}
 
 	private void HandleOnWallBack()
@@ -207,6 +267,7 @@ public class PlayerController : MonoBehaviour
 		if(state.onGround && verticalSpeed < 0 || state.onCeiling && verticalSpeed > 0)
 			verticalSpeed = 0;
 
+		//if(state.onCeilingCorner && state.
 		if (state.leanOffWall == true){
 			verticalSpeed = 0;
 		}
@@ -356,7 +417,8 @@ public class PlayerController : MonoBehaviour
 	public Transform wallCheckerBottomBack;
 	public Transform ceilingChecker;
 	public Transform floorCornerCheck;
-	public Transform ceilingCornerCheck;
+	public Transform ceilingCornerCheckBack;
+	public Transform ceilingCornerCheckFront;
 
 	private void Linecasts()
 	{
@@ -388,7 +450,8 @@ public class PlayerController : MonoBehaviour
 		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 		state.onFloorCorner = !state.onWallBack && !state.onGround && Physics2D.Linecast (groundChecker.position, floorCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onCeilingCorner = !state.onWallBack && !state.onCeiling && Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onCeilingCornerBack = !state.onWallBack && !state.onCeiling && Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onCeilingCornerFront = !state.onWallFront && !state.onCeiling && Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 	}
 	
 	void OnCollisionEnter2D (Collision2D collision) {
