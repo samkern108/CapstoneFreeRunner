@@ -233,6 +233,7 @@ public class PlayerController : MonoBehaviour
 
 		transform.position += new Vector3(state.facingRight ? xOverCornerTransform : -xOverCornerTransform, yOverCornerTransform, 0);
 		FlipPlayer();
+		lastOnSide = false;
 	}
 
 	private void MoveUnderCorner(){
@@ -241,6 +242,7 @@ public class PlayerController : MonoBehaviour
 
 		transform.position += new Vector3(state.facingRight ? xUnderCornerTransform : -xUnderCornerTransform, -yUnderCornerTransform, 0);
 		FlipPlayer();
+		lastOnSide = true;
 	}
 
 	private void HandleOnWallBack()
@@ -444,13 +446,23 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 
-		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onFloorCorner = !state.onWallBack && !state.onGround && Physics2D.Linecast (groundChecker.position, floorCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onCeilingCornerBack = !state.onWallBack && !state.onCeiling && Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onCeilingCornerFront = !state.onWallFront && !state.onCeiling && Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D ground = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D wallTop = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D wallBottom = Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D ceiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D wallTopBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D wallBottomBack =  Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D floorCorner = Physics2D.Linecast (groundChecker.position, floorCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D ceilingCornerBack = Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		RaycastHit2D ceilingCornerFront = Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		
+		state.onGround = ground;
+		state.onWallFront = wallTop || wallBottom;
+		state.onCeiling = ceiling;
+		state.onWallBack = wallTopBack || wallBottomBack;
+		state.onFloorCorner = !state.onWallBack && !state.onGround && floorCorner;
+		state.onCeilingCornerBack = !state.onWallBack && !state.onCeiling && ceilingCornerBack;
+		state.onCeilingCornerFront = !state.onWallFront && !state.onCeiling && ceilingCornerFront;
 	}
 	
 	void OnCollisionEnter2D (Collision2D collision) {
