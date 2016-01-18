@@ -475,6 +475,7 @@ public class PlayerController : MonoBehaviour
 		state = new PlayerState ();
 		state.facingRight = true;
 		Reset ();
+		transform.position = playerStartPosition.position;
 	}
 
 	public void Reset()
@@ -484,8 +485,7 @@ public class PlayerController : MonoBehaviour
 		hAxis = 0;
 		currentJumpSpeed = new Vector3 ();
 		currentSpeedVector = new Vector3 ();
-		transform.position = playerStartPosition.position;
-		state.startPosition = transform.position;
+		transform.position = state.startPosition;
 		state.position = transform.position;
 	}
 
