@@ -4,48 +4,73 @@ using System.Collections;
 public class Sniper : MonoBehaviour {
 
 	LineRenderer LR;
-	
 	GameObject player;
+	AudioSource AS_Charge;
+	AudioSource AS_PowerDown;
 
 	float sightLength = 22;
 
 	Color trackingColor = Color.white;
 	Color fireColor = Color.red;
 
-	bool spotted = false;
-	float fireRate = 2;
-	float fireAt = 0;
-	bool scheduledToFire = false;
+	private bool spotted = false;
+	private float fireRate = 3;
+	private float fireTimeDiff;
+	private float fireAt = 0;
+	private bool scheduledToFire = false;
+	private bool fired = false;
+	private bool dormant = true;
 
 	void Start () {
-		LR = gameObject.GetComponent<LineRenderer>();
+		LR = GetComponent <LineRenderer>();
+		Debug.Log (GetComponents <AudioSource>()[1]);
+		AS_Charge = GetComponents <AudioSource>()[0];
+		AS_PowerDown = GetComponents <AudioSource>()[1];
 		LR.material = new Material(Shader.Find("Particles/Additive"));
-		LR.SetColors(trackingColor, trackingColor);
 		player = GameObject.Find("hero");
+		Reset ();
 	}
-	
+
+	public void Reset()
+	{
+		fired = false;
+		scheduledToFire = false;
+		fireAt = 0;
+		LR.SetColors(trackingColor,trackingColor);
+	}
+
 	void Update () {
-		RayCast();
+		if (!fired) {
+			RayCast ();
 
-		if (spotted && !scheduledToFire){
-			fireAt = Time.time + fireRate;
-			scheduledToFire = true;
-		}else if(!spotted){
-			fireAt = 0;
-			scheduledToFire = false;
-		}
-		//Debug.Log ("Time: "+Time.time);
-		//Debug.Log (fireAt);
-		if (scheduledToFire && fireAt < Time.time){
-			Fire();
-			scheduledToFire = false;
-		}
+			if (spotted && !scheduledToFire) {
+				fireAt = Time.time + fireRate;
+				AS_PowerDown.Stop ();
+				AS_Charge.Play ();
+				dormant = false;
+				scheduledToFire = true;
+			} else if (!spotted && !dormant) {
+				dormant = true;
+				AS_Charge.Stop();
+				AS_PowerDown.Play ();
+				Reset ();
+			}
 
+			if (scheduledToFire) {
+				fireTimeDiff = fireAt - Time.time;
+				ChargeLerp ();
+
+				if (fireTimeDiff <= 0) {
+					fired = true;
+					player.SendMessage ("PlayerHit", 2);
+				}
+			}
+		}
 	}
 
 	void RayCast(){
 
-		Vector3 dir = (player.transform.position - transform.position).normalized;		
+		Vector3 dir = (PlayerController.state.position - transform.position).normalized;		
 		Ray2D ray = new Ray2D(transform.position, dir);
 		RaycastHit2D[] hitList = Physics2D.RaycastAll(ray.origin, ray.direction, sightLength);
 		
@@ -54,16 +79,14 @@ public class Sniper : MonoBehaviour {
 		
 		foreach(RaycastHit2D hit in hitList) {
 			//if player enters laser
-			if (hit.collider.gameObject.tag == "Player"){
+			if (hit.collider.tag == "Player"){
 				spotted = true;
 				LR.enabled = true;
-				//return;
-			}else{
+			} else {
 				spotted = false;
-				LR.enabled = false;
 			}
 			
-			if(hit == true && !hit.collider.CompareTag("Background")){
+			if (hit && !hit.collider.isTrigger) {
 				LR.SetPosition(1,hit.point);
 				return;
 			}
@@ -75,14 +98,12 @@ public class Sniper : MonoBehaviour {
 
 	}
 
-	void Fire(){
-		Debug.Log ("Fire");
-		LR.SetColors(fireColor, fireColor);
-		player.SendMessage("PlayerHit", 2);
-		Invoke("RevertColor", 1);
-	}
+	private void ChargeLerp() {
+		float size = (float)(Mathf.Lerp (.2f, .05f, fireTimeDiff/fireRate));
+		LR.SetWidth (size, size);
 
-	void RevertColor(){
-		LR.SetColors(trackingColor,trackingColor);
+		Color currentColor = Color.Lerp (fireColor, trackingColor, fireTimeDiff/fireRate);
+		LR.SetColors (currentColor,currentColor);
+		CameraController.self.ShakeCamera ((fireRate - fireTimeDiff).Map(0, fireRate, 0, 2));
 	}
 }

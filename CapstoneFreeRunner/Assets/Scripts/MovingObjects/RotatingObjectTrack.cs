@@ -3,18 +3,16 @@ using System.Collections;
 
 public class RotatingObjectTrack : MonoBehaviour {
 
-	public Transform obj;
 	Transform pointA;
 	Transform pointB;
+	Transform obj;
 	float speed = .5f;
 
 	private Quaternion rotationA;
 	private Quaternion rotationB;
 	
 	void Start () {
-		if (obj == null) {
-			obj = transform.GetChild (2);
-		}
+		obj = transform.GetChild (2);
 		pointA = transform.Find("PointA");
 		pointB = transform.Find("PointB");
 

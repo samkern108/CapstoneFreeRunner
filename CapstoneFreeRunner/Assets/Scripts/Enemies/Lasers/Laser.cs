@@ -1,17 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Lazer : MonoBehaviour {
+public class Laser : MonoBehaviour {
 
+	AudioSource AS;
 	LineRenderer LR;
+	public ParticleSystem PS;
+
 	Transform DirectionHandle;
 	bool active;
 	float maxLazerLength = 1000;
 	Color startColor = Color.red;
 	Color endColor = Color.red;
+	private bool disabled = false;
+	private float dist;
+	private float maxDist = 40;
 	
 	void Start () {
-		LR = gameObject.GetComponent<LineRenderer>();
+		AS = GetComponent<AudioSource> ();
+		LR = GetComponent<LineRenderer>();
 		DirectionHandle = FindDirectionHandle(this.transform, "DirectionHandle");
 		active = true;
 		LR.material = new Material(Shader.Find("Particles/Additive"));
@@ -19,7 +26,29 @@ public class Lazer : MonoBehaviour {
 	}
 
 	void Update () {
-		Raycast ();
+		dist = Vector2.Distance (transform.position, PlayerController.state.position);
+		if (dist < maxDist) {
+			if (disabled) {
+				AS.enabled = true;
+				LR.enabled = true;
+				PS.Play ();
+				disabled = false;
+			}
+			Raycast ();
+			AudioUpdate ();
+		} else {
+			if (!disabled) {
+				AS.enabled = false;
+				LR.enabled = false;
+				PS.Stop ();
+				disabled = true;
+			}
+		}
+	}
+
+	private void AudioUpdate()
+	{
+		AS.volume = dist.Map (0, 30, 1f, 0);
 	}
 
 	void Raycast() {
@@ -39,7 +68,8 @@ public class Lazer : MonoBehaviour {
 				}
 
 				if(hit == true && !hit.collider.CompareTag("Background")){
-					LR.SetPosition(1,hit.point);
+					PS.transform.position = new Vector3 (hit.point.x, hit.point.y, -1);
+					LR.SetPosition(1, hit.point);
 					return;
 				}
 			}
