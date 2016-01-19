@@ -10,4 +10,11 @@ public class DamagePlayer : MonoBehaviour {
 		if (coll.gameObject.tag == "Player")
 			coll.gameObject.SendMessage("PlayerHit", damagePlayer);
 	}
+
+	IEnumerator ShakeCamera() {
+		for (float f = 1f; f >= .5f; f -= 0.1f) {
+			CameraController.self.ShakeCamera (f);
+			yield return null;
+		}
+	}
 }

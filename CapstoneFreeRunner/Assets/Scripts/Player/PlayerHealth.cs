@@ -16,17 +16,40 @@ public class PlayerHealth : MonoBehaviour {
 			}
 			UIManager.self.DisplayHurtScreen ();
 			hit = true;
+			StartCoroutine ("ShakeCamera");
+			PlayerAudioManager.self.PlayHit ();
 			Invoke ("GetBetter", 1);
 		}
 	}
 
-	public void PlayerDrain(int timer)
+	IEnumerator ShakeCamera() {
+		for (float f = 4f; f >= 1f; f -= 0.2f) {
+			CameraController.self.ShakeCamera (f);
+			yield return null;
+		}
+	}
+
+	IEnumerator ZoomInCamera() {
+		for (float f = 0f; f <= 3f; f += 0.05f) {
+			CameraController.self.ZoomInCamera (f);
+			yield return null;
+		}
+		CameraController.self.RestoreSize ();
+	}
+		
+	public void PlayerDrainEnter()
 	{
 		if (!invulnerable) {
 			PlayerController.state.drained = true;
 			UIManager.self.DisplayDisableScreen ();
-			Invoke ("ChargeUp", timer);
+			PlayerAudioManager.self.PlayDisable ();
+			StartCoroutine ("ZoomInCamera");
 		}
+	}
+
+	public void PlayerDrainLeave(int timer)
+	{
+		Invoke ("ChargeUp", timer);
 	}
 
 	private void ChargeUp()

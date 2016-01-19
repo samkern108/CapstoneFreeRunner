@@ -3,16 +3,25 @@ using System.Collections;
 
 public class CameraController : MonoBehaviour {
 
+	public static CameraController self;
+
 	private float offsetX = 0;
 	private float offsetY = 0;
 	private float targetX = 0;
 	private float targetY = 0;
+
+	private float shakeOffsetX = 0;
+	private float shakeOffsetY = 0;
+
 	private float speed;
 	private float size;
+	private float tempSize;
 
 	void Start () {
-		size = this.GetComponent <Camera>().orthographicSize;
+		size = GetComponent <Camera>().orthographicSize;
 		speed = size * 3;
+		tempSize = size;
+		self = this;
 	}
 
 	void LateUpdate () 
@@ -20,9 +29,35 @@ public class CameraController : MonoBehaviour {
 		MoveCamera ();
 	}
 
+	public void ZoomInCamera(float amount)
+	{
+		tempSize = size - amount;
+		GetComponent <Camera> ().orthographicSize = tempSize;
+	}
+
+	IEnumerator SizeRestore()
+	{
+		while(tempSize < size) {
+			tempSize += .05f;
+			GetComponent <Camera> ().orthographicSize = tempSize;
+			yield return null;
+		}
+	}
+
+	public void RestoreSize()
+	{
+		StartCoroutine ("SizeRestore");
+	}
+
+	public void ShakeCamera(float amount)
+	{
+		shakeOffsetX = Random.Range(-1, 1) * Mathf.PerlinNoise (Time.time, Time.time) * amount;
+		shakeOffsetY = Random.Range(-1, 1) * Mathf.PerlinNoise (Time.time, Time.time) * amount;
+	}
+
 	void MoveCamera() 
 	{
-		transform.position = new Vector3(PlayerController.state.position.x, PlayerController.state.position.y, -9);
+		transform.position = new Vector3(PlayerController.state.position.x + shakeOffsetX, PlayerController.state.position.y + shakeOffsetY, -9);
 	}
 
 	/*void Update () {

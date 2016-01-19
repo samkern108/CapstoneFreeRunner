@@ -5,6 +5,7 @@ public class PlayerController : MonoBehaviour
 {
 	public Transform playerStartPosition;
 
+	public static GameObject player;
 	public static PlayerState state;
 	public class PlayerState
 	{
@@ -574,6 +575,7 @@ public class PlayerController : MonoBehaviour
 		state.facingRight = true;
 		Reset ();
 		transform.position = playerStartPosition.position;
+		player = this.gameObject;
 	}
 
 	public void Reset()
