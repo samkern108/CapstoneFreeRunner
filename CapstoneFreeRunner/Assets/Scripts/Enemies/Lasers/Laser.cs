@@ -69,10 +69,15 @@ public class Laser : MonoBehaviour {
 
 				if(hit == true && !hit.collider.CompareTag("Background")){
 					PS.transform.position = new Vector3 (hit.point.x, hit.point.y, -1);
+					if (!PS.isPlaying)
+						PS.Play ();
 					LR.SetPosition(1, hit.point);
 					return;
 				}
 			}
+		//if the ray hit nothing
+		if(PS.isPlaying)
+			PS.Stop();
 			//if the ray hit nothing
 			LR.SetPosition(1,ray.GetPoint(maxLazerLength));
 		}

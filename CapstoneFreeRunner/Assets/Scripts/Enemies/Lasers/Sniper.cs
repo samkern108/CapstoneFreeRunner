@@ -23,7 +23,6 @@ public class Sniper : MonoBehaviour {
 
 	void Start () {
 		LR = GetComponent <LineRenderer>();
-		Debug.Log (GetComponents <AudioSource>()[1]);
 		AS_Charge = GetComponents <AudioSource>()[0];
 		AS_PowerDown = GetComponents <AudioSource>()[1];
 		LR.material = new Material(Shader.Find("Particles/Additive"));
@@ -104,6 +103,6 @@ public class Sniper : MonoBehaviour {
 
 		Color currentColor = Color.Lerp (fireColor, trackingColor, fireTimeDiff/fireRate);
 		LR.SetColors (currentColor,currentColor);
-		CameraController.self.ShakeCamera ((fireRate - fireTimeDiff).Map(0, fireRate, 0, 2));
+		CameraController.self.ShakeCamera ((fireRate - fireTimeDiff).Map(0, fireRate, 0, 1.2f));
 	}
 }
