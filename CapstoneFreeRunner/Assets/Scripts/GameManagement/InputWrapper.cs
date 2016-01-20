@@ -4,6 +4,19 @@ using System.Collections;
 
 public class InputWrapper : MonoBehaviour {
 
+	private static bool isGamepadConnected = false;
+	//true is axis warping, false is button-press warping.
+	private static bool warpType = false;
+
+	private static float axisActivationPoint = 0.15f; 
+	private static float wallJumpAxisActivationPoint = 0.3f;
+
+	void Start()
+	{
+		isGamepadConnected = Input.GetJoystickNames ().Length > 0;
+		Debug.Log ("Is Gamepad Connected:  " + isGamepadConnected);
+	}
+
 	public static float GetHorizontalAxis()
 	{
 		return Input.GetAxis ("Horizontal");
@@ -12,16 +25,6 @@ public class InputWrapper : MonoBehaviour {
 	public static float GetVerticalAxis()
 	{
 		return Input.GetAxis ("Vertical");
-	}
-
-	public static float GetWarpHorizontalAxis()
-	{
-		return Input.GetAxis ("WarpHorizontal");
-	}
-
-	public static float GetWarpVerticalAxis()
-	{
-		return Input.GetAxis ("WarpVertical");
 	}
 
 	public static bool GetJump()
@@ -36,12 +39,45 @@ public class InputWrapper : MonoBehaviour {
 
 	public static bool GetSprint()
 	{
-		return Input.GetAxis ("Boost") > 0;
+		return Input.GetAxis ("Sprint") > 0;
 	}
 
-	public static bool GetWarp()
+	public static float GetWarpVertical()
 	{
-		return Input.GetButtonDown("WarpBack");
+		return warpType ? GetWarpVerticalAxis () : GetWarpVerticalButton ();
+	}
+
+	public static float GetWarpHorizontal()
+	{
+		return warpType ? GetWarpHorizontalAxis () : GetWarpHorizontalButton ();
+	}
+
+	private static float GetWarpHorizontalButton()
+	{
+		if (!Input.GetButtonDown ("WarpOneShot")) {
+			return 0;
+		}
+		return Input.GetAxis ("Horizontal");
+	}
+
+	private static float GetWarpVerticalButton()
+	{
+		if (!Input.GetButtonDown ("WarpOneShot")) {
+			return 0;
+		}
+		return Input.GetAxis ("Vertical");
+	}
+
+	private static float GetWarpHorizontalAxis()
+	{
+		float axis = Input.GetAxis ("WarpHorizontal");
+		return (axis >= axisActivationPoint) ? axis : 0;
+	}
+
+	private static float GetWarpVerticalAxis()
+	{
+		float axis = Input.GetAxis ("WarpVertical");
+		return (axis >= axisActivationPoint) ? axis : 0;
 	}
 
 	public static bool GetMenuOpen()
