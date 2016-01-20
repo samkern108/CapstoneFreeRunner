@@ -60,6 +60,7 @@ public class PlayerController : MonoBehaviour
 	//## UPDATE ##//
 	void FixedUpdate()
 	{
+		Linecasts();
 		if (playerInputEnabled) {
 			if (warpVector.x != 0 || warpVector.y != 0) {
 				warping = true;
@@ -94,8 +95,6 @@ public class PlayerController : MonoBehaviour
 
 			state.sprintButton = InputWrapper.GetSprint ();
 			jumpButtonDown = InputWrapper.GetJump ();
-
-			Linecasts();
 
 			if(boostTimer > 0) {
 				HandleBoost();
@@ -559,7 +558,7 @@ public class PlayerController : MonoBehaviour
 				Bounds hitBounds = hit.collider.bounds;
 				Vector3 size = hitBounds.size;
 				if (size.y < maxWarpDistance){
-					warpVector = new Vector3(0, size.y  + playerHeight, 0);
+					warpVector = new Vector3(0, size.y + playerHeight, 0);
 					warping = true;
 				}
 			}
