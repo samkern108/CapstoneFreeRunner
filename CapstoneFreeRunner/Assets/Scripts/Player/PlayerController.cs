@@ -19,7 +19,6 @@ public class PlayerController : MonoBehaviour
 		public bool onCeiling;
 		public bool onGround;
 		public bool fallingOffCeiling;
-		public bool fallingOffWall;
 		public bool onCeilingCorner;
 		public bool onFloorCorner;
 
@@ -27,7 +26,7 @@ public class PlayerController : MonoBehaviour
 		public bool drained;
 
 		//## JUMPING AND FALLING ##//
-		public bool jumping ;
+		public bool jumping;
 		public bool leanOffWall;
 		public bool sprintButton;
 
@@ -40,12 +39,12 @@ public class PlayerController : MonoBehaviour
 
 		public bool inAir()
 		{
-			return !(onGround || (onCeiling && !fallingOffCeiling) || (onWallFront && !fallingOffWall));
+			return !(onGround || (onCeiling && !fallingOffCeiling) || (onWallFront));//&& !fallingOffWall));
 		}
 	}
 
-	private float playerWidth = .6f;
-	private float playerHeight = 1f;
+	private float playerWidth = 1f;
+	private float playerHeight = 1.2f;
 
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0;
@@ -54,32 +53,12 @@ public class PlayerController : MonoBehaviour
 	private float vWarp = 0;
 
 	//## UPDATE ##//
-	void FixedUpdate()
-	{
-		Linecasts();
-		if (playerInputEnabled) {
-			if (warpVector.x != 0 || warpVector.y != 0) {
-				transform.position += warpVector;
-				warpVector = new Vector3 ();
-			} else {
-				if(!boosting) {
-					ApplyJump ();
-					ApplyGravity ();
-					if (!canBoost && state.colliding()) {
-						canBoost = true;
-					}
-				}
-				transform.position += currentSpeedVector;
-			}
-			Animate ();
-			state.position = transform.position;
-		}
-	}
 
 	void Update () 
 	{
 		if (playerInputEnabled) 
 		{
+			//1: Update Input Values
 			vAxis = InputWrapper.GetVerticalAxis ();
 			hAxis = InputWrapper.GetHorizontalAxis ();
 
@@ -89,44 +68,68 @@ public class PlayerController : MonoBehaviour
 			state.sprintButton = InputWrapper.GetSprint ();
 			jumpButtonDown = InputWrapper.GetJump ();
 
+			//2: Conduct Linecasts
+			Linecasts();
+
+			//3: Handle Warping
+			if (!state.drained && (vWarp != 0 || hWarp != 0)) {
+				HandleWarp ();
+				if (warpVector.x != 0 || warpVector.y != 0) {
+					transform.position += warpVector;
+					warpVector = new Vector3 ();
+					warping = false;
+					state.position = transform.position;
+					Animate ();
+				} 
+				//Time.timeScale = 0;
+				return;
+			}
+
+			//4: Handle Regular Movement
 			if(boostTimer > 0) {
 				HandleBoost();
-				return;
+			}
+			else {
+				if (state.onWallFront) {	
+					HandleOnWallFront ();
+					if (jumpButtonDown) {
+						JumpOffWalls ();
+					}
+				} else if (state.onWallBack) {
+					HandleOnWallBack ();
+				}
+
+				if (state.onGround) {
+					MoveOnGround ();
+					if (jumpButtonDown) {
+						Jump ();
+					}
+				} else if (state.onCeiling) {
+					MoveOnCeiling ();
+					if (jumpButtonDown) {
+						JumpOffCeiling ();
+					}
+				} else if (state.inAir ()) {
+					MoveInAir ();
+					if (jumpButtonDown) {
+						BoostJump ();
+					}
+				}
 			}
 
-			WarpController ();
+			//5: Apply Movement Vectors to Transform
+			if(!boosting) {
+				ApplyJump ();
+				ApplyGravity ();
+				if (!canBoost && state.colliding()) {
+					canBoost = true;
+				}
+			}
+			transform.position += currentSpeedVector * 50 * Time.deltaTime;
+			state.position = transform.position;
 
-			if (state.onWallFront) 
-			{	
-				HandleOnWallFront();
-				if(jumpButtonDown) {
-					JumpOffWalls ();
-				}
-			}
-			else if(state.onWallBack) {
-				HandleOnWallBack();
-			}
-
-			if(state.onGround) {
-				MoveOnGround();
-				if(jumpButtonDown) {
-					Jump ();
-				}
-			}
-			else if(state.onCeiling) {
-				MoveOnCeiling();
-				if(jumpButtonDown) {
-					JumpOffCeiling();
-				}
-			}
-			else if(state.inAir ())
-			{
-				MoveInAir();
-				if(jumpButtonDown) {
-					BoostJump();
-				}
-				return;
-			}
+			//6: Animation
+			Animate ();
 		}
 	}
 
@@ -210,7 +213,7 @@ public class PlayerController : MonoBehaviour
 	private void JumpOffCeiling()
 	{
 		state.fallingOffCeiling = true;
-		canBoost = false;
+		canBoost = true;
 	}
 
 	private void JumpOffWalls()
@@ -221,9 +224,6 @@ public class PlayerController : MonoBehaviour
 				currentSpeedVector.x = Mathf.Sign(hAxis) * runSpeed;
 				state.jumping = true;
 			}
-		}
-		else {
-			state.fallingOffWall = true;
 		}
 	}
 
@@ -249,10 +249,6 @@ public class PlayerController : MonoBehaviour
 			//##POTENTIAL BUG: What happens if we're falling off the ceiling onto a wall and never stop colliding?
 			if (!state.colliding()) {
 				state.fallingOffCeiling = false;
-				state.fallingOffWall = false;
-			}
-			if (state.onGround) {
-				state.fallingOffWall = false;
 			}
 		}
 	}
@@ -314,6 +310,7 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
+
 	private void FlipPlayer()
 	{
 		state.facingRight = !state.facingRight;
@@ -356,10 +353,11 @@ public class PlayerController : MonoBehaviour
 		}
 
 		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onWallFront = Physics2D.Linecast (transform.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onWallFront = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onWallBack = Physics2D.Linecast (transform.position, wallCheckerTopBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax) || Physics2D.Linecast (transform.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-//		state.onFloorCorner = !state.onWallBack && !state.onGround && Physics2D.Linecast (groundChecker.position, floorCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		state.onWallBack = Physics2D.Linecast (wallCheckerTopBack.position, wallCheckerBottomBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+
+		//		state.onFloorCorner = !state.onWallBack && !state.onGround && Physics2D.Linecast (groundChecker.position, floorCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 //		state.onCeilingCorner = !state.onWallBack && !state.onCeiling && Physics2D.Linecast (ceilingChecker.position, ceilingCornerCheck.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 //		Debug.Log (state.onFloorCorner);
 	}
@@ -375,11 +373,11 @@ public class PlayerController : MonoBehaviour
 	//## ANIMATION ##//
 	private Animator animator;
 	private int animState = 0;
-	void Animate()
+	private void Animate()
 	{
 		int newState = animState;
 		if (state.onGround) {
-			if (hAxis != 0) {
+			if (hAxis > .2 || hAxis < -.2) {
 				if (state.sprintButton) {
 					newState = 2;
 				} else {
@@ -411,11 +409,11 @@ public class PlayerController : MonoBehaviour
 	}
 
 	private Vector3 warpVector;
+	private bool warping = false;
+	private float maxWarpDistance = 2f;
 
-	private void WarpController() 
+	private void HandleWarp() 
 	{
-		if (!state.drained && (vWarp != 0 || hWarp != 0))
-		{
 			if(state.onWallFront) 
 			{
 				RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
@@ -423,37 +421,45 @@ public class PlayerController : MonoBehaviour
 					Bounds hitBounds = hit.collider.bounds;
 					Vector3 size = hitBounds.size;
 
-					if (state.facingRight && hWarp > 0) {
-						warpVector = new Vector3 (size.x + playerWidth, 0, 0);
-					} 
-					else if (!state.facingRight && hWarp < 0) {
-						warpVector = new Vector3 (-(size.x + playerWidth), 0, 0);
+					if (size.x <= maxWarpDistance) {
+						if (state.facingRight && hWarp > 0) { //FIX: HWARP >
+							warpVector = new Vector3 (size.x + playerWidth, 0, 0);
+							FlipPlayer ();
+							warping = true;
+						} else if (!state.facingRight && hWarp < 0) { //FIX: HWARP <
+							warpVector = new Vector3 (-(size.x + playerWidth), 0, 0);
+							FlipPlayer ();
+							warping = true;
+						}
 					}
-					FlipPlayer ();
 				}
 			}
-			if(state.onGround && vWarp < 0) 
+			if(state.onGround && vWarp < 0)
 			{
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
-				Debug.Log (hit.collider);
 				if (hit.collider != null) {
 					Bounds hitBounds = hit.collider.bounds;
 					Vector3 size = hitBounds.size;
 
-					warpVector = new Vector3 (0, -size.y - playerHeight, 0);
+					if (size.y <= maxWarpDistance) {
+						warpVector = new Vector3 (0, -size.y - playerHeight, 0);
+						warping = true;
+					}
 				}
 			}
-			else if(state.onCeiling && vWarp > 0) 
+			else if(state.onCeiling && vWarp > 0)
 			{
 				RaycastHit2D hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 				if (hit.collider != null) {
 					Bounds hitBounds = hit.collider.bounds;
 					Vector3 size = hitBounds.size;
 
-					warpVector = new Vector3 (0, size.y + playerHeight, 0);
+					if (size.y <= maxWarpDistance) {
+						warpVector = new Vector3 (0, size.y + playerHeight, 0);
+						warping = true;
+					}
 				}
 			}
-		}
 	}
 
 
@@ -471,8 +477,6 @@ public class PlayerController : MonoBehaviour
 	public void Reset()
 	{
 		PlayerInputEnabled (true);
-		vAxis = 0;
-		hAxis = 0;
 		currentJumpSpeed = new Vector3 ();
 		currentSpeedVector = new Vector3 ();
 		transform.position = state.startPosition;

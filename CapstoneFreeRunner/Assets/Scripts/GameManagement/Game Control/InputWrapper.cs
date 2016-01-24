@@ -71,13 +71,13 @@ public class InputWrapper : MonoBehaviour {
 	private static float GetWarpHorizontalAxis()
 	{
 		float axis = Input.GetAxis ("WarpHorizontal");
-		return (axis >= axisActivationPoint) ? axis : 0;
+		return (axis >= axisActivationPoint || axis <= axisActivationPoint) ? axis : 0;
 	}
 
 	private static float GetWarpVerticalAxis()
 	{
 		float axis = Input.GetAxis ("WarpVertical");
-		return (axis >= axisActivationPoint) ? axis : 0;
+		return (axis >= axisActivationPoint || axis <= -axisActivationPoint) ? axis : 0;
 	}
 
 	public static bool GetMenuOpen()
