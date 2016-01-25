@@ -11,8 +11,10 @@ public class PlayerHealth : MonoBehaviour {
 		if (!invulnerable) {
 			if (hit || damage >= 2) {
 				UIManager.self.DisplayGameOverScreen ();
+				DeathZoom ();
 				PlayerController.PlayerInputEnabled(false);
 				SetInvulnerable(true);
+				return;
 			}
 			UIManager.self.DisplayHurtScreen ();
 			hit = true;
@@ -29,12 +31,12 @@ public class PlayerHealth : MonoBehaviour {
 		}
 	}
 
-	IEnumerator ZoomInCamera() {
-		for (float f = 0f; f <= 3f; f += 0.05f) {
-			CameraController.self.ZoomInCamera (f);
-			yield return null;
-		}
-		CameraController.self.RestoreSize ();
+	private void DeathZoom() {
+		CameraController.self.ZoomCamera(.2f, 40, -1);
+	}
+
+	private void IonBeamZoom() {
+		CameraController.self.ZoomCamera(.5f, 20, 20);
 	}
 		
 	public void PlayerDrainEnter()
@@ -43,7 +45,7 @@ public class PlayerHealth : MonoBehaviour {
 			PlayerController.state.drained = true;
 			UIManager.self.DisplayDisableScreen ();
 			PlayerAudioManager.self.PlayDisable ();
-			StartCoroutine ("ZoomInCamera");
+			IonBeamZoom ();
 		}
 	}
 
