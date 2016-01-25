@@ -14,13 +14,17 @@ public class CameraController : MonoBehaviour {
 	private float shakeOffsetY = 0;
 
 	private float speed;
-	private float size;
-	private float tempSize;
+	private float regularSize;
+
+	void Reset() {
+		if (GetComponent <Camera> ().orthographicSize != regularSize) {
+			StartCoroutine ("RestoreSize",20);
+		}
+	}
 
 	void Start () {
-		size = GetComponent <Camera>().orthographicSize;
-		speed = size * 3;
-		tempSize = size;
+		regularSize = GetComponent <Camera>().orthographicSize;
+		speed = regularSize * 3;
 		self = this;
 	}
 
@@ -29,24 +33,54 @@ public class CameraController : MonoBehaviour {
 		MoveCamera ();
 	}
 
-	public void ZoomInCamera(float amount)
+	float targetSize;
+	float dt;
+
+	/**
+	 * Zooms the camera by %1 percentage% over %2 time%, then restore over %3 time%
+	 * Example: to double size, percentage should be 2
+	 * time and rTime should be greater than one.
+	 **/
+	public void ZoomCamera(float percentage, float time, float rTime)
 	{
-		tempSize = size - amount;
-		GetComponent <Camera> ().orthographicSize = tempSize;
+		targetSize = regularSize * percentage;
+		dt = (targetSize - regularSize)/time;
+		Debug.Log (regularSize + " " + percentage + " " + targetSize + "  " + dt);
+		StartCoroutine ("ZoomCoroutine", rTime);
 	}
 
-	IEnumerator SizeRestore()
+	public void RestoreSize(float restoreTime)
 	{
-		while(tempSize < size) {
-			tempSize += .05f;
+		StartCoroutine ("RestoreCoroutine", restoreTime);
+	}
+
+	IEnumerator ZoomCoroutine(float restoreTime)
+	{
+		bool zooming = targetSize > regularSize;
+		float tempSize = regularSize;
+		while((zooming && tempSize < targetSize) || (!zooming && tempSize > targetSize)) {
+			tempSize += dt;
 			GetComponent <Camera> ().orthographicSize = tempSize;
 			yield return null;
 		}
+		if (restoreTime != -1) {
+			StartCoroutine ("RestoreCoroutine", restoreTime);
+		}
+		Debug.Log ("DONE");
 	}
 
-	public void RestoreSize()
+	IEnumerator RestoreCoroutine(float time)
 	{
-		StartCoroutine ("SizeRestore");
+		if (time == 0) {
+			GetComponent <Camera> ().orthographicSize = regularSize;
+			yield break;
+		}
+		float dt = (regularSize - targetSize)/time;
+		while(targetSize < regularSize) {
+			targetSize += dt;
+			GetComponent <Camera> ().orthographicSize = targetSize;
+			yield return null;
+		}
 	}
 
 	public void ShakeCamera(float amount)
