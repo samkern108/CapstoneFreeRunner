@@ -42,12 +42,12 @@ public class PlayerController : MonoBehaviour
 
 		public bool colliding()
 		{
-			return onGround || onCeiling || onWallFront || onCorner();
+			return onGround || onCeiling || onWallFront;// || onCorner();
 		}
 
 		public bool inAir()
 		{
-			return !colliding () && !fallingOffCeiling;//!(onGround || (onCeiling && !fallingOffCeiling) || (onWallFront));//&& !fallingOffWall));
+			return !colliding () || fallingOffCeiling;
 		}
 	}
 
@@ -85,6 +85,8 @@ public class PlayerController : MonoBehaviour
 				return;
 			}
 
+			Debug.Log (state.fallingOffCeiling + " " + state.inAir());
+
 			//4: Handle Regular Movement
 			if(boostTimer > 0) {
 				HandleBoost();
@@ -107,9 +109,9 @@ public class PlayerController : MonoBehaviour
 					if (jumpButtonDown) {
 						Jump ();
 					}
-				} else if (state.onCeiling) {
+				} else if (state.onCeiling && !state.fallingOffCeiling) {
 					MoveOnCeiling ();
-					if (jumpButtonDown) {
+					if (jumpButtonDown && vAxis < 0) {
 						JumpOffCeiling ();
 					}
 				} else if (state.inAir ()) {
@@ -123,10 +125,12 @@ public class PlayerController : MonoBehaviour
 
 			//5: Apply Movement Vectors to Transform
 			if(!boosting) {
-			//	ApplyJump ();
 				if (!canBoost && state.colliding()) {
 					canBoost = true;
 				}
+			}
+			if (state.jumping && state.colliding ()) {
+				state.jumping = false;
 			}
 			transform.position += currentSpeedVector * 50 * Time.deltaTime;
 			state.position = transform.position;
@@ -140,7 +144,7 @@ public class PlayerController : MonoBehaviour
 	private static Vector3 currentSpeedVector;
 	private float runSpeed = .2f, sprintSpeed = .4f;
 
-	private void MoveOnCorner()
+	/*private void MoveOnCorner()
 	{
 		if (state.onFloorCornerBack) {
 			
@@ -148,7 +152,7 @@ public class PlayerController : MonoBehaviour
 		} else if (state.onCeilingCornerBack) {
 		} else if (state.onCeilingCornerFront) {
 		}
-	}
+	}*/
 
 	private void MoveInAir()
 	{	
@@ -228,7 +232,6 @@ public class PlayerController : MonoBehaviour
 	{
 		if(state.leanOffWall) {
 			if(!state.jumping) {
-				//currentJumpSpeed.y = jumpSpeed * vAxis; //## This should allow us to jump sideways, up, or in a downward arc.
 				currentSpeedVector.y = jumpSpeed * vAxis;
 				currentSpeedVector.x = Mathf.Sign(hAxis) * runSpeed;
 				state.jumping = true;
@@ -240,7 +243,6 @@ public class PlayerController : MonoBehaviour
 	{
 		if (state.onGround) {
 			if(!state.jumping) {
-				//currentJumpSpeed.y = jumpSpeed;
 				currentSpeedVector.y = jumpSpeed;
 				state.jumping = true;
 			}
@@ -251,21 +253,16 @@ public class PlayerController : MonoBehaviour
 	{
 		currentSpeedVector.y -= gravityFactor;
 
-		if(currentSpeedVector.y < terminalVelocity) 	
+		if (currentSpeedVector.y < terminalVelocity)
 			currentSpeedVector.y = terminalVelocity;
 
-		//##POTENTIAL BUG: What happens if we're falling off the ceiling onto a wall and never stop colliding?
-		if (!state.colliding()) {
+		if (!state.onCeiling) {
 			state.fallingOffCeiling = false;
 		}
 	}
 
-	private void ApplyJump()
+	/*private void ApplyJump()
 	{
-		if (state.colliding ()) {
-			state.jumping = false;
-		}
-		/*
 //		currentSpeedVector.y = currentJumpSpeed.y;
 		if (state.jumping) {
 //			currentJumpSpeed.y -= .01f;
@@ -282,8 +279,8 @@ public class PlayerController : MonoBehaviour
 		if (currentJumpSpeed.y < 0) {
 			state.jumping = false;
 			currentJumpSpeed.y = 0;
-		}*/
-	}
+		}
+	}*/
 
 	//## BOOSTING ##
 
