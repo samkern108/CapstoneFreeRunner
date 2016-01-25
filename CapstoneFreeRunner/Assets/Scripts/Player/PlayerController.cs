@@ -24,6 +24,7 @@ public class PlayerController : MonoBehaviour
 		public bool onFloorCornerBack;
 
 		public bool fallingOffCeiling;
+		public bool fallingOffWall;
 
 		//## WARPING ##//
 		public bool drained;
@@ -47,7 +48,7 @@ public class PlayerController : MonoBehaviour
 
 		public bool inAir()
 		{
-			return !colliding () || fallingOffCeiling;
+			return !colliding () || fallingOffCeiling || fallingOffWall;
 		}
 	}
 
@@ -84,8 +85,6 @@ public class PlayerController : MonoBehaviour
 				} 
 				return;
 			}
-
-			Debug.Log (state.fallingOffCeiling + " " + state.inAir());
 
 			//4: Handle Regular Movement
 			if(boostTimer > 0) {
@@ -198,6 +197,13 @@ public class PlayerController : MonoBehaviour
 
 	private void HandleOnWallFront ()
 	{
+		if (state.fallingOffWall) {
+			if ((hAxis > 0 && state.facingRight) || (hAxis < 0 && !state.facingRight)) {
+				state.fallingOffWall = false;
+			} else {
+				return;
+			}
+		}
 		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight)) {
 			state.leanOffWall = true;
 		}
@@ -230,12 +236,14 @@ public class PlayerController : MonoBehaviour
 
 	private void JumpOffWalls()
 	{
-		if(state.leanOffWall) {
-			if(!state.jumping) {
-				currentSpeedVector.y = jumpSpeed * vAxis;
-				currentSpeedVector.x = Mathf.Sign(hAxis) * runSpeed;
+		if (state.leanOffWall) {
+			if (!state.jumping) {
+				currentSpeedVector.y = jumpSpeed * vAxis + (Mathf.Abs(hAxis));
+				currentSpeedVector.x = Mathf.Sign (hAxis) * runSpeed;
 				state.jumping = true;
 			}
+		} else {
+			//state.fallingOffWall = true;
 		}
 	}
 
@@ -256,8 +264,14 @@ public class PlayerController : MonoBehaviour
 		if (currentSpeedVector.y < terminalVelocity)
 			currentSpeedVector.y = terminalVelocity;
 
+		//Debug.Log ("APPLYING GRAVITY");
 		if (!state.onCeiling) {
 			state.fallingOffCeiling = false;
+		} 
+		//Debug.Log (state.onCeiling + "  " + state.onGround);
+		if (state.onCeiling || state.onGround) {
+			state.fallingOffWall = false;
+			Debug.Log ("HELLO");
 		}
 	}
 
