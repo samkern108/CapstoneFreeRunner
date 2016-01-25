@@ -52,6 +52,12 @@ public class PlayerHealth : MonoBehaviour {
 		Invoke ("ChargeUp", timer);
 	}
 
+	public void OnTriggerExit2D(Collider2D other) {
+		if(other.gameObject.tag == "PlayableArea"){
+			PlayerHit(2);
+		}
+	}
+
 	private void ChargeUp()
 	{
 		PlayerController.state.drained = false;
