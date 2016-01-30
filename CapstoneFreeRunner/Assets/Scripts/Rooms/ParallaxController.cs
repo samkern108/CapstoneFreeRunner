@@ -14,6 +14,6 @@ public class ParallaxController : MonoBehaviour {
 	}
 
 	void Update () {
-		transform.position = new Vector3(PlayerController.state.position.x, PlayerController.state.position.y, 20);
+		transform.position = new Vector3(PlayerController.PlayerPosition().x, PlayerController.PlayerPosition().y, 20);
 	}
 }

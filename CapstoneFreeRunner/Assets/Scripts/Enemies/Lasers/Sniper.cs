@@ -69,7 +69,7 @@ public class Sniper : MonoBehaviour {
 
 	void RayCast(){
 
-		Vector3 dir = (PlayerController.state.position - transform.position).normalized;		
+		Vector2 dir = (PlayerController.PlayerPosition() - transform.position).normalized;		
 		Ray2D ray = new Ray2D(transform.position, dir);
 		RaycastHit2D[] hitList = Physics2D.RaycastAll(ray.origin, ray.direction, sightLength);
 		

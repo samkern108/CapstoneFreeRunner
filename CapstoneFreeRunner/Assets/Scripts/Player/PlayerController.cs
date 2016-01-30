@@ -5,20 +5,22 @@ public class PlayerController : MonoBehaviour
 {
 	public Transform playerStartPosition;
 	public static GameObject player;
+	public static Transform staticTransform;
 
+	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
 	public static PlayerState state;
 	public class PlayerState
 	{
 		//## POSITION ##//
-	 	public Vector3 position;
-		public Vector3 startPosition;
+		public Vector3 respawnPosition;
 
 		//## RAYCASTING ##//
 		public bool onWallBack;
 		public bool onWallFront;
 		public bool onCeiling;
 		public bool onGround;
-		public bool onCorner;
+
+		public Corner collidingCorner;
 
 		public bool fallingOffCeiling;
 		public bool fallingOffWall;
@@ -33,14 +35,19 @@ public class PlayerController : MonoBehaviour
 
 		public bool facingRight;
 
-		public bool colliding()
+		public bool OnCorner()
 		{
-			return onGround || onCeiling || onWallFront || onCorner;
+			return (collidingCorner != Corner.noCorner);
 		}
 
-		public bool inAir()
+		public bool Colliding()
 		{
-			return !colliding () || fallingOffCeiling || fallingOffWall;
+			return onGround || onCeiling || onWallFront || OnCorner();
+		}
+
+		public bool InAir()
+		{
+			return !Colliding () || fallingOffCeiling || fallingOffWall;
 		}
 	}
 
@@ -72,8 +79,8 @@ public class PlayerController : MonoBehaviour
 				if (warpVector.x != 0 || warpVector.y != 0) {
 					transform.position += warpVector;
 					warpVector = new Vector3 ();
-					state.position = transform.position;
-					Animate ();
+					//animator.SetTrigger();
+					//animator.ResetTrigger ();
 				} 
 				return;
 			}
@@ -83,11 +90,11 @@ public class PlayerController : MonoBehaviour
 				HandleBoost();
 			}
 			else {
-				if (state.onCorner) {
+				if (state.OnCorner()) {
 					MoveOnCorner ();
-					Animate ();
 					transform.position += currentSpeedVector * 50 * Time.deltaTime;
-					state.position = transform.position;
+					//animator.SetTrigger();
+					//animator.ResetTrigger ();
 					return;
 				}
 				else if (state.onWallFront) {
@@ -109,7 +116,7 @@ public class PlayerController : MonoBehaviour
 					if (jumpButtonDown && vAxis < 0) {
 						JumpOffCeiling ();
 					}
-				} else if (state.inAir ()) {
+				} else if (state.InAir ()) {
 					MoveInAir ();
 					ApplyGravity ();
 					if (jumpButtonDown) {
@@ -123,15 +130,14 @@ public class PlayerController : MonoBehaviour
 
 			 //6: Apply Movement Vectors to Transform
 			if(!boosting) {
-				if (!canBoost && state.colliding()) {
+				if (!canBoost && state.Colliding()) {
 					canBoost = true;
 				}
 			}
-			if (state.jumping && state.colliding ()) {
+			if (state.jumping && state.Colliding ()) {
 				state.jumping = false;
 			}
 			transform.position += currentSpeedVector * 50 * Time.deltaTime;
-			state.position = transform.position;
 		}
 	}
 
@@ -139,44 +145,100 @@ public class PlayerController : MonoBehaviour
 	private static Vector3 currentSpeedVector;
 	private float runSpeed = .2f, sprintSpeed = .4f;
 
-	//0: FCB
-	//1: FCF
-	//2: CCB
-	//3: CCF
+
+
+	float x, y;
+	Vector2 checkerX, checkerY, cornerChecker;
+
+	//0: move 				(1 : yes, -1 : no)
+	//0: reverse X 			(1 : *, -1 : *)
+	//1: reverse Y 			(1 : *, -1 : *)
+	//2: primary direction 	(1 : x, -1 : y)
+	short[] cornerMoveData = new short[4];
 
 	private void MoveOnCorner()
 	{
 		currentSpeedVector = new Vector3 ();
 
-		switch (cornerColType) {
-		case 0:
+		//Debug.Log (state.collidingCorner);
+
+		switch (state.collidingCorner) {
+		case Corner.bottomBack:
 			if (vAxis < .3f) {
-				transform.position += new Vector3 (0, vAxis, 0);
+				cornerMoveData = new short[4]{1, 1, -1, -1};
+				FlipPlayer ();
+				cornerChecker = floorCornerCheckBack.position;
+				checkerX = groundChecker.position;
+				checkerY = wallCheckerBottomBack.position;
 			} else if ((hAxis > 3f && !state.facingRight) || (hAxis < -.3f && state.facingRight)) {
-				transform.position += new Vector3 (hAxis, 0, 0);
+				cornerMoveData = new short[4]{1, -1, 1, 1};
+				cornerChecker = floorCornerCheckBack.position;
+				checkerX = groundChecker.position;
+				checkerY = wallCheckerBottomBack.position;
 			}
 			break;
-		case 1:
+		case Corner.bottomFront:
 			if (vAxis < .3f) {
-				transform.position += new Vector3 (0, vAxis, 0);
+				cornerMoveData = new short[4]{1, -1, -1, -1};
+				cornerChecker = floorCornerCheckFront.position;
+				checkerX = groundChecker.position;
+				checkerY = wallCheckerBottom.position;
 			} else if ((hAxis < -.3f && !state.facingRight) || (hAxis > .3f && state.facingRight)) {
-				transform.position += new Vector3 (hAxis, 0, 0);
+				cornerMoveData = new short[4]{1, 1, 1, 1};
+				cornerChecker = floorCornerCheckFront.position;
+				checkerX = groundChecker.position;
+				checkerY = wallCheckerBottom.position;
 			}
 			break;
-		case 2:
+		case Corner.topBack:
 			if (vAxis > .3f) {
-				transform.position += new Vector3 (0, vAxis, 0);
+				FlipPlayer ();
+				cornerMoveData = new short[4]{1, 1, 1, -1};
+				cornerChecker = ceilingCornerCheckBack.position;
+				checkerX = ceilingChecker.position;
+				checkerY = wallCheckerTopBack.position;
 			} else if ((hAxis > .3f && !state.facingRight) || (hAxis < -.3f && state.facingRight)) {
-				transform.position += new Vector3 (hAxis, 0, 0);
+				cornerMoveData = new short[4]{1, -1, -1, 1};
+				cornerChecker = ceilingCornerCheckBack.position;
+				checkerX = ceilingChecker.position;
+				checkerY = wallCheckerTopBack.position;
 			}
 			break;
-		case 3:
+		case Corner.topFront:
 			if (vAxis > .3f) {
-				transform.position += new Vector3 (0, vAxis, 0);
+				cornerMoveData = new short[4]{ 1, -1, 1, -1 };
+				cornerChecker = ceilingCornerCheckFront.position;
+				checkerX = ceilingChecker.position;
+				checkerY = wallCheckerTop.position;
 			} else if ((hAxis < -.3f && !state.facingRight) || (hAxis > .3f && state.facingRight)) {
-				transform.position += new Vector3 (hAxis, 0, 0);
+				cornerMoveData = new short[4]{ 1, 1, -1, 1 };
+				cornerChecker = ceilingCornerCheckFront.position;
+				checkerX = ceilingChecker.position;
+				checkerY = wallCheckerTop.position;
 			}
 			break;
+		}
+
+		if(cornerMoveData[0] == 1) {
+			float distanceX = Physics2D.Linecast (checkerX, cornerChecker, 1 << LayerMask.NameToLayer ("Wall")).distance;
+			float distanceY = Physics2D.Linecast (checkerY, cornerChecker, 1 << LayerMask.NameToLayer ("Wall")).distance;
+
+			switch(cornerMoveData[3])
+			{
+			case 1: //moving primarily in x
+				distanceX = Vector2.Distance (checkerX, cornerChecker) - distanceX;
+				distanceY = 0;
+				break;
+			case -1: //moving primarily in y
+				distanceY = Vector2.Distance (checkerY, cornerChecker) - distanceY;
+				//distanceX = 0;
+				break;
+			}
+
+			Debug.Log (cornerMoveData[0] + " " + cornerMoveData[1] + " " + cornerMoveData[2] + " " + cornerMoveData[3] + "  " + distanceX + "  " + distanceY);
+
+			transform.position += new Vector3 (cornerMoveData[1] * distanceX * (state.facingRight ? 1 : -1), cornerMoveData[2] * distanceY, 0);
+			cornerMoveData [0] = -1;
 		}
 	}
 
@@ -315,7 +377,7 @@ public class PlayerController : MonoBehaviour
 	{
 		boostTimer -= Time.deltaTime;
 
-		if (state.colliding()) {
+		if (state.Colliding()) {
 			boosting = false;
 			boostTimer = 0f;
 			currentSpeedVector = new Vector3();
@@ -354,7 +416,6 @@ public class PlayerController : MonoBehaviour
 	public Transform ceilingCornerCheckFront;
 
 	private RaycastHit2D cornerHit;
-	private int cornerColType = -1;
 
 	private void Linecasts()
 	{
@@ -383,27 +444,26 @@ public class PlayerController : MonoBehaviour
 
 		if (!state.onCeiling && !state.onWallBack && !state.onWallFront && !state.onGround) {
 			cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-			cornerColType = 0;
+			state.collidingCorner = Corner.bottomBack;
 
 			//This code is so ugly it makes my brain spasm
 			if (cornerHit.collider == null) {
 				cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-				cornerColType = 1;
+				state.collidingCorner = Corner.bottomFront;
 			}
 			if (cornerHit.collider == null) {
 				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-				cornerColType = 2;
+				state.collidingCorner = Corner.topBack;
 			}
 			if (cornerHit.collider == null) {
 				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-				cornerColType = 3;
+				state.collidingCorner = Corner.topFront;
 			}
 			if (cornerHit.collider != null) {
-				state.onCorner = true;
 				return;
 			}
 		}
-		state.onCorner = false;
+		state.collidingCorner = Corner.noCorner;
 	}
 
 	void OnCollisionEnter2D (Collision2D collision) {
@@ -420,7 +480,7 @@ public class PlayerController : MonoBehaviour
 	private void Animate()
 	{
 		int newState = animState;
-		if (state.onCorner) {
+		if (state.OnCorner()) {
 			animState = 10;
 		}
 		else if (state.onGround) {
@@ -523,16 +583,16 @@ public class PlayerController : MonoBehaviour
 		state = new PlayerState ();
 		state.facingRight = true;
 		Reset ();
-		state.startPosition = playerStartPosition.position;
+		state.respawnPosition = playerStartPosition.position;
 		player = this.gameObject;
+		staticTransform = this.transform;
 	}
 
 	public void Reset()
 	{
 		PlayerInputEnabled (true);
 		currentSpeedVector = new Vector3 ();
-		transform.position = state.startPosition;
-		state.position = transform.position;
+		transform.position = state.respawnPosition;
 	}
 
 	//## INPUT ##//
@@ -545,5 +605,9 @@ public class PlayerController : MonoBehaviour
 			currentSpeedVector = new Vector3();
 		}
 	}
-} 
 
+	public static Vector3 PlayerPosition()
+	{
+		return staticTransform.position;
+	}
+} 

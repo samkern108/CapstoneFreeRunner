@@ -91,7 +91,7 @@ public class CameraController : MonoBehaviour {
 
 	void MoveCamera() 
 	{
-		transform.position = new Vector3(PlayerController.state.position.x + shakeOffsetX, PlayerController.state.position.y + shakeOffsetY, -9);
+		transform.position = new Vector3(PlayerController.PlayerPosition().x + shakeOffsetX, PlayerController.PlayerPosition().y + shakeOffsetY, -9);
 	}
 
 	/*void Update () {

@@ -26,7 +26,7 @@ public class Laser : MonoBehaviour {
 	}
 
 	void Update () {
-		dist = Vector2.Distance (transform.position, PlayerController.state.position);
+		dist = Vector2.Distance (transform.position, PlayerController.PlayerPosition());
 		if (dist < maxDist) {
 			if (disabled) {
 				AS.enabled = true;

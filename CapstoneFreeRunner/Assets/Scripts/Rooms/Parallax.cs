@@ -24,8 +24,8 @@ public class Parallax : MonoBehaviour {
 	}
 		
 	void Update () {
-		offsetX = offsetAmountX * (initialPosition.x - PlayerController.state.position.x);
-		offsetY = offsetAmountY * Mathf.Abs((initialPosition.y - PlayerController.state.position.y));
+		offsetX = offsetAmountX * (initialPosition.x - PlayerController.PlayerPosition().x);
+		offsetY = offsetAmountY * Mathf.Abs((initialPosition.y - PlayerController.PlayerPosition().y));
 
 		this.transform.localPosition = new Vector3(offsetX, -offsetY, zPos);
 	}
