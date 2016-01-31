@@ -74,14 +74,16 @@ public class PlayerController : MonoBehaviour
 			Linecasts();
 
 			//3: Handle Warping
-			if (!state.drained && (vWarp != 0 || hWarp != 0)) {
+			if ((vWarp != 0 || hWarp != 0) && !state.drained) {
 				HandleWarp ();
 				if (warpVector.x != 0 || warpVector.y != 0) {
 					transform.position += warpVector;
 					warpVector = new Vector3 ();
 					//animator.SetTrigger();
 					//animator.ResetTrigger ();
-				} 
+				} else {
+					Debug.Log ("Can't warp right now!");
+				}
 				return;
 			}
 
@@ -95,7 +97,6 @@ public class PlayerController : MonoBehaviour
 					transform.position += currentSpeedVector * 50 * Time.deltaTime;
 					//animator.SetTrigger();
 					//animator.ResetTrigger ();
-					return;
 				}
 				else if (state.onWallFront) {
 					HandleOnWallFront ();
@@ -113,7 +114,7 @@ public class PlayerController : MonoBehaviour
 					}
 				} else if (state.onCeiling && !state.fallingOffCeiling) {
 					MoveOnCeiling ();
-					if (jumpButtonDown && vAxis < 0) {
+					if (jumpButtonDown) {
 						JumpOffCeiling ();
 					}
 				} else if (state.InAir ()) {
@@ -134,9 +135,6 @@ public class PlayerController : MonoBehaviour
 					canBoost = true;
 				}
 			}
-			if (state.jumping && state.Colliding ()) {
-				state.jumping = false;
-			}
 			transform.position += currentSpeedVector * 50 * Time.deltaTime;
 		}
 	}
@@ -144,8 +142,6 @@ public class PlayerController : MonoBehaviour
 	//## RUNNING ##//
 	private static Vector3 currentSpeedVector;
 	private float runSpeed = .2f, sprintSpeed = .4f;
-
-
 
 	float x, y;
 	Vector2 checkerX, checkerY, cornerChecker;
@@ -296,7 +292,7 @@ public class PlayerController : MonoBehaviour
 		}
 
 		float verticalSpeed = 0;
-		if ((hAxis > .5f && !state.facingRight) || (hAxis < -.5f && state.facingRight)) {
+		if ((hAxis > .3f && !state.facingRight) || (hAxis < -.3f && state.facingRight)) {
 			 state.leanOffWall = true;
 		} else {
 			state.leanOffWall = false;
@@ -311,7 +307,7 @@ public class PlayerController : MonoBehaviour
 	//## JUMPING ##//
 	private bool jumpButtonDown = false;
 	private float jumpSpeed = .45f;
-	private float jumpArc = .35f;
+	private float jumpArc = .25f;
 
 	//## FALLING ##//
 	private float terminalVelocity = -.8f, gravityFactor = .02f;
@@ -319,17 +315,13 @@ public class PlayerController : MonoBehaviour
 	private void JumpOffCeiling()
 	{
 		state.fallingOffCeiling = true;
-		canBoost = true;
 	}
 
 	private void JumpOffWalls()
 	{
 		if (state.leanOffWall) {
-			if (!state.jumping) {
-				currentSpeedVector.y = (Mathf.Abs(vAxis) > .8f ? Mathf.Sign(vAxis)*jumpArc : 0);
+				currentSpeedVector.y = jumpArc;
 				currentSpeedVector.x = Mathf.Sign(hAxis) * jumpSpeed;
-				state.jumping = true;
-			}
 		} else {
 			//transform.position += new Vector3 ((state.facingRight ? -1 : 1), 0, 0);
 			//state.fallingOffWall = true;
@@ -338,9 +330,8 @@ public class PlayerController : MonoBehaviour
 
 	private void Jump()
 	{
-		if (state.onGround && !state.jumping) {
+		if (state.onGround) {
 			currentSpeedVector.y = jumpSpeed;
-			state.jumping = true;
 		}
 	}
 
@@ -348,13 +339,16 @@ public class PlayerController : MonoBehaviour
 	{
 		currentSpeedVector.y -= gravityFactor;
 
+		if (currentSpeedVector.y > 0 && InputWrapper.GetAbortJump()) {
+			currentSpeedVector.y /= 2;
+		}
 		if (currentSpeedVector.y < terminalVelocity)
 			currentSpeedVector.y = terminalVelocity;
 
-		if (state.fallingOffCeiling && !state.onCeiling) {
+		if (state.fallingOffCeiling) {
 			state.fallingOffCeiling = false;
 		} 
-		else if (state.fallingOffWall && state.onCeiling || state.onGround) {
+		else if (state.fallingOffWall) {
 			state.fallingOffWall = false;
 		}
 	}
