@@ -29,11 +29,18 @@ public class PlayerController : MonoBehaviour
 		public bool drained;
 
 		//## JUMPING AND FALLING ##//
-		public bool jumping;
 		public bool leanOffWall;
 		public bool sprintButton;
 
 		public bool facingRight;
+
+		/**
+		 * true: returns 1 if facing right, -1 if facing left
+		 * false: returns 1 if facing left, -1 if facing right
+		 **/
+		public int FacingRight(bool right) {
+			return (right == facingRight) ? 1 : -1;
+		}
 
 		public bool OnCorner()
 		{
@@ -60,7 +67,7 @@ public class PlayerController : MonoBehaviour
 
 	void Update () 
 	{
-		if (playerInputEnabled) 
+		if (PlayerInputEnabled) 
 		{
 			//1: Update Input Values
 			vAxis = InputWrapper.GetVerticalAxis ();
@@ -78,7 +85,6 @@ public class PlayerController : MonoBehaviour
 				HandleWarp ();
 				if (warpVector.x != 0 || warpVector.y != 0) {
 					transform.position += warpVector;
-					warpVector = new Vector3 ();
 					//animator.SetTrigger();
 					//animator.ResetTrigger ();
 				} else {
@@ -166,7 +172,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = floorCornerCheckBack.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottomBack.position;
-			} else if ((hAxis > 3f && !state.facingRight) || (hAxis < -.3f && state.facingRight)) {
+			} else if (state.FacingRight(false) * hAxis > 3f) {
 				cornerMoveData = new short[4]{1, -1, 1, 1};
 				cornerChecker = floorCornerCheckBack.position;
 				checkerX = groundChecker.position;
@@ -179,7 +185,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = floorCornerCheckFront.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottom.position;
-			} else if ((hAxis < -.3f && !state.facingRight) || (hAxis > .3f && state.facingRight)) {
+			} else if ((state.FacingRight(true) * hAxis) > .3f) {
 				cornerMoveData = new short[4]{1, 1, 1, 1};
 				cornerChecker = floorCornerCheckFront.position;
 				checkerX = groundChecker.position;
@@ -193,7 +199,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = ceilingCornerCheckBack.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTopBack.position;
-			} else if ((hAxis > .3f && !state.facingRight) || (hAxis < -.3f && state.facingRight)) {
+			} else if ((state.FacingRight(false) * hAxis) > .3f) {
 				cornerMoveData = new short[4]{1, -1, -1, 1};
 				cornerChecker = ceilingCornerCheckBack.position;
 				checkerX = ceilingChecker.position;
@@ -206,7 +212,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = ceilingCornerCheckFront.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTop.position;
-			} else if ((hAxis < -.3f && !state.facingRight) || (hAxis > .3f && state.facingRight)) {
+			} else if ((state.FacingRight(true) * hAxis) > .3f) {
 				cornerMoveData = new short[4]{ 1, 1, -1, 1 };
 				cornerChecker = ceilingCornerCheckFront.position;
 				checkerX = ceilingChecker.position;
@@ -230,10 +236,7 @@ public class PlayerController : MonoBehaviour
 				//distanceX = 0;
 				break;
 			}
-
-			Debug.Log (cornerMoveData[0] + " " + cornerMoveData[1] + " " + cornerMoveData[2] + " " + cornerMoveData[3] + "  " + distanceX + "  " + distanceY);
-
-			transform.position += new Vector3 (cornerMoveData[1] * distanceX * (state.facingRight ? 1 : -1), cornerMoveData[2] * distanceY, 0);
+			transform.position += new Vector3 (cornerMoveData[1] * distanceX * state.FacingRight(true), cornerMoveData[2] * distanceY, 0);
 			cornerMoveData [0] = -1;
 		}
 	}
@@ -248,7 +251,7 @@ public class PlayerController : MonoBehaviour
 		if (state.onGround && !state.onWallFront)
 			currentSpeedVector.y = 0;
 
-		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight))
+		if ((state.FacingRight(false) * hAxis) > 0f)
 			FlipPlayer ();
 
 		if (state.onWallFront) {
@@ -261,7 +264,7 @@ public class PlayerController : MonoBehaviour
 
 	private void MoveOnCeiling()
 	{
-		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight))
+		if ((state.FacingRight(false) * hAxis) > 0f)
 			FlipPlayer ();
 
 		if (state.onWallFront) {
@@ -274,7 +277,7 @@ public class PlayerController : MonoBehaviour
 
 	private void HandleOnWallBack()
 	{
-		if ((currentSpeedVector.x < 0 && state.facingRight) || (currentSpeedVector.x > 0 && state.facingRight)) {
+		if (currentSpeedVector.x  * state.FacingRight(false) > 0) {
 			currentSpeedVector.x = 0;
 			FlipPlayer ();
 		}
@@ -283,7 +286,7 @@ public class PlayerController : MonoBehaviour
 	private void HandleOnWallFront ()
 	{
 		if (state.fallingOffWall) {
-			if ((hAxis > 0 && state.facingRight) || (hAxis < 0 && !state.facingRight) || state.onGround || state.onCeiling) {
+			if ((hAxis * state.FacingRight(true) > 0) || state.onGround || state.onCeiling) {
 				state.fallingOffWall = false;
 			} 
 			else {
@@ -292,7 +295,7 @@ public class PlayerController : MonoBehaviour
 		}
 
 		float verticalSpeed = 0;
-		if ((hAxis > .3f && !state.facingRight) || (hAxis < -.3f && state.facingRight)) {
+		if (hAxis * state.FacingRight(false) > .3f) {
 			 state.leanOffWall = true;
 		} else {
 			state.leanOffWall = false;
@@ -378,7 +381,7 @@ public class PlayerController : MonoBehaviour
 			return;
 		}
 
-		if ((hAxis > 0 && !state.facingRight) || (hAxis < 0 && state.facingRight))
+		if (hAxis * state.FacingRight(false) > 0)
 			FlipPlayer ();
 
 		currentSpeedVector = boostSpeed * new Vector3 (hAxis != 0 ? 1 * Mathf.Sign (hAxis) : 0, vAxis != 0 ? 1 * Mathf.Sign (vAxis) : 0, 0).normalized;
@@ -525,24 +528,19 @@ public class PlayerController : MonoBehaviour
 
 	private void HandleWarp() 
 	{
-		if(state.onWallFront) 
-			{
+		if(state.onWallFront && state.FacingRight(true) * hWarp > .3f) 
+		{
 			RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 			if (hit.collider != null) {
 				Bounds hitBounds = hit.collider.bounds;
 				Vector3 size = hitBounds.size;
 
 				if (size.x <= maxWarpDistance) {
-					if (state.facingRight && hWarp > 0) { 
-						warpVector = new Vector3 (size.x + playerWidth, 0, 0);
-						FlipPlayer ();
-					} else if (!state.facingRight && hWarp < 0) { 
-						warpVector = new Vector3 (-(size.x + playerWidth), 0, 0);
-						FlipPlayer ();
-						}
-					}
+					warpVector = new Vector3 (state.FacingRight(true) * (size.x + playerWidth), 0, 0);
+					FlipPlayer ();
 				}
 			}
+		}
 		if(state.onGround && vWarp < 0)
 		{
 			RaycastHit2D hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
@@ -570,7 +568,7 @@ public class PlayerController : MonoBehaviour
 	}
 
 
-	//## GAME CONTROL ##//
+	//## INITIALIZING THE CONTROLLER ##//
 	void Start()
 	{
 		animator = this.GetComponent<Animator>();
@@ -578,30 +576,41 @@ public class PlayerController : MonoBehaviour
 		state.facingRight = true;
 		Reset ();
 		state.respawnPosition = playerStartPosition.position;
-		player = this.gameObject;
-		staticTransform = this.transform;
+		PlayerTransform = this.transform;
+		Player = this.gameObject;
+
 	}
 
 	public void Reset()
 	{
-		PlayerInputEnabled (true);
+		PlayerInputEnabled = true;
 		currentSpeedVector = new Vector3 ();
 		transform.position = state.respawnPosition;
 	}
 
 	//## INPUT ##//
-	private static bool playerInputEnabled = true;
-
-	public static void PlayerInputEnabled(bool enabled)
+	private static bool _playerInputEnabled = true;
+	public static bool PlayerInputEnabled
 	{
-		playerInputEnabled = enabled;
-		if(!playerInputEnabled) {
-			currentSpeedVector = new Vector3();
-		}
+		get { return _playerInputEnabled; } 
+		set {_playerInputEnabled = value; if (!_playerInputEnabled)
+				currentSpeedVector = new Vector3 ();}
+	}
+		
+	//## STATIC REFERENCES TO PLAYER ##//
+	private static Transform _playerTransform;
+	public static Transform PlayerTransform
+	{
+		set { if(_playerTransform == null) _playerTransform = value; }
+	}
+	public static Vector3 PlayerPosition {
+		get { return _playerTransform.position; }
 	}
 
-	public static Vector3 PlayerPosition()
+	private static GameObject _player;
+	public static GameObject Player
 	{
-		return staticTransform.position;
+		set { if(_player == null) _player = value; }
+		get { return _player; }
 	}
 } 

@@ -45,7 +45,6 @@ public class CameraController : MonoBehaviour {
 	{
 		targetSize = regularSize * percentage;
 		dt = (targetSize - regularSize)/time;
-		Debug.Log (regularSize + " " + percentage + " " + targetSize + "  " + dt);
 		StartCoroutine ("ZoomCoroutine", rTime);
 	}
 
@@ -90,7 +89,7 @@ public class CameraController : MonoBehaviour {
 
 	void MoveCamera() 
 	{
-		transform.position = new Vector3(PlayerController.PlayerPosition().x + shakeOffsetX, PlayerController.PlayerPosition().y + shakeOffsetY, -9);
+		transform.position = new Vector3(PlayerController.PlayerPosition.x + shakeOffsetX, PlayerController.PlayerPosition.y + shakeOffsetY, -9);
 	}
 
 	/*void Update () {

@@ -29,7 +29,7 @@ public class IonLaser : MonoBehaviour {
 	}
 
 	void Update () {
-		dist = Vector2.Distance (transform.position, PlayerController.PlayerPosition());
+		dist = Vector2.Distance (transform.position, PlayerController.PlayerPosition);
 		if (dist < maxDist) {
 			if (disabled) {
 				AS.enabled = true;
@@ -74,7 +74,7 @@ public class IonLaser : MonoBehaviour {
 				} else {
 					if(playerInLaser){
 						playerInLaser = false;
-						PlayerController.player.SendMessage ("PlayerDrainLeave",2);
+						PlayerController.Player.SendMessage ("PlayerDrainLeave",2);
 					}
 				}
 

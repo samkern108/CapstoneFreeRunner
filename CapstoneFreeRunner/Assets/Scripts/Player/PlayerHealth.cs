@@ -12,7 +12,7 @@ public class PlayerHealth : MonoBehaviour {
 			if (hit || damage >= 2) {
 				UIManager.self.DisplayGameOverScreen ();
 				DeathZoom ();
-				PlayerController.PlayerInputEnabled(false);
+				PlayerController.PlayerInputEnabled = false;
 				SetInvulnerable(true);
 				return;
 			}
