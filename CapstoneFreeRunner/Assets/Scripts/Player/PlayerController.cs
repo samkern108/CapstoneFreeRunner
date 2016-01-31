@@ -4,8 +4,6 @@ using System.Collections;
 public class PlayerController : MonoBehaviour 
 {
 	public Transform playerStartPosition;
-	public static GameObject player;
-	public static Transform staticTransform;
 
 	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
 	public static PlayerState state;
@@ -40,6 +38,13 @@ public class PlayerController : MonoBehaviour
 		 **/
 		public int FacingRight(bool right) {
 			return (right == facingRight) ? 1 : -1;
+		}
+
+		/**
+		 * Returns true if the player is moving right (true) or left (false).
+		 **/
+		public bool ValueInDirection(float value, float comparison, bool right) {
+			return ((facingRight == right) ? 1 : -1) * value > comparison;
 		}
 
 		public bool OnCorner()
@@ -172,7 +177,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = floorCornerCheckBack.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottomBack.position;
-			} else if (state.FacingRight(false) * hAxis > 3f) {
+			} else if (state.ValueInDirection(hAxis, .3f, false)) {
 				cornerMoveData = new short[4]{1, -1, 1, 1};
 				cornerChecker = floorCornerCheckBack.position;
 				checkerX = groundChecker.position;
@@ -185,7 +190,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = floorCornerCheckFront.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottom.position;
-			} else if ((state.FacingRight(true) * hAxis) > .3f) {
+			} else if (state.ValueInDirection(hAxis, .3f, true)) {
 				cornerMoveData = new short[4]{1, 1, 1, 1};
 				cornerChecker = floorCornerCheckFront.position;
 				checkerX = groundChecker.position;
@@ -199,7 +204,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = ceilingCornerCheckBack.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTopBack.position;
-			} else if ((state.FacingRight(false) * hAxis) > .3f) {
+			} else if (state.ValueInDirection(hAxis, .3f, false)) {
 				cornerMoveData = new short[4]{1, -1, -1, 1};
 				cornerChecker = ceilingCornerCheckBack.position;
 				checkerX = ceilingChecker.position;
@@ -212,7 +217,7 @@ public class PlayerController : MonoBehaviour
 				cornerChecker = ceilingCornerCheckFront.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTop.position;
-			} else if ((state.FacingRight(true) * hAxis) > .3f) {
+			} else if (state.ValueInDirection(hAxis, .3f, true)) {
 				cornerMoveData = new short[4]{ 1, 1, -1, 1 };
 				cornerChecker = ceilingCornerCheckFront.position;
 				checkerX = ceilingChecker.position;
@@ -251,7 +256,7 @@ public class PlayerController : MonoBehaviour
 		if (state.onGround && !state.onWallFront)
 			currentSpeedVector.y = 0;
 
-		if ((state.FacingRight(false) * hAxis) > 0f)
+		if (state.ValueInDirection(hAxis, 0f, false))
 			FlipPlayer ();
 
 		if (state.onWallFront) {
@@ -264,7 +269,7 @@ public class PlayerController : MonoBehaviour
 
 	private void MoveOnCeiling()
 	{
-		if ((state.FacingRight(false) * hAxis) > 0f)
+		if (state.ValueInDirection(hAxis, 0f, false))
 			FlipPlayer ();
 
 		if (state.onWallFront) {
@@ -277,7 +282,7 @@ public class PlayerController : MonoBehaviour
 
 	private void HandleOnWallBack()
 	{
-		if (currentSpeedVector.x  * state.FacingRight(false) > 0) {
+		if (state.ValueInDirection(currentSpeedVector.x, 0, false)) {
 			currentSpeedVector.x = 0;
 			FlipPlayer ();
 		}
@@ -286,7 +291,7 @@ public class PlayerController : MonoBehaviour
 	private void HandleOnWallFront ()
 	{
 		if (state.fallingOffWall) {
-			if ((hAxis * state.FacingRight(true) > 0) || state.onGround || state.onCeiling) {
+			if (state.ValueInDirection(hAxis, 0, true) || state.onGround || state.onCeiling) {
 				state.fallingOffWall = false;
 			} 
 			else {
@@ -295,7 +300,7 @@ public class PlayerController : MonoBehaviour
 		}
 
 		float verticalSpeed = 0;
-		if (hAxis * state.FacingRight(false) > .3f) {
+		if (state.ValueInDirection(hAxis, .3f, false)) {
 			 state.leanOffWall = true;
 		} else {
 			state.leanOffWall = false;
@@ -381,7 +386,7 @@ public class PlayerController : MonoBehaviour
 			return;
 		}
 
-		if (hAxis * state.FacingRight(false) > 0)
+		if (state.ValueInDirection(hAxis, 0, false))
 			FlipPlayer ();
 
 		currentSpeedVector = boostSpeed * new Vector3 (hAxis != 0 ? 1 * Mathf.Sign (hAxis) : 0, vAxis != 0 ? 1 * Mathf.Sign (vAxis) : 0, 0).normalized;
@@ -528,7 +533,7 @@ public class PlayerController : MonoBehaviour
 
 	private void HandleWarp() 
 	{
-		if(state.onWallFront && state.FacingRight(true) * hWarp > .3f) 
+		if(state.onWallFront && state.ValueInDirection(hWarp, .3f, true)) 
 		{
 			RaycastHit2D hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 			if (hit.collider != null) {
