@@ -66,7 +66,6 @@ public class CameraController : MonoBehaviour {
 		if (restoreTime != -1) {
 			StartCoroutine ("RestoreCoroutine", restoreTime);
 		}
-		Debug.Log ("DONE");
 	}
 
 	IEnumerator RestoreCoroutine(float time)

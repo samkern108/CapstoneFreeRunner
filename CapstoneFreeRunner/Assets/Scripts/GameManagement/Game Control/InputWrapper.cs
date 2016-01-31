@@ -9,7 +9,6 @@ public class InputWrapper : MonoBehaviour {
 	private static bool warpType = false;
 
 	private static float axisActivationPoint = 0.15f; 
-	private static float wallJumpAxisActivationPoint = 0.3f;
 
 	void Start()
 	{

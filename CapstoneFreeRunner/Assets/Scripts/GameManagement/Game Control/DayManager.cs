@@ -24,7 +24,6 @@ public class DayManager : MonoBehaviour {
 
 		for (int i = 0; i < mailboxesPerDay.Length; i++) {
 			mailboxesPerDay [i] = days [i].GetComponentsInChildren<Mailbox> ().Length;
-			Debug.Log (mailboxesPerDay[i]);
 		}
 		currentDay = 1;
 	}
