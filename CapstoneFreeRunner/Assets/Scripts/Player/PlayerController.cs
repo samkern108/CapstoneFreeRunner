@@ -106,41 +106,36 @@ public class PlayerController : MonoBehaviour
 				if (state.OnCorner()) {
 					MoveOnCorner ();
 					transform.position += currentSpeedVector * 50 * Time.deltaTime;
-					//animator.SetTrigger();
-					//animator.ResetTrigger ();
 				}
 				else if (state.onWallFront) {
-					HandleOnWallFront ();
+					Animate(HandleOnWallFront ());
 					if (jumpButtonDown) {
-						JumpOffWalls ();
+						Animate(JumpOffWalls ());
 					}
 				} else if (state.onWallBack) {
-					HandleOnWallBack ();
+					Animate(HandleOnWallBack ());
 				}
 
 				if (state.onGround) {
-					MoveOnGround ();
+					Animate(MoveOnGround ());
 					if (jumpButtonDown) {
 						Jump ();
 					}
 				} else if (state.onCeiling && !state.fallingOffCeiling) {
-					MoveOnCeiling ();
+					Animate(MoveOnCeiling ());
 					if (jumpButtonDown) {
-						JumpOffCeiling ();
+						Animate(JumpOffCeiling ());
 					}
 				} else if (state.InAir ()) {
 					MoveInAir ();
-					ApplyGravity ();
+					Animate(ApplyGravity ());
 					if (jumpButtonDown) {
 						BoostJump ();
 					}
 				 }
 			}
 
-			 //5: Animation
-			Animate ();
-
-			 //6: Apply Movement Vectors to Transform
+			//5: Apply Movement Vectors to Transform
 			if(!boosting) {
 				if (!canBoost && state.Colliding()) {
 					canBoost = true;
@@ -251,51 +246,58 @@ public class PlayerController : MonoBehaviour
 		currentSpeedVector.x = hAxis * runSpeed;
 	}
 
-	private void MoveOnGround()
+	private AnimationState MoveOnGround()
 	{
-		if (state.onGround && !state.onWallFront)
+		if (!state.onWallFront)
 			currentSpeedVector.y = 0;
-
-		if (state.ValueInDirection(hAxis, 0f, false))
-			FlipPlayer ();
-
-		if (state.onWallFront) {
+		else {
 			currentSpeedVector.x = 0;
-			return;
+			return AnimationState.IDLE;
 		}
 
+		if (state.ValueInDirection(hAxis, 0f, false))  
+			FlipPlayer ();
+
 		currentSpeedVector.x = hAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+
+		if (currentSpeedVector.x == 0) {
+			return AnimationState.IDLE;
+		} else {
+			return (state.sprintButton ? AnimationState.RUN : AnimationState.WALK);
+		}
 	}
 
-	private void MoveOnCeiling()
+	private AnimationState MoveOnCeiling()
 	{
 		if (state.ValueInDirection(hAxis, 0f, false))
 			FlipPlayer ();
 
 		if (state.onWallFront) {
 			currentSpeedVector.x = 0;
-			return;
+			return AnimationState.IDLE_CEILING;
 		}
 
 		currentSpeedVector.x = hAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+		return AnimationState.CLIMB_CEILING;
 	}
 
-	private void HandleOnWallBack()
+	private AnimationState HandleOnWallBack()
 	{
 		if (state.ValueInDirection(currentSpeedVector.x, 0, false)) {
 			currentSpeedVector.x = 0;
 			FlipPlayer ();
 		}
+		return AnimationState.NONE;
 	}
 
-	private void HandleOnWallFront ()
+	private AnimationState HandleOnWallFront ()
 	{
 		if (state.fallingOffWall) {
 			if (state.ValueInDirection(hAxis, 0, true) || state.onGround || state.onCeiling) {
 				state.fallingOffWall = false;
 			} 
 			else {
-				return;
+				return AnimationState.NONE;
 			}
 		}
 
@@ -320,30 +322,35 @@ public class PlayerController : MonoBehaviour
 	//## FALLING ##//
 	private float terminalVelocity = -.8f, gravityFactor = .02f;
 
-	private void JumpOffCeiling()
+	private AnimationState JumpOffCeiling()
 	{
 		state.fallingOffCeiling = true;
+		return AnimationState.JUMP;
 	}
 
-	private void JumpOffWalls()
+	private AnimationState JumpOffWalls()
 	{
 		if (state.leanOffWall) {
-				currentSpeedVector.y = jumpArc;
-				currentSpeedVector.x = Mathf.Sign(hAxis) * jumpSpeed;
+			currentSpeedVector.y = jumpArc;
+			currentSpeedVector.x = Mathf.Sign(hAxis) * jumpSpeed;
+			return AnimationState.JUMP;
 		} else {
 			//transform.position += new Vector3 ((state.facingRight ? -1 : 1), 0, 0);
 			//state.fallingOffWall = true;
 		}
+		return AnimationState.NONE;
 	}
 
-	private void Jump()
+	private AnimationState Jump()
 	{
 		if (state.onGround) {
 			currentSpeedVector.y = jumpSpeed;
+			return AnimationState.JUMP;
 		}
+		return AnimationState.NONE;
 	}
 
-	private void ApplyGravity()
+	private AnimationState ApplyGravity()
 	{
 		currentSpeedVector.y -= gravityFactor;
 
@@ -477,59 +484,18 @@ public class PlayerController : MonoBehaviour
 
 
 	//## ANIMATION ##//
-	private Animator animator;
-	private int animState = 0;
-	private void Animate()
+	private enum AnimationState {IDLE, WALK, RUN, CLIMB_WALL, CLIMB_CEILING, JUMP, IDLE_WALL, IDLE_CEILING, NONE};
+	private AnimationState animationState;
+	private void Animate(AnimationState state)
 	{
-		int newState = animState;
-		if (state.OnCorner()) {
-			animState = 10;
-		}
-		else if (state.onGround) {
-			if (currentSpeedVector.x != 0) {
-				if (state.sprintButton) {
-					newState = 2;
-				} else {
-					newState = 1;
-				}
-			} else {
-				newState = 0;
-			}
+		if (state != AnimationState.NONE && animationState != state) {
+			animator.SetInteger ("State", (int)state);
+			animationState = state;
 		} 
-		else if (state.onWallFront) {
-			if (currentSpeedVector.y != 0) {
-				newState = 3;
-			} else {
-				newState = 6;
-			}
-		}
-		else if (state.onCeiling) {
-			if (currentSpeedVector.x != 0) {
-				newState = 4;
-			} else {
-				newState = 7;
-			}
-		} 
-		else {
-			newState = 5;
-		}
-			
-		if (animState != newState) {
-			animator.SetInteger ("State", newState);
-			animState = newState;
-		}
 	}
-
 
 	//## WARPING ##//
-
-	private void Recharge()
-	{
-		state.drained = false;
-	}
-
 	private Vector3 warpVector;
-	private float maxWarpDistance = 2f;
 
 	private void HandleWarp() 
 	{
