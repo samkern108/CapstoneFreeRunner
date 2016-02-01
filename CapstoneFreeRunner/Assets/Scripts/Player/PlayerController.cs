@@ -5,6 +5,8 @@ public class PlayerController : MonoBehaviour
 {
 	public Transform playerStartPosition;
 
+	public Animator animator;
+
 	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
 	public static PlayerState state;
 	public class PlayerState
