@@ -41,7 +41,8 @@ public class PlayerController : MonoBehaviour
 		}
 
 		/**
-		 * Returns true if the player is moving right (true) or left (false).
+		 * Returns true if the player is moving in the direction they are facing (true)
+		 * or moving away from the direction they're facing (false)
 		 **/
 		public bool ValueInDirection(float value, float comparison, bool right) {
 			return ((facingRight == right) ? 1 : -1) * value > comparison;
@@ -69,7 +70,6 @@ public class PlayerController : MonoBehaviour
 	private float hAxis = 0, vAxis = 0, hWarp = 0, vWarp = 0;
 
 	//## UPDATE ##//
-
 	void Update () 
 	{
 		if (PlayerInputEnabled) 
@@ -90,10 +90,7 @@ public class PlayerController : MonoBehaviour
 				HandleWarp ();
 				if (warpVector.x != 0 || warpVector.y != 0) {
 					transform.position += warpVector;
-					//animator.SetTrigger();
-					//animator.ResetTrigger ();
-				} else {
-					Debug.Log ("Can't warp right now!");
+					warpVector = new Vector3 ();
 				}
 				return;
 			}
@@ -153,16 +150,14 @@ public class PlayerController : MonoBehaviour
 	Vector2 checkerX, checkerY, cornerChecker;
 
 	//0: move 				(1 : yes, -1 : no)
-	//0: reverse X 			(1 : *, -1 : *)
-	//1: reverse Y 			(1 : *, -1 : *)
-	//2: primary direction 	(1 : x, -1 : y)
+	//1: reverse X 			(1 : *, -1 : *)
+	//2: reverse Y 			(1 : *, -1 : *)
+	//3: primary direction 	(1 : x, -1 : y)
 	short[] cornerMoveData = new short[4];
 
 	private void MoveOnCorner()
 	{
 		currentSpeedVector = new Vector3 ();
-
-		//Debug.Log (state.collidingCorner);
 
 		switch (state.collidingCorner) {
 		case Corner.bottomBack:
@@ -250,7 +245,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (!state.onWallFront)
 			currentSpeedVector.y = 0;
-		else {
+		else if (state.ValueInDirection(hAxis, 0f, true)) {
 			currentSpeedVector.x = 0;
 			return AnimationState.IDLE;
 		}
@@ -312,6 +307,7 @@ public class PlayerController : MonoBehaviour
 		}
 
 		currentSpeedVector.y = verticalSpeed;
+		return (verticalSpeed != 0) ? AnimationState.CLIMB_WALL : AnimationState.IDLE_WALL;
 	}
 
 	//## JUMPING ##//
@@ -366,6 +362,7 @@ public class PlayerController : MonoBehaviour
 		else if (state.fallingOffWall) {
 			state.fallingOffWall = false;
 		}
+		return AnimationState.JUMP;
 	}
 
 	//## BOOSTING ##
@@ -496,6 +493,7 @@ public class PlayerController : MonoBehaviour
 
 	//## WARPING ##//
 	private Vector3 warpVector;
+	private float maxWarpDistance = 2f;
 
 	private void HandleWarp() 
 	{
@@ -508,11 +506,11 @@ public class PlayerController : MonoBehaviour
 
 				if (size.x <= maxWarpDistance) {
 					warpVector = new Vector3 (state.FacingRight(true) * (size.x + playerWidth), 0, 0);
-					FlipPlayer ();
+					if(!state.onGround) FlipPlayer ();
 				}
 			}
 		}
-		if(state.onGround && vWarp < 0)
+		else if(state.onGround && vWarp < 0)
 		{
 			RaycastHit2D hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 			if (hit.collider != null) {
