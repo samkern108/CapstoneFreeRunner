@@ -4,8 +4,9 @@ using System.Collections;
 public class PlayerController : MonoBehaviour 
 {
 	public Transform playerStartPosition;
+	public GameObject boostArrow;
 
-	public Animator animator;
+	private Animator animator;
 
 	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
 	public static PlayerState state;
@@ -30,7 +31,6 @@ public class PlayerController : MonoBehaviour
 
 		//## JUMPING AND FALLING ##//
 		public bool leanOffWall;
-		public bool sprintButton;
 
 		public bool facingRight;
 
@@ -70,6 +70,7 @@ public class PlayerController : MonoBehaviour
 
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0, vAxis = 0, hWarp = 0, vWarp = 0;
+	private bool sprintButtonDown;
 
 	//## UPDATE ##//
 	void Update () 
@@ -81,8 +82,9 @@ public class PlayerController : MonoBehaviour
 			hAxis = InputWrapper.GetHorizontalAxis ();
 			vWarp = InputWrapper.GetWarpVertical ();
 			hWarp = InputWrapper.GetWarpHorizontal ();
-			state.sprintButton = InputWrapper.GetSprint ();
+			sprintButtonDown = InputWrapper.GetSprint ();
 			jumpButtonDown = InputWrapper.GetJump ();
+			jumpButtonUp = InputWrapper.GetAbortJump ();
 
 			//2: Conduct Linecasts
 			Linecasts();
@@ -255,12 +257,12 @@ public class PlayerController : MonoBehaviour
 		if (state.ValueInDirection(hAxis, 0f, false))  
 			FlipPlayer ();
 
-		currentSpeedVector.x = hAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+		currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
 
 		if (currentSpeedVector.x == 0) {
 			return AnimationState.IDLE;
 		} else {
-			return (state.sprintButton ? AnimationState.RUN : AnimationState.WALK);
+			return (sprintButtonDown ? AnimationState.RUN : AnimationState.WALK);
 		}
 	}
 
@@ -274,7 +276,7 @@ public class PlayerController : MonoBehaviour
 			return AnimationState.IDLE_CEILING;
 		}
 
-		currentSpeedVector.x = hAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+		currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
 		return AnimationState.CLIMB_CEILING;
 	}
 
@@ -305,7 +307,7 @@ public class PlayerController : MonoBehaviour
 			state.leanOffWall = false;
 			currentSpeedVector.x = 0;
 			if(!(state.onGround && vAxis < 0) && !(state.onCeiling && vAxis > 0))
-				verticalSpeed = vAxis * (state.sprintButton ? sprintSpeed : runSpeed);
+				verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
 		}
 
 		currentSpeedVector.y = verticalSpeed;
@@ -314,6 +316,7 @@ public class PlayerController : MonoBehaviour
 
 	//## JUMPING ##//
 	private bool jumpButtonDown = false;
+	private bool jumpButtonUp = false;
 	private float jumpSpeed = .45f;
 	private float jumpArc = .25f;
 
@@ -352,7 +355,7 @@ public class PlayerController : MonoBehaviour
 	{
 		currentSpeedVector.y -= gravityFactor;
 
-		if (currentSpeedVector.y > 0 && InputWrapper.GetAbortJump()) {
+		if (currentSpeedVector.y > 0 && jumpButtonUp) {
 			currentSpeedVector.y /= 2;
 		}
 		if (currentSpeedVector.y < terminalVelocity)
@@ -369,21 +372,55 @@ public class PlayerController : MonoBehaviour
 
 	//## BOOSTING ##
 
-	private bool canBoost = true, boosting = false;
-	private float boostTimeMax = .30f, boostTimer = 0f, boostSpeed = .45f;
+	private bool canBoost = true, boosting = false, chargingBoost = false;
+	private float boostTimeMax = .25f, boostTimer = 0f, boostSpeed = .45f;
+	private Vector2 boostDirection;
 
 	private void BoostJump()
 	{
 		if (canBoost) {
+			shakeAmount = .1f;
 			boostTimer = boostTimeMax;
 			boosting = true;
 			canBoost = false;
+			chargingBoost = true;
+			CameraController.self.ZoomCamera (.7f, 40);
+			currentSpeedVector = new Vector3 ();
+			Time.timeScale = .2f;
+			PlayerAudioManager.self.PlayBoostCharge ();
+			boostArrow.SetActive (true);
+			boostArrow.transform.rotation = Quaternion.Slerp(boostArrow.transform.rotation, Quaternion.LookRotation (Vector3.forward, new Vector3 (hAxis != 0 ?  state.FacingRight(true) * Mathf.Sign(hAxis) * 1 : 0, vAxis != 0 ? Mathf.Sign(vAxis) * 1 : 0, 0)), 1);
 		}
 	}
 
+	private float shakeAmount;
+
 	private void HandleBoost()
 	{
+		if (chargingBoost && jumpButtonUp) {
+			if (hAxis == 0 && vAxis == 0) {
+				boostDirection = new Vector2 (0, 1);
+			} else {
+				boostDirection = new Vector2 (hAxis, vAxis).normalized;
+			}
+			CameraController.self.RestoreSize (5);
+			chargingBoost = false;
+			Time.timeScale = 1f;
+			PlayerAudioManager.self.PlayBoostRelease ();
+			boostArrow.SetActive (false);
+			shakeAmount = 2f;
+		} else if (chargingBoost) {
+			CameraController.self.ShakeCamera (shakeAmount);
+			shakeAmount += .01f;
+			boostArrow.transform.rotation = Quaternion.Slerp(boostArrow.transform.rotation, Quaternion.LookRotation (Vector3.forward, new Vector3 (hAxis != 0 ?  state.FacingRight(true) * Mathf.Sign(hAxis) * 1 : 0, vAxis != 0 ? Mathf.Sign(vAxis) * 1 : 0, 0)), 1);
+			return;
+		}
+
 		boostTimer -= Time.deltaTime;
+		if (shakeAmount > 0) {
+			shakeAmount -= .05f;
+			CameraController.self.ShakeCamera (shakeAmount);
+		}
 
 		if (state.Colliding()) {
 			boosting = false;
@@ -395,7 +432,7 @@ public class PlayerController : MonoBehaviour
 		if (state.ValueInDirection(hAxis, 0, false))
 			FlipPlayer ();
 
-		currentSpeedVector = boostSpeed * new Vector3 (hAxis != 0 ? 1 * Mathf.Sign (hAxis) : 0, vAxis != 0 ? 1 * Mathf.Sign (vAxis) : 0, 0).normalized;
+		currentSpeedVector = boostSpeed * boostDirection;
 		if (boostTimer <= 0) {
 			boosting = false;
 		}
@@ -424,6 +461,7 @@ public class PlayerController : MonoBehaviour
 	public Transform ceilingCornerCheckFront;
 
 	private RaycastHit2D cornerHit;
+	private RaycastHit2D hit;
 
 	private void Linecasts()
 	{
@@ -444,12 +482,31 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 
-		state.onGround = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-		state.onCeiling = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-
 		state.onWallBack = Physics2D.Linecast (wallCheckerBottomBack.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 		state.onWallFront = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+			
+		hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 
+		if (hit.collider != null) {
+			transform.position += new Vector3 (0,Vector3.Distance(transform.position, groundChecker.position) - hit.distance,0);
+			state.collidingCorner = Corner.noCorner;
+			state.onGround = true;
+			return;
+		} else {
+			state.onGround = false;
+		}
+
+		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+
+		if (hit.collider != null) {
+		//	transform.position += new Vector3 (0,Vector3.Distance(transform.position, groundChecker.position) - hit.distance,0);
+			state.collidingCorner = Corner.noCorner;
+			state.onCeiling = true;
+			return;
+		} else {
+			state.onCeiling = false;
+		}
+			
 		if (!state.onCeiling && !state.onWallBack && !state.onWallFront && !state.onGround) {
 			cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 			state.collidingCorner = Corner.bottomBack;
@@ -549,7 +606,6 @@ public class PlayerController : MonoBehaviour
 		state.respawnPosition = playerStartPosition.position;
 		PlayerTransform = this.transform;
 		Player = this.gameObject;
-
 	}
 
 	public void Reset()

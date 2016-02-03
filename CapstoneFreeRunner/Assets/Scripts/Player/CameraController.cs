@@ -4,6 +4,7 @@ using System.Collections;
 public class CameraController : MonoBehaviour {
 
 	public static CameraController self;
+	private Camera heroCamera;
 
 	private float offsetX = 0;
 	private float offsetY = 0;
@@ -17,13 +18,14 @@ public class CameraController : MonoBehaviour {
 	private float regularSize;
 
 	void Reset() {
-		if (GetComponent <Camera> ().orthographicSize != regularSize) {
+		if (heroCamera.orthographicSize != regularSize) {
 			StartCoroutine ("RestoreSize",20);
 		}
 	}
 
 	void Start () {
-		regularSize = GetComponent <Camera>().orthographicSize;
+		heroCamera = GetComponent <Camera>();
+		regularSize = heroCamera.orthographicSize;
 		speed = regularSize * 3;
 		self = this;
 	}
@@ -48,8 +50,17 @@ public class CameraController : MonoBehaviour {
 		StartCoroutine ("ZoomCoroutine", rTime);
 	}
 
+	public void ZoomCamera(float percentage, float time)
+	{
+		targetSize = regularSize * percentage;
+		dt = (targetSize - regularSize)/time;
+		StartCoroutine ("ZoomCoroutine", -1);
+	}
+
 	public void RestoreSize(float restoreTime)
 	{
+		StopCoroutine("ZoomCoroutine");
+		targetSize = heroCamera.orthographicSize;
 		StartCoroutine ("RestoreCoroutine", restoreTime);
 	}
 
@@ -59,7 +70,7 @@ public class CameraController : MonoBehaviour {
 		float tempSize = regularSize;
 		while((zooming && tempSize < targetSize) || (!zooming && tempSize > targetSize)) {
 			tempSize += dt;
-			GetComponent <Camera> ().orthographicSize = tempSize;
+			heroCamera.orthographicSize = tempSize;
 			yield return null;
 		}
 		if (restoreTime != -1) {
@@ -70,13 +81,13 @@ public class CameraController : MonoBehaviour {
 	IEnumerator RestoreCoroutine(float time)
 	{
 		if (time == 0) {
-			GetComponent <Camera> ().orthographicSize = regularSize;
+			heroCamera.orthographicSize = regularSize;
 			yield break;
 		}
 		float dt = (regularSize - targetSize)/time;
 		while(targetSize < regularSize) {
 			targetSize += dt;
-			GetComponent <Camera> ().orthographicSize = targetSize;
+			heroCamera.orthographicSize = targetSize;
 			yield return null;
 		}
 	}

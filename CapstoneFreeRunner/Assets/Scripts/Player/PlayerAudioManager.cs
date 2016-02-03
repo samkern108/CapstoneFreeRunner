@@ -5,6 +5,8 @@ public class PlayerAudioManager : MonoBehaviour {
 
 	public AudioSource AS_Vaporize;
 	public AudioSource AS_SubBass;
+	public AudioSource AS_BoostCharge;
+	public AudioSource AS_BoostRelease;
 
 	public static PlayerAudioManager self;
 
@@ -19,5 +21,14 @@ public class PlayerAudioManager : MonoBehaviour {
 
 	public void PlayDisable() {
 		AS_SubBass.Play ();
+	}
+
+	public void PlayBoostCharge() {
+		AS_BoostCharge.Play ();	
+	}
+
+	public void PlayBoostRelease() {
+		AS_BoostCharge.Stop ();
+		AS_BoostRelease.Play ();
 	}
 }
