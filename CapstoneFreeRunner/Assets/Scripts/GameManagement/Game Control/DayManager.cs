@@ -8,7 +8,7 @@ public class DayManager : MonoBehaviour {
 	public GameObject day2;
 	public GameObject[] days; 
 	public GameObject hero;
-	public GameObject camera;
+	public GameObject mainCamera;
 
 	public static DayManager self;
 
@@ -51,6 +51,6 @@ public class DayManager : MonoBehaviour {
 		//days[currentDay - 1].BroadcastMessage ("Reset");
 		BroadcastMessage ("Reset");
 		hero.BroadcastMessage ("Reset");
-		camera.BroadcastMessage ("Reset");
+		mainCamera.BroadcastMessage ("Reset");
 	}
 }
