@@ -55,7 +55,7 @@ public class PlayerHealth : MonoBehaviour {
 	}
 
 	public void OnTriggerExit2D(Collider2D other) {
-		if(other.gameObject.tag == "PlayableArea"){
+		if(other.gameObject.name == "PlayableArea"){
 			PlayerHit(2);
 		}
 	}

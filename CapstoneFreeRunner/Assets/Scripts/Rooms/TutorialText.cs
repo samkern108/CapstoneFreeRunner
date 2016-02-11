@@ -19,13 +19,13 @@ public class TutorialText : MonoBehaviour {
 		hintText.enabled = true;
 		switch (h) {
 		case HintType.jump:
-			hintText.text = "Press A to Jump";
+			hintText.text = "Press Space to Jump";
 			break;
 		case HintType.boostJump:
-			hintText.text = "Hold and Release A While Jumping To Boost";
+			hintText.text = "Press Space While Jumping To Boost";
 			break;
 		case HintType.warp:
-			hintText.text = "Use the Right Stick To Warp through Walls";
+			hintText.text = "Press a directional key and F to warp through walls.";
 			break;
 		}
 	}

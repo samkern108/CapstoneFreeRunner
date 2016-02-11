@@ -15,6 +15,7 @@ public class Mailbox : MonoBehaviour {
 		if (collider.CompareTag ("Player") && !delivered) {
 			StatsTracker.self.DeliverPaper();
 			SR.color = Color.blue;
+			GetComponent <ParticleSystem> ().Stop ();
 			delivered = true;
 		}
 	}

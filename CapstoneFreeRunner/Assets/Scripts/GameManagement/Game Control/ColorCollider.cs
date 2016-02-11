@@ -22,9 +22,4 @@ public class ColorCollider : MonoBehaviour {
 		mesh.triangles = triangles;
 		mf.mesh = mesh;
 	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
 }

@@ -4,25 +4,29 @@ using System.Collections;
 public class Laser : MonoBehaviour {
 
 	AudioSource AS;
-	LineRenderer LR;
+	public LineRenderer LR;
+	public LineRenderer WhiteLR;
 	public ParticleSystem PS;
 
 	Transform DirectionHandle;
 	bool active;
 	float maxLazerLength = 1000;
-	Color startColor = Color.red;
-	Color endColor = Color.red;
+	Color color = Color.red;
 	private bool disabled = false;
 	private float dist;
 	private float maxDist = 40;
+	private float z;
 	
 	void Start () {
 		AS = GetComponent<AudioSource> ();
-		LR = GetComponent<LineRenderer>();
 		DirectionHandle = FindDirectionHandle(this.transform, "DirectionHandle");
 		active = true;
-		LR.material = new Material(Shader.Find("Particles/Additive"));
-		LR.SetColors(startColor, endColor);
+		LR = GetComponent<LineRenderer> ();
+		if (WhiteLR == null) {
+			LR.material = new Material (Shader.Find ("Particles/Additive"));
+		}
+		LR.SetColors(color, color);
+		z = transform.position.z;
 	}
 
 	void Update () {
@@ -48,7 +52,7 @@ public class Laser : MonoBehaviour {
 
 	private void AudioUpdate()
 	{
-		AS.volume = dist.Map (0, 30, 1f, 0);
+		AS.volume = dist.Map (0, 30, .5f, 0);
 	}
 
 	void Raycast() {
@@ -58,7 +62,7 @@ public class Laser : MonoBehaviour {
 			RaycastHit2D[] hitList = Physics2D.RaycastAll(ray.origin, ray.direction, maxLazerLength);
 			
 			//draw laser
-			LR.SetPosition(0, ray.origin);
+			UpdateLinePosition (0, ray.origin);
 
 			foreach(RaycastHit2D hit in hitList) {
 				//if player enters laser
@@ -68,10 +72,10 @@ public class Laser : MonoBehaviour {
 				}
 
 				if(hit == true && !hit.collider.CompareTag("Background")){
-					PS.transform.position = new Vector3 (hit.point.x, hit.point.y, -1);
+					PS.transform.position = new Vector3 (hit.point.x, hit.point.y, z);
 					if (!PS.isPlaying)
 						PS.Play ();
-					LR.SetPosition(1, hit.point);
+					UpdateLinePosition (1, hit.point);
 					return;
 				}
 			}
@@ -79,7 +83,16 @@ public class Laser : MonoBehaviour {
 		if(PS.isPlaying)
 			PS.Stop();
 			//if the ray hit nothing
-			LR.SetPosition(1,ray.GetPoint(maxLazerLength));
+			Vector3 point = ray.GetPoint(maxLazerLength);
+			UpdateLinePosition (1, point);
+		}
+	}
+
+	private void UpdateLinePosition(int pos, Vector2 point)
+	{
+		LR.SetPosition(pos, new Vector3(point.x, point.y, z));
+		if (WhiteLR != null) {
+			WhiteLR.SetPosition (pos, new Vector3 (point.x, point.y, z + 1));
 		}
 	}
 

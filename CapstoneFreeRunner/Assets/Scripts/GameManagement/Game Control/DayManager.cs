@@ -7,6 +7,8 @@ public class DayManager : MonoBehaviour {
 	public GameObject day1;
 	public GameObject day2;
 	public GameObject[] days; 
+	public GameObject hero;
+	public GameObject camera;
 
 	public static DayManager self;
 
@@ -39,13 +41,16 @@ public class DayManager : MonoBehaviour {
 	}
 
 	public bool PaperRouteFinished() {
-		return false;
+		return StatsTracker.papersDelivered >= mailboxesPerDay[currentDay - 1];
 	}
 
 	public void ResetLevel() {
 		//Sends the "Reset" message to all objects in the scene.
 		//Every game object should implement a Reset function to reset its position, health,
 		// etc for when the player dies or resets the level.
-		days[currentDay].BroadcastMessage ("Reset");
+		//days[currentDay - 1].BroadcastMessage ("Reset");
+		BroadcastMessage ("Reset");
+		hero.BroadcastMessage ("Reset");
+		camera.BroadcastMessage ("Reset");
 	}
 }
