@@ -25,7 +25,7 @@ public class TutorialText : MonoBehaviour {
 			hintText.text = "Press Space While Jumping To Boost";
 			break;
 		case HintType.warp:
-			hintText.text = "Press a directional key and F to warp through walls.";
+			hintText.text = "Run at a wall and press F to warp.";
 			break;
 		}
 	}

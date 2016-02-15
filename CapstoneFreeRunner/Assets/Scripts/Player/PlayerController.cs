@@ -61,7 +61,7 @@ public class PlayerController : MonoBehaviour
 
 		public bool InAir()
 		{
-			Debug.Log (Colliding() + "  " + falling);
+//			Debug.Log (Colliding() + "  " + falling);
 			return !Colliding () || falling;
 		}
 	}
@@ -77,7 +77,7 @@ public class PlayerController : MonoBehaviour
 	void Update () 
 	{
 		screenSize = Screen.width;
-		Debug.Log (screenSize);
+//		Debug.Log (screenSize);
 
 		if (PlayerInputEnabled) 
 		{
@@ -98,6 +98,7 @@ public class PlayerController : MonoBehaviour
 				HandleWarp ();
 				if (warpVector.x != 0 || warpVector.y != 0) {
 					transform.position += warpVector;
+					Jukebox.self.PlayWarp (.5f);
 					warpVector = new Vector3 ();
 				}
 				return;
@@ -408,6 +409,7 @@ public class PlayerController : MonoBehaviour
 	private void BoostJump()
 	{
 		if (canBoost) {
+			Jukebox.self.PlayBoost ();
 			state.falling = false;
 			boostChargeTimer = 0f;
 			shakeAmount = .1f;
@@ -454,6 +456,7 @@ public class PlayerController : MonoBehaviour
 		}
 
 		if (state.Colliding()) {
+			Jukebox.self.PlayRegular ();
 			boosting = false;
 			boostTimer = 0f;
 			currentSpeedVector = new Vector3();
@@ -465,6 +468,7 @@ public class PlayerController : MonoBehaviour
 
 		currentSpeedVector = boostSpeed * boostDirection;
 		if (boostTimer <= 0) {
+			Jukebox.self.PlayRegular ();
 			boosting = false;
 		}
 	}
@@ -562,7 +566,7 @@ public class PlayerController : MonoBehaviour
 	private AnimationState animationState;
 	private void Animate(AnimationState state)
 	{
-		Debug.Log (state.ToString());
+//		Debug.Log (state.ToString());
 		if (state != AnimationState.NONE && animationState != state) {
 			animator.SetInteger ("State", (int)state);
 			animationState = state;
