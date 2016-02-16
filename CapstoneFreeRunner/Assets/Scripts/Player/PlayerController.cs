@@ -6,6 +6,9 @@ public class PlayerController : MonoBehaviour
 	public Transform playerStartPosition;
 	public GameObject boostArrow;
 
+    public GameObject boostRight;
+    public GameObject boostLeft;
+
 	private Animator animator;
 
 	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
@@ -72,6 +75,8 @@ public class PlayerController : MonoBehaviour
 	private float hAxis = 0, vAxis = 0, hWarp = 0, vWarp = 0;
 	private bool sprintButtonDown, jumpButtonDown, jumpButtonUp;
 	private int screenSize;
+
+    private float boostTrailRate = 20f;
 
 	//## UPDATE ##//
 	void Update () 
@@ -140,6 +145,18 @@ public class PlayerController : MonoBehaviour
 					}
 				 }
 			}
+            if (boosting) {
+                if (state.facingRight) {
+                    boostRight.GetComponent<ParticleSystem>().emissionRate = boostTrailRate;
+                    boostLeft.GetComponent<ParticleSystem>().emissionRate = 0;
+                } else {
+                    boostRight.GetComponent<ParticleSystem>().emissionRate = 0;
+                    boostLeft.GetComponent<ParticleSystem>().emissionRate = boostTrailRate;
+                }
+            } else {
+                boostRight.GetComponent<ParticleSystem>().emissionRate = 0;
+                boostLeft.GetComponent<ParticleSystem>().emissionRate = 0;
+            }
 
 			//5: Apply Movement Vectors to Transform
 			if(!boosting) {
@@ -350,9 +367,9 @@ public class PlayerController : MonoBehaviour
 	}
 
 	//## JUMPING ##//
-	private float jumpSpeed = .45f;
+	private float jumpSpeed = .3f;
 	private float jumpArc = .25f;
-	private float jumpSpeedSprint = .50f;
+	private float jumpSpeedSprint = .4f;
 	private float jumpArcSprint = .30f;
 
 	//## FALLING ##//
@@ -418,9 +435,10 @@ public class PlayerController : MonoBehaviour
 			canBoost = false;
 			CameraController.self.ZoomCamera (.7f, 40);
 			currentSpeedVector = new Vector3 ();
-			Time.timeScale = .2f;
+		    //Time.timeScale = .2f;
+
 			PlayerAudioManager.self.PlayBoostCharge ();
-			boostArrow.SetActive (true);
+			//boostArrow.SetActive (true);
 			chargingBoost = true;
 			boostArrow.transform.rotation = Quaternion.Slerp(boostArrow.transform.rotation, Quaternion.LookRotation (Vector3.forward, new Vector3 (hAxis != 0 ?  state.FacingRight(true) * Mathf.Sign(hAxis) * 1 : 0, vAxis != 0 ? Mathf.Sign(vAxis) * 1 : 0, 0)), 1);
 		}
@@ -428,7 +446,8 @@ public class PlayerController : MonoBehaviour
 
 	private void HandleBoost()
 	{
-		if (boostChargeTimer >= boostChargeTimeMax || (chargingBoost && jumpButtonUp)) {
+		//if (boostChargeTimer >= boostChargeTimeMax || (chargingBoost && jumpButtonUp)) {
+        if (true) {
 			if (hAxis == 0 && vAxis == 0) {
 				boostDirection = new Vector2 (0, 1);
 			} else {
@@ -452,7 +471,7 @@ public class PlayerController : MonoBehaviour
 		boostTimer -= Time.deltaTime;
 		if (shakeAmount > 0) {
 			shakeAmount -= .05f;
-			CameraController.self.ShakeCamera (shakeAmount);
+			//CameraController.self.ShakeCamera (shakeAmount);
 		}
 
 		if (state.Colliding()) {
