@@ -8,15 +8,16 @@ public class Mailbox : MonoBehaviour {
 
 	void Start(){
 		SR = gameObject.GetComponent<SpriteRenderer>();
-	}
+        //gameObject.GetComponent<ParticleSystem>();
+    }
 
 	void OnTriggerEnter2D(Collider2D collider) {
 		
 		if (collider.CompareTag ("Player") && !delivered) {
 			StatsTracker.self.DeliverPaper();
 			SR.color = Color.blue;
-			GetComponent <ParticleSystem> ().Stop ();
-			delivered = true;
+            gameObject.GetComponent<ParticleSystem>().Emit(15);
+            delivered = true;
 		}
 	}
 }
