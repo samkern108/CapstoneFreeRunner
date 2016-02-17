@@ -290,7 +290,11 @@ public class PlayerController : MonoBehaviour
 
 	private void MoveInAir()
 	{
-		currentSpeedVector.x = hAxis * runSpeed;
+        if (!sprintButtonDown) {
+            currentSpeedVector.x = hAxis * runSpeed;
+        } else {
+            currentSpeedVector.x = hAxis * sprintSpeed;
+        }
 	}
 
 	private AnimationState MoveOnGround()
@@ -327,8 +331,9 @@ public class PlayerController : MonoBehaviour
 			return AnimationState.IDLE_CEILING;
 		}
 
-		currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
-		return AnimationState.CLIMB_CEILING;
+        //currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
+        currentSpeedVector.x = hAxis * runSpeed;
+        return AnimationState.CLIMB_CEILING;
 	}
 
 	private AnimationState HandleOnWallBack()
@@ -358,18 +363,19 @@ public class PlayerController : MonoBehaviour
 			state.leanOffWall = false;
 			currentSpeedVector.x = 0;
 			if(!(state.onGround && vAxis < 0) && !(state.onCeiling && vAxis > 0))
-				verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
-		}
+                //verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
+                verticalSpeed = vAxis * runSpeed;
+        }
 
 		currentSpeedVector.y = verticalSpeed;
 		return (verticalSpeed != 0) ? AnimationState.CLIMB_WALL : AnimationState.IDLE_WALL;
 	}
 
 	//## JUMPING ##//
-	private float jumpSpeed = .3f;
-	private float jumpArc = .25f;
+	private float jumpSpeed = .4f;
+	private float jumpArc = .5f;
 	private float jumpSpeedSprint = .4f;
-	private float jumpArcSprint = .30f;
+	private float jumpArcSprint = .5f;
 
 	//## FALLING ##//
 	private float terminalVelocity = -.8f, gravityFactor = .02f;
@@ -384,7 +390,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (state.leanOffWall) {
 			currentSpeedVector.y = sprintButtonDown ? jumpArcSprint : jumpArc;
-			currentSpeedVector.x = (screenSize/500) * Mathf.Sign(hAxis) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
+			currentSpeedVector.x = Mathf.Sign(hAxis) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
 			return AnimationState.JUMP;
 		} else {
 			state.falling = true;
@@ -395,8 +401,8 @@ public class PlayerController : MonoBehaviour
 	private AnimationState Jump()
 	{
 		if (state.onGround) {
-			currentSpeedVector.y = (screenSize/500) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
-			return AnimationState.JUMP;
+            currentSpeedVector.y = sprintButtonDown ? jumpArcSprint : jumpArc;
+            return AnimationState.JUMP;
 		}
 		return AnimationState.NONE;
 	}
