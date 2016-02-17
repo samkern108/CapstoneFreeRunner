@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public enum HintType {jump, boostJump, warp};
+public enum HintType {jump, boostJump, warp, boostRun};
 
 public class TutorialText : MonoBehaviour {
 
@@ -26,6 +26,9 @@ public class TutorialText : MonoBehaviour {
 			break;
 		case HintType.warp:
 			hintText.text = "Run at a wall and press F to warp.";
+			break;
+		case HintType.boostRun:
+			hintText.text = "Hold right trigger to sprint.";
 			break;
 		}
 	}

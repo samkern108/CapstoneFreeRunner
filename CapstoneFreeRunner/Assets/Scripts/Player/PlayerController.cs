@@ -103,7 +103,6 @@ public class PlayerController : MonoBehaviour
 				HandleWarp ();
 				if (warpVector.x != 0 || warpVector.y != 0) {
 					transform.position += warpVector;
-					Jukebox.self.PlayWarp (.5f);
 					warpVector = new Vector3 ();
 				}
 				return;
@@ -426,7 +425,44 @@ public class PlayerController : MonoBehaviour
 	private void BoostJump()
 	{
 		if (canBoost) {
-			Jukebox.self.PlayBoost ();
+			state.falling = false;
+			boostTimer = boostTimeMax;
+			boosting = true;
+			canBoost = false;
+			currentSpeedVector = new Vector3 ();
+
+			if (hAxis == 0 && vAxis == 0) {
+				boostDirection = new Vector2 (0, 1);
+			} else {
+				boostDirection = new Vector2 (hAxis, vAxis).normalized;
+			}
+			PlayerAudioManager.self.PlayBoostRelease ();
+		}
+	}
+
+	private void HandleBoost()
+	{
+		boostTimer -= Time.deltaTime;
+
+		if (state.Colliding()) {
+			boosting = false;
+			boostTimer = 0f;
+			currentSpeedVector = new Vector3();
+			return;
+		}
+
+		if (state.ValueInDirection(hAxis, 0, false))
+			FlipPlayer ();
+
+		currentSpeedVector = boostSpeed * boostDirection;
+		if (boostTimer <= 0) {
+			boosting = false;
+		}
+	}
+
+	/*private void BoostJump()
+	{
+		if (canBoost) {
 			state.falling = false;
 			boostChargeTimer = 0f;
 			shakeAmount = .1f;
@@ -437,7 +473,7 @@ public class PlayerController : MonoBehaviour
 			currentSpeedVector = new Vector3 ();
 		    //Time.timeScale = .2f;
 
-			PlayerAudioManager.self.PlayBoostCharge ();
+			//PlayerAudioManager.self.PlayBoostCharge ();
 			//boostArrow.SetActive (true);
 			chargingBoost = true;
 			boostArrow.transform.rotation = Quaternion.Slerp(boostArrow.transform.rotation, Quaternion.LookRotation (Vector3.forward, new Vector3 (hAxis != 0 ?  state.FacingRight(true) * Mathf.Sign(hAxis) * 1 : 0, vAxis != 0 ? Mathf.Sign(vAxis) * 1 : 0, 0)), 1);
@@ -455,7 +491,7 @@ public class PlayerController : MonoBehaviour
 			}
 			CameraController.self.RestoreSize (5);
 			Time.timeScale = 1f;
-			PlayerAudioManager.self.PlayBoostRelease ();
+			//PlayerAudioManager.self.PlayBoostRelease ();
 			boostArrow.SetActive (false);
 			shakeAmount = 2f;
 			boostChargeTimer = 0f;
@@ -475,7 +511,6 @@ public class PlayerController : MonoBehaviour
 		}
 
 		if (state.Colliding()) {
-			Jukebox.self.PlayRegular ();
 			boosting = false;
 			boostTimer = 0f;
 			currentSpeedVector = new Vector3();
@@ -487,10 +522,9 @@ public class PlayerController : MonoBehaviour
 
 		currentSpeedVector = boostSpeed * boostDirection;
 		if (boostTimer <= 0) {
-			Jukebox.self.PlayRegular ();
 			boosting = false;
 		}
-	}
+	}*/
 
 	private void FlipPlayer()
 	{

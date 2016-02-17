@@ -28,7 +28,9 @@ public class PlayerAudioManager : MonoBehaviour {
 	}
 
 	public void PlayBoostRelease() {
-		AS_BoostCharge.Stop ();
+		if (AS_BoostCharge.isPlaying) {
+			AS_BoostCharge.Stop ();
+		}
 		AS_BoostRelease.Play ();
 	}
 }
