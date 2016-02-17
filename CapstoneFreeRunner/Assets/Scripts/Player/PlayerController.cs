@@ -64,7 +64,6 @@ public class PlayerController : MonoBehaviour
 
 		public bool InAir()
 		{
-//			Debug.Log (Colliding() + "  " + falling);
 			return !Colliding () || falling;
 		}
 	}
@@ -331,8 +330,7 @@ public class PlayerController : MonoBehaviour
 			return AnimationState.IDLE_CEILING;
 		}
 
-        //currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
-        currentSpeedVector.x = hAxis * runSpeed;
+		currentSpeedVector.x = hAxis * (sprintButtonDown ? (sprintSpeed - .1f) : runSpeed);
         return AnimationState.CLIMB_CEILING;
 	}
 
@@ -363,8 +361,7 @@ public class PlayerController : MonoBehaviour
 			state.leanOffWall = false;
 			currentSpeedVector.x = 0;
 			if(!(state.onGround && vAxis < 0) && !(state.onCeiling && vAxis > 0))
-                //verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
-                verticalSpeed = vAxis * runSpeed;
+				verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : (runSpeed - .1f));
         }
 
 		currentSpeedVector.y = verticalSpeed;
