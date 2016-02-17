@@ -17,4 +17,10 @@ public class StatsTracker : MonoBehaviour {
 		papersDelivered++;
 		DeliveredText.text = papersDelivered + "";
 	}
+
+	public void ResetDelivered()
+	{
+		papersDelivered = 0;
+		DeliveredText.text = papersDelivered + "";
+	}
 }

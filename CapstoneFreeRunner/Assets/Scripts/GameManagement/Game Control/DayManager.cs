@@ -27,7 +27,7 @@ public class DayManager : MonoBehaviour {
 		for (int i = 0; i < mailboxesPerDay.Length; i++) {
 			mailboxesPerDay [i] = days [i].GetComponentsInChildren<Mailbox> ().Length;
 		}
-		currentDay = 1;
+		currentDay = 0;
 	}
 
 	public void LoadNextDay() {
@@ -35,20 +35,21 @@ public class DayManager : MonoBehaviour {
 	}
 
 	public void LoadDay(int day) {
-		days [day - 1].SetActive(true);
-		days [currentDay - 1].SetActive(false);
+		days [day].SetActive(true);
+		days [currentDay].SetActive(false);
 		currentDay = day;
+		StatsTracker.self.ResetDelivered ();
 	}
 
 	public bool PaperRouteFinished() {
-		return StatsTracker.papersDelivered >= mailboxesPerDay[currentDay - 1];
+		return StatsTracker.papersDelivered >= mailboxesPerDay[currentDay];
 	}
 
 	public void ResetLevel() {
 		//Sends the "Reset" message to all objects in the scene.
 		//Every game object should implement a Reset function to reset its position, health,
 		// etc for when the player dies or resets the level.
-		//days[currentDay - 1].BroadcastMessage ("Reset");
+		//days[currentDay].BroadcastMessage ("Reset");
 		BroadcastMessage ("Reset");
 		hero.BroadcastMessage ("Reset");
 		mainCamera.BroadcastMessage ("Reset");
