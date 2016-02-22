@@ -6,6 +6,7 @@ public class DayManager : MonoBehaviour {
 	//WHENEVER YOU WANT TO ADD A NEW DAY, MAKE SURE TO SET UP ITS GAMEOBJECT, THEN GO TO (2)
 	public GameObject day1;
 	public GameObject day2;
+	public GameObject day3;
 	public GameObject[] days; 
 	public GameObject hero;
 	public GameObject mainCamera;
@@ -20,7 +21,7 @@ public class DayManager : MonoBehaviour {
 		self = this;
 
 		//(2): ADD NEXT DAY TO THIS LIST
-		days = new GameObject[]{ day1, day2 };
+		days = new GameObject[]{ day1, day2, day3 };
 
 		mailboxesPerDay = new int[days.Length];
 
