@@ -460,7 +460,11 @@ public class PlayerController : MonoBehaviour
 			return AnimationState.NONE;
 		}
 
-		if (state.ValueInDirection(hAxis, 0, false))
+		if (hAxis != 0 && vAxis != 0) {
+			boostDirection = new Vector2 (hAxis, vAxis).normalized;
+		}
+
+		if (state.ValueInDirection (hAxis, 0, false))
 			FlipPlayer ();
 
 		currentSpeedVector = boostSpeed * boostDirection;
