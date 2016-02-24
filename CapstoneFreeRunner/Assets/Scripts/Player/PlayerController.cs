@@ -68,7 +68,7 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-	private float playerWidth = 1f, playerHeight = 1.4f;
+	private float playerWidth, playerHeight;
 
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0, vAxis = 0, hWarp = 0, vWarp = 0;
@@ -98,16 +98,12 @@ public class PlayerController : MonoBehaviour
 
 			//3: Handle Warping
 			if ((vWarp != 0 || hWarp != 0) && !state.drained && !state.falling) {
-				HandleWarp ();
-				if (warpVector.x != 0 || warpVector.y != 0) {
-					transform.position += warpVector;
-					if(warpVector.x != 0) {
-						Linecasts ();
-						if(!state.onGround) FlipPlayer ();
-					}
-					warpVector = new Vector3 ();
+				if (HandleWarp ()) {
+					Linecasts ();
+					if (!state.onCeiling && !state.onGround) //what happens if we're on a wall & ceiling?
+						FlipPlayer ();
+					return;
 				}
-				return;
 			}
 
 			//4: Handle Regular Movement
@@ -116,7 +112,7 @@ public class PlayerController : MonoBehaviour
 			}
 			else {
 				if (state.OnCorner()) {
-					MoveOnCorner ();
+					Animate(MoveOnCorner ());
 				}
 				else if (state.onWallFront) {
 					Animate(HandleOnWallFront ());
@@ -182,91 +178,83 @@ public class PlayerController : MonoBehaviour
 	//3: primary direction 	(1 : x, -1 : y)
 	short[] cornerMoveData = new short[4];
 
-	private void MoveOnCorner()
+	private AnimationState MoveOnCorner()
 	{
+		AnimationState anim = AnimationState.NONE;
 		currentSpeedVector = new Vector3 ();
 		if (state.falling) {
-			return;
+			return anim;
 		}
 
 		switch (state.collidingCorner) {
 		case Corner.bottomBack:
-			if (jumpButtonDown && state.ValueInDirection(hAxis, .3f, true)) {
-				JumpOffWalls ();
-			}
-			else if (jumpButtonDown) {
-				JumpOffCeiling ();
-			}
-			else if (vAxis < .3f) {
-				cornerMoveData = new short[4]{1, 1, -1, -1};
+			if (jumpButtonDown) {
+				Jump();
+			} else if (vAxis < .3f) {
+				cornerMoveData = new short[4]{ 1, 1, -1, -1 };
 				FlipPlayer ();
 				cornerChecker = floorCornerCheckBack.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottomBack.position;
-			} else if (state.ValueInDirection(hAxis, .3f, false)) {
-				cornerMoveData = new short[4]{1, -1, 1, 1};
+			} else if (state.ValueInDirection (hAxis, .3f, false)) {
+				cornerMoveData = new short[4]{ 1, -1, 1, 1 };
 				cornerChecker = floorCornerCheckBack.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottomBack.position;
-			}
+			} 
+			anim = AnimationState.FLOOR_CORNER;
 			break;
 		case Corner.bottomFront:
-			if (jumpButtonDown && state.ValueInDirection(hAxis, .3f, false)) {
+			if (jumpButtonDown) {
 				JumpOffWalls ();
-			}
-			else if (jumpButtonDown) {
-				JumpOffCeiling ();
-			}
+			} 
 			else if (vAxis < .3f) {
-				cornerMoveData = new short[4]{1, -1, -1, -1};
+				cornerMoveData = new short[4]{ 1, -1, -1, -1 };
 				cornerChecker = floorCornerCheckFront.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottom.position;
-			} else if (state.ValueInDirection(hAxis, .3f, true)) {
-				cornerMoveData = new short[4]{1, 1, 1, 1};
+			} else if (state.ValueInDirection (hAxis, .3f, true)) {
+				cornerMoveData = new short[4]{ 1, 1, 1, 1 };
 				cornerChecker = floorCornerCheckFront.position;
 				checkerX = groundChecker.position;
 				checkerY = wallCheckerBottom.position;
 			}
+			anim = AnimationState.WALL_UP_CORNER;
 			break;
 		case Corner.topBack:
-			if (jumpButtonDown && state.ValueInDirection(hAxis, .3f, true)) {
-				JumpOffWalls ();
-			}
-			else if (jumpButtonDown) {
+			if (jumpButtonDown) {
 				JumpOffCeiling ();
-			}
-			else if (vAxis > .3f) {
+			} else if (vAxis > .3f) {
 				FlipPlayer ();
-				cornerMoveData = new short[4]{1, 1, 1, -1};
+				cornerMoveData = new short[4]{ 1, 1, 1, -1 };
 				cornerChecker = ceilingCornerCheckBack.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTopBack.position;
-			} else if (state.ValueInDirection(hAxis, .3f, false)) {
-				cornerMoveData = new short[4]{1, -1, -1, 1};
+			} else if (state.ValueInDirection (hAxis, .3f, false)) {
+				cornerMoveData = new short[4]{ 1, -1, -1, 1 };
 				cornerChecker = ceilingCornerCheckBack.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTopBack.position;
 			}
+	
+				anim = AnimationState.CEILING_CORNER;
 			break;
 		case Corner.topFront:
-			if (jumpButtonDown && state.ValueInDirection(hAxis, .3f, false)) {
+			if (jumpButtonDown) {
 				JumpOffWalls ();
-			}
-			else if (jumpButtonDown) {
-				JumpOffCeiling ();
 			}
 			else if (vAxis > .3f) {
 				cornerMoveData = new short[4]{ 1, -1, 1, -1 };
 				cornerChecker = ceilingCornerCheckFront.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTop.position;
-			} else if (state.ValueInDirection(hAxis, .3f, true)) {
+			} else if (state.ValueInDirection (hAxis, .3f, true)) {
 				cornerMoveData = new short[4]{ 1, 1, -1, 1 };
 				cornerChecker = ceilingCornerCheckFront.position;
 				checkerX = ceilingChecker.position;
 				checkerY = wallCheckerTop.position;
 			}
+			anim = AnimationState.WALL_DOWN_CORNER;
 			break;
 		}
 
@@ -288,6 +276,7 @@ public class PlayerController : MonoBehaviour
 			transform.position += new Vector3 (cornerMoveData[1] * distanceX * state.FacingRight(true), cornerMoveData[2] * distanceY, 0);
 			cornerMoveData [0] = -1;
 		}
+		return anim;
 	}
 
 	private void MoveInAir()
@@ -330,7 +319,7 @@ public class PlayerController : MonoBehaviour
 
 		if (state.onWallFront) {
 			currentSpeedVector.x = 0;
-			return AnimationState.IDLE_CEILING;
+			return AnimationState.IN_CORNER;
 		}
 
 		currentSpeedVector.x = hAxis * (sprintButtonDown ? (sprintSpeed - .1f) : runSpeed);
@@ -376,7 +365,6 @@ public class PlayerController : MonoBehaviour
 	private float jumpSpeed = .4f;
 	private float jumpArc = .5f;
 	private float jumpSpeedSprint = .4f;
-	private float jumpArcSprint = .5f;
 
 	//## FALLING ##//
 	private float terminalVelocity = -.8f, gravityFactor = .02f;
@@ -387,7 +375,8 @@ public class PlayerController : MonoBehaviour
 		return AnimationState.JUMP;
 	}
 
-	private AnimationState JumpOffWalls()
+	/* Press A to fall off wall
+	 * private AnimationState JumpOffWalls()
 	{
 		if (state.leanOffWall) {
 			currentSpeedVector.y = sprintButtonDown ? jumpArcSprint : jumpArc;
@@ -397,15 +386,19 @@ public class PlayerController : MonoBehaviour
 			state.falling = true;
 		}
 		return AnimationState.NONE;
+	}*/
+
+	private AnimationState JumpOffWalls()
+	{
+		currentSpeedVector.y = jumpArc * vAxis;
+		currentSpeedVector.x = Mathf.Sign(hAxis) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
+		return AnimationState.JUMP;
 	}
 
 	private AnimationState Jump()
 	{
-		if (state.onGround) {
-            currentSpeedVector.y = sprintButtonDown ? jumpArcSprint : jumpArc;
-            return AnimationState.JUMP;
-		}
-		return AnimationState.NONE;
+        currentSpeedVector.y = jumpArc;
+        return AnimationState.JUMP;
 	}
 
 	private AnimationState ApplyGravity()
@@ -423,9 +416,8 @@ public class PlayerController : MonoBehaviour
 
 	//## BOOSTING ##
 
-	private bool canBoost = true, boosting = false, chargingBoost = true;
+	private bool canBoost = true, boosting = false;
 	private float boostTimeMax = .25f, boostTimer = 0f, boostSpeed = .45f;
-	private float boostChargeTimeMax = .25f, boostChargeTimer = 0f;
 	private Vector2 boostDirection;
 	private float shakeAmount;
 
@@ -474,7 +466,10 @@ public class PlayerController : MonoBehaviour
 		return AnimationState.BOOST;
 	}
 
-	/*private void BoostJump()
+	/*
+	//private bool chargingBoost = true;
+	//private float boostChargeTimeMax = .25f, boostChargeTimer = 0f;
+	private void BoostJump()
 	{
 		if (canBoost) {
 			state.falling = false;
@@ -628,7 +623,7 @@ public class PlayerController : MonoBehaviour
 
 
 	//## ANIMATION ##//
-	private enum AnimationState {IDLE, WALK, RUN, CLIMB_WALL, CLIMB_CEILING, JUMP, IDLE_WALL, IDLE_CEILING, IN_CORNER, FLOOR_CORNER, CEILING_CORNER, WALL_UP_CORNER, WALL_DOWN_CORNER, BOOST, NONE};
+	private enum AnimationState {IDLE, WALK, RUN, CLIMB_WALL, CLIMB_CEILING, JUMP, IDLE_WALL, IDLE_CEILING, IN_CORNER, FLOOR_CORNER, CEILING_CORNER, WALL_DOWN_CORNER, WALL_UP_CORNER, BOOST, NONE};
 	private AnimationState animationState;
 	private void Animate(AnimationState state)
 	{
@@ -639,10 +634,9 @@ public class PlayerController : MonoBehaviour
 	}
 
 	//## WARPING ##//
-	private Vector3 warpVector;
 	private float maxWarpDistance = 2f;
 
-	private void HandleWarp() 
+	private bool HandleWarp() 
 	{
 		//the player is trying to warp sideways, not up or down
 		//if (Mathf.Abs (hWarp) >= 2 * Mathf.Abs (vWarp)) 
@@ -655,7 +649,8 @@ public class PlayerController : MonoBehaviour
 				Vector3 size = hitBounds.size;
 
 				if (size.x <= maxWarpDistance) {
-					warpVector = new Vector3 (state.FacingRight(true) * (size.x + playerWidth), 0, 0);
+					transform.position = new Vector3(hitBounds.center.x + state.FacingRight(true) * ((size.x / 2) + ((playerWidth - .2f) /2)), transform.position.y, transform.position.z);
+					return true;
 				}
 			}
 		}
@@ -667,7 +662,8 @@ public class PlayerController : MonoBehaviour
 				Vector3 size = hitBounds.size;
 
 				if (size.y <= maxWarpDistance) {
-					warpVector = new Vector3 (0, -size.y - playerHeight, 0);
+					transform.position = new Vector3(transform.position.x, hitBounds.center.y - ((size.y / 2) + ((playerWidth - .2f) /2)), transform.position.z);
+					return true;
 				}
 			}
 		}
@@ -679,10 +675,12 @@ public class PlayerController : MonoBehaviour
 				Vector3 size = hitBounds.size;
 
 				if (size.y <= maxWarpDistance) {
-					warpVector = new Vector3 (0, size.y + playerHeight, 0);
+					transform.position = new Vector3(transform.position.x, hitBounds.center.y + ((size.y / 2) + ((playerWidth - .2f) /2)), transform.position.z);
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 
 
@@ -696,6 +694,8 @@ public class PlayerController : MonoBehaviour
 		PlayerTransform = this.transform;
 		Player = this.gameObject;
 		Reset ();
+		playerHeight = Vector2.Distance (groundChecker.position, ceilingChecker.position);
+		playerWidth = Vector2.Distance (wallCheckerTop.position, wallCheckerTopBack.position);
 	}
 
 	public void Reset()
