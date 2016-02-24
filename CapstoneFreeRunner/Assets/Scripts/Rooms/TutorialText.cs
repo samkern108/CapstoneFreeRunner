@@ -17,6 +17,32 @@ public class TutorialText : MonoBehaviour {
 
 	public void DisplayTutorialText(HintType h) {
 		hintText.enabled = true;
+
+		if (InputWrapper.IsGamepadConnected ()) {
+			DisplayForGamepad (h);
+		} else {
+			DisplayForKeyboard (h);
+		}
+	}
+
+	private void DisplayForGamepad(HintType h) {
+		switch (h) {
+		case HintType.jump:
+			hintText.text = "Press A to Jump";
+			break;
+		case HintType.boostJump:
+			hintText.text = "Press A While Jumping To Boost";
+			break;
+		case HintType.warp:
+			hintText.text = "Run at a wall and press B to warp.";
+			break;
+		case HintType.boostRun:
+			hintText.text = "Hold right trigger to sprint.";
+			break;
+		}
+	}
+
+	private void DisplayForKeyboard(HintType h) {
 		switch (h) {
 		case HintType.jump:
 			hintText.text = "Press Space to Jump";
@@ -28,7 +54,7 @@ public class TutorialText : MonoBehaviour {
 			hintText.text = "Run at a wall and press F to warp.";
 			break;
 		case HintType.boostRun:
-			hintText.text = "Hold right trigger to sprint.";
+			hintText.text = "Hold shift to sprint.";
 			break;
 		}
 	}
