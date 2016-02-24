@@ -75,8 +75,6 @@ public class PlayerController : MonoBehaviour
 	private bool sprintButtonDown, jumpButtonDown, jumpButtonUp;
 	private int screenSize;
 
-    private float boostTrailRate = 20f;
-
 	//## UPDATE ##//
 	void Update () 
 	{
@@ -142,18 +140,6 @@ public class PlayerController : MonoBehaviour
 					}
 				 }
 			}
-            if (boosting) {
-                if (state.facingRight) {
-                    boostRight.GetComponent<ParticleSystem>().emissionRate = boostTrailRate;
-                    boostLeft.GetComponent<ParticleSystem>().emissionRate = 0;
-                } else {
-                    boostRight.GetComponent<ParticleSystem>().emissionRate = 0;
-                    boostLeft.GetComponent<ParticleSystem>().emissionRate = boostTrailRate;
-                }
-            } else {
-                boostRight.GetComponent<ParticleSystem>().emissionRate = 0;
-                boostLeft.GetComponent<ParticleSystem>().emissionRate = 0;
-            }
 
 			//5: Apply Movement Vectors to Transform
 			if(!boosting) {
@@ -161,6 +147,7 @@ public class PlayerController : MonoBehaviour
 					canBoost = true;
 				}
 			}
+
 			transform.position += currentSpeedVector * screenSize/10 * Time.deltaTime;
 		}
 	}
@@ -362,9 +349,11 @@ public class PlayerController : MonoBehaviour
 	}
 
 	//## JUMPING ##//
-	private float jumpSpeed = .4f;
+	private float jumpSpeed = 1f;
 	private float jumpArc = .5f;
-	private float jumpSpeedSprint = .4f;
+	private float wallJumpArc = .4f;
+	private float lowJumpArc = .15f;
+	private float jumpSpeedSprint = 1f;
 
 	//## FALLING ##//
 	private float terminalVelocity = -.8f, gravityFactor = .02f;
@@ -390,8 +379,19 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState JumpOffWalls()
 	{
-		currentSpeedVector.y = jumpArc * vAxis;
-		currentSpeedVector.x = Mathf.Sign(hAxis) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
+		if (InputWrapper.IsGamepadConnected()) {
+			currentSpeedVector.y = wallJumpArc * vAxis;
+			currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
+		} else {
+			if (vAxis > .1f) {
+				currentSpeedVector.y = wallJumpArc;
+			} else if (vAxis < -.1f) {
+				currentSpeedVector.y = 0;
+			} else {
+				currentSpeedVector.y = lowJumpArc;
+			}
+			currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
+		}
 		return AnimationState.JUMP;
 	}
 
@@ -447,6 +447,8 @@ public class PlayerController : MonoBehaviour
 
 		if (state.Colliding()) {
 			boosting = false;
+			boostRight.SetActive(false);
+			boostLeft.SetActive (false);
 			boostTimer = 0f;
 			currentSpeedVector = new Vector3();
 			return AnimationState.NONE;
@@ -459,9 +461,20 @@ public class PlayerController : MonoBehaviour
 		if (state.ValueInDirection (hAxis, 0, false))
 			FlipPlayer ();
 
+		if (state.facingRight && !boostRight.activeSelf) {
+			boostRight.SetActive (true);
+			boostLeft.SetActive (false);
+		} 
+		else if(!state.facingRight && !boostLeft.activeSelf) {
+			boostRight.SetActive (false);
+			boostLeft.SetActive (true);
+		}
+
 		currentSpeedVector = boostSpeed * boostDirection;
 		if (boostTimer <= 0) {
 			boosting = false;
+			boostRight.SetActive(false);
+			boostLeft.SetActive (false);
 		}
 		return AnimationState.BOOST;
 	}

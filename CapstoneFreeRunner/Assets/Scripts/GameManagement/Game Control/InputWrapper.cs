@@ -15,9 +15,7 @@ public class InputWrapper : MonoBehaviour {
 		isGamepadConnected = Input.GetJoystickNames ().Length > 0;
 		Debug.Log ("Is Gamepad Connected:  " + isGamepadConnected);
 	}
-	/**
-	 * HOLY SHIT FIX THIS
-	 **/
+
 	public static bool IsGamepadConnected()
 	{
 		return Input.GetJoystickNames ().Length > 0;
@@ -89,5 +87,13 @@ public class InputWrapper : MonoBehaviour {
 	public static bool GetMenuOpen()
 	{
 		return Input.GetKeyDown (KeyCode.Escape);
+	}
+
+	public static bool Restart()
+	{
+		if (PlayerHealth.isDead) {
+			return Input.GetButtonDown ("Jump");
+		}
+		return false;
 	}
 }
