@@ -79,6 +79,7 @@ public class PlayerController : MonoBehaviour
 	void Update () 
 	{
 		screenSize = Screen.width;
+		Debug.Log (1.0f / Time.deltaTime);
 
 		if (PlayerInputEnabled) 
 		{

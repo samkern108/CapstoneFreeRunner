@@ -18,6 +18,7 @@ public class DayManager : MonoBehaviour {
 	public int[] mailboxesPerDay;
 
 	void Start () {
+		Application.targetFrameRate = 60;
 		self = this;
 
 		//(2): ADD NEXT DAY TO THIS LIST
