@@ -68,7 +68,7 @@ public class PlayerController : MonoBehaviour
 		}
 	}
 
-	private float playerWidth = 1f, playerHeight = 1.4f;
+	private float playerWidth, playerHeight;
 
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0, vAxis = 0, hWarp = 0, vWarp = 0;
@@ -98,16 +98,12 @@ public class PlayerController : MonoBehaviour
 
 			//3: Handle Warping
 			if ((vWarp != 0 || hWarp != 0) && !state.drained && !state.falling) {
-				HandleWarp ();
-				if (warpVector.x != 0 || warpVector.y != 0) {
-					transform.position += warpVector;
-					if(warpVector.x != 0) {
-						Linecasts ();
-						if(!state.onGround) FlipPlayer ();
-					}
-					warpVector = new Vector3 ();
+				if (HandleWarp ()) {
+					Linecasts ();
+					if (!state.onCeiling && !state.onGround) //what happens if we're on a wall & ceiling?
+						FlipPlayer ();
+					return;
 				}
-				return;
 			}
 
 			//4: Handle Regular Movement
@@ -369,7 +365,6 @@ public class PlayerController : MonoBehaviour
 	private float jumpSpeed = .4f;
 	private float jumpArc = .5f;
 	private float jumpSpeedSprint = .4f;
-	private float jumpArcSprint = .5f;
 
 	//## FALLING ##//
 	private float terminalVelocity = -.8f, gravityFactor = .02f;
@@ -380,7 +375,8 @@ public class PlayerController : MonoBehaviour
 		return AnimationState.JUMP;
 	}
 
-	private AnimationState JumpOffWalls()
+	/* Press A to fall off wall
+	 * private AnimationState JumpOffWalls()
 	{
 		if (state.leanOffWall) {
 			currentSpeedVector.y = sprintButtonDown ? jumpArcSprint : jumpArc;
@@ -390,15 +386,19 @@ public class PlayerController : MonoBehaviour
 			state.falling = true;
 		}
 		return AnimationState.NONE;
+	}*/
+
+	private AnimationState JumpOffWalls()
+	{
+		currentSpeedVector.y = jumpArc * vAxis;
+		currentSpeedVector.x = Mathf.Sign(hAxis) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
+		return AnimationState.JUMP;
 	}
 
 	private AnimationState Jump()
 	{
-		if (state.onGround) {
-            currentSpeedVector.y = sprintButtonDown ? jumpArcSprint : jumpArc;
-            return AnimationState.JUMP;
-		}
-		return AnimationState.NONE;
+        currentSpeedVector.y = jumpArc;
+        return AnimationState.JUMP;
 	}
 
 	private AnimationState ApplyGravity()
@@ -416,9 +416,8 @@ public class PlayerController : MonoBehaviour
 
 	//## BOOSTING ##
 
-	private bool canBoost = true, boosting = false, chargingBoost = true;
+	private bool canBoost = true, boosting = false;
 	private float boostTimeMax = .25f, boostTimer = 0f, boostSpeed = .45f;
-	private float boostChargeTimeMax = .25f, boostChargeTimer = 0f;
 	private Vector2 boostDirection;
 	private float shakeAmount;
 
@@ -467,7 +466,10 @@ public class PlayerController : MonoBehaviour
 		return AnimationState.BOOST;
 	}
 
-	/*private void BoostJump()
+	/*
+	//private bool chargingBoost = true;
+	//private float boostChargeTimeMax = .25f, boostChargeTimer = 0f;
+	private void BoostJump()
 	{
 		if (canBoost) {
 			state.falling = false;
@@ -632,10 +634,9 @@ public class PlayerController : MonoBehaviour
 	}
 
 	//## WARPING ##//
-	private Vector3 warpVector;
 	private float maxWarpDistance = 2f;
 
-	private void HandleWarp() 
+	private bool HandleWarp() 
 	{
 		//the player is trying to warp sideways, not up or down
 		//if (Mathf.Abs (hWarp) >= 2 * Mathf.Abs (vWarp)) 
@@ -648,7 +649,8 @@ public class PlayerController : MonoBehaviour
 				Vector3 size = hitBounds.size;
 
 				if (size.x <= maxWarpDistance) {
-					warpVector = new Vector3 (state.FacingRight(true) * (size.x + playerWidth), 0, 0);
+					transform.position = new Vector3(hitBounds.center.x + state.FacingRight(true) * ((size.x / 2) + ((playerWidth - .2f) /2)), transform.position.y, transform.position.z);
+					return true;
 				}
 			}
 		}
@@ -660,7 +662,8 @@ public class PlayerController : MonoBehaviour
 				Vector3 size = hitBounds.size;
 
 				if (size.y <= maxWarpDistance) {
-					warpVector = new Vector3 (0, -size.y - playerHeight, 0);
+					transform.position = new Vector3(transform.position.x, hitBounds.center.y - ((size.y / 2) + ((playerWidth - .2f) /2)), transform.position.z);
+					return true;
 				}
 			}
 		}
@@ -672,10 +675,12 @@ public class PlayerController : MonoBehaviour
 				Vector3 size = hitBounds.size;
 
 				if (size.y <= maxWarpDistance) {
-					warpVector = new Vector3 (0, size.y + playerHeight, 0);
+					transform.position = new Vector3(transform.position.x, hitBounds.center.y + ((size.y / 2) + ((playerWidth - .2f) /2)), transform.position.z);
+					return true;
 				}
 			}
 		}
+		return false;
 	}
 
 
@@ -689,6 +694,8 @@ public class PlayerController : MonoBehaviour
 		PlayerTransform = this.transform;
 		Player = this.gameObject;
 		Reset ();
+		playerHeight = Vector2.Distance (groundChecker.position, ceilingChecker.position);
+		playerWidth = Vector2.Distance (wallCheckerTop.position, wallCheckerTopBack.position);
 	}
 
 	public void Reset()
