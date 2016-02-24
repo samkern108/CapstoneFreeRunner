@@ -73,14 +73,10 @@ public class PlayerController : MonoBehaviour
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0, vAxis = 0, hWarp = 0, vWarp = 0;
 	private bool sprintButtonDown, jumpButtonDown, jumpButtonUp;
-	private int screenSize;
 
 	//## UPDATE ##//
 	void Update () 
 	{
-		screenSize = Screen.width;
-		Debug.Log (1.0f / Time.deltaTime);
-
 		if (PlayerInputEnabled) 
 		{
 			//1: Update Input Values
@@ -114,23 +110,26 @@ public class PlayerController : MonoBehaviour
 					Animate(MoveOnCorner ());
 				}
 				else if (state.onWallFront) {
-					Animate(HandleOnWallFront ());
 					if (jumpButtonDown) {
-						Animate(JumpOffWalls ());
+						Animate (JumpOffWalls ());
+					} else {
+						Animate(HandleOnWallFront ());
 					}
 				} else if (state.onWallBack) {
 					Animate(HandleOnWallBack ());
 				}
 
 				if (state.onGround) {
-					Animate(MoveOnGround ());
 					if (jumpButtonDown) {
 						Jump ();
+					} else {
+						Animate(MoveOnGround ());
 					}
 				} else if (state.onCeiling) {
-					Animate(MoveOnCeiling ());
 					if (jumpButtonDown) {
-						Animate(JumpOffCeiling ());
+						Animate (JumpOffCeiling ());
+					} else {
+						Animate(MoveOnCeiling ());
 					}
 				}
 				if (state.InAir ()) {
@@ -149,13 +148,26 @@ public class PlayerController : MonoBehaviour
 				}
 			}
 
-			transform.position += currentSpeedVector * screenSize/10 * Time.deltaTime;
+			transform.position += currentSpeedVector * Time.deltaTime;
 		}
 	}
 
 	//## RUNNING ##//
 	private static Vector3 currentSpeedVector;
-	private float runSpeed = .2f, sprintSpeed = .4f;
+	private float runSpeed = 12f, sprintSpeed = 24f;
+
+	//## JUMPING ##//
+	private float jumpSpeed = 50f;
+	private float jumpArc = 40f;
+	private float wallJumpArc = 40f;
+	private float lowJumpArc = 30f;
+	private float jumpSpeedSprint = 60f;
+
+	//## FALLING ##//
+	private float terminalVelocity = -28f, gravityFactor = 2f;
+
+	//## BOOSTING ##//
+	private float boostTimeMax = .2f, boostTimer = 0f, boostSpeed = 35f;
 
 	float x, y;
 	Vector2 checkerX, checkerY, cornerChecker;
@@ -269,11 +281,7 @@ public class PlayerController : MonoBehaviour
 
 	private void MoveInAir()
 	{
-        if (!sprintButtonDown) {
-            currentSpeedVector.x = hAxis * runSpeed;
-        } else {
-            currentSpeedVector.x = hAxis * sprintSpeed;
-        }
+		currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
 	}
 
 	private AnimationState MoveOnGround()
@@ -281,6 +289,7 @@ public class PlayerController : MonoBehaviour
 		if (state.falling) {
 			state.falling = false;
 		}
+
 		if (!state.onWallFront)
 			currentSpeedVector.y = 0;
 		else if (state.ValueInDirection(hAxis, 0f, true)) {
@@ -349,16 +358,6 @@ public class PlayerController : MonoBehaviour
 		return (Mathf.Abs(verticalSpeed) >= .05f) ? AnimationState.CLIMB_WALL : AnimationState.IDLE_WALL;
 	}
 
-	//## JUMPING ##//
-	private float jumpSpeed = 1f;
-	private float jumpArc = .5f;
-	private float wallJumpArc = .4f;
-	private float lowJumpArc = .15f;
-	private float jumpSpeedSprint = 1f;
-
-	//## FALLING ##//
-	private float terminalVelocity = -.8f, gravityFactor = .02f;
-
 	private AnimationState JumpOffCeiling()
 	{
 		state.falling = true;
@@ -418,7 +417,6 @@ public class PlayerController : MonoBehaviour
 	//## BOOSTING ##
 
 	private bool canBoost = true, boosting = false;
-	private float boostTimeMax = .25f, boostTimer = 0f, boostSpeed = .45f;
 	private Vector2 boostDirection;
 	private float shakeAmount;
 
@@ -586,7 +584,7 @@ public class PlayerController : MonoBehaviour
 		hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 
 		if (hit.collider != null) {
-			transform.position += new Vector3 (0,(Vector3.Distance(transform.position, groundChecker.position) - hit.distance)/2,0);
+			transform.position += new Vector3 (0,(Vector3.Distance(transform.position, groundChecker.position) - hit.distance),0);
 			state.collidingCorner = Corner.noCorner;
 			state.onGround = true;
 			return;
@@ -596,8 +594,8 @@ public class PlayerController : MonoBehaviour
 		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 
 		if (hit.collider != null) {
-	//		Debug.Log (Vector3.Distance(transform.position, ceilingChecker.position) + "  " +  hit.distance);
-			//transform.position -= new Vector3 (0,(Vector3.Distance(transform.position, ceilingChecker.position) - hit.distance)/2,0);
+			Debug.Log (Vector3.Distance(transform.position, ceilingChecker.position) + "  " +  hit.distance);
+			transform.position -= new Vector3 (0,(Vector3.Distance(transform.position, ceilingChecker.position) - hit.distance)/3,0);
 			state.collidingCorner = Corner.noCorner;
 			state.onCeiling = true;
 			return;
@@ -714,14 +712,16 @@ public class PlayerController : MonoBehaviour
 
 	public void Reset()
 	{
-		PlayerInputEnabled = true;
+		Animate (AnimationState.IDLE);
+		RaycastHit2D hit = Physics2D.Raycast (state.respawnPosition, Vector2.down, 100, 1 << LayerMask.NameToLayer ("Wall"));
+		transform.position = new Vector3(hit.point.x, hit.point.y +  + playerHeight/2, transform.position.z);
 		currentSpeedVector = new Vector3 ();
 		state.drained = false;
 		boosting = false;
 		boostTimer = 0;
-		transform.position = state.respawnPosition;
 		boostRight.SetActive (false);
 		boostLeft.SetActive (false);
+		PlayerInputEnabled = true;
 	}
 
 	//## INPUT ##//
