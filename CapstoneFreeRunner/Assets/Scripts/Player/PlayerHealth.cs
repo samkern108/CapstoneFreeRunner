@@ -6,7 +6,8 @@ public class PlayerHealth : MonoBehaviour {
 	public static bool isDead = false;
 	private bool hit = false;
 	private bool invulnerable = false;
-	public GameObject deathParticle;
+	public GameObject deathParticleBlue;
+	public GameObject deathParticleYellow;
 
 	public void PlayerHit(int damage)
 	{
@@ -15,7 +16,8 @@ public class PlayerHealth : MonoBehaviour {
 				isDead = true;
 				UIManager.self.DisplayGameOverScreen ();
 				PlayerController.PlayerInputEnabled = false;
-				deathParticle.SetActive (true);
+				deathParticleYellow.SetActive (true);
+				deathParticleBlue.SetActive (true);
 				Invoke ("DisableDeathParticle", 5f);
 				SetInvulnerable(true);
 				GetComponent<SpriteRenderer> ().enabled = false;
@@ -31,7 +33,8 @@ public class PlayerHealth : MonoBehaviour {
 
 	public void DisableDeathParticle()
 	{
-		deathParticle.SetActive (false);	
+		deathParticleYellow.SetActive (false);
+		deathParticleBlue.SetActive (false);
 	}
 
 	IEnumerator ShakeCamera() {
@@ -91,7 +94,8 @@ public class PlayerHealth : MonoBehaviour {
 	{
 		isDead = false;
 		hit = false;
-		deathParticle.SetActive (false);
+		deathParticleYellow.SetActive (false);
+		deathParticleBlue.SetActive (false);
 		GetComponent<SpriteRenderer> ().enabled = true;
 		SetInvulnerable (false);
 	}

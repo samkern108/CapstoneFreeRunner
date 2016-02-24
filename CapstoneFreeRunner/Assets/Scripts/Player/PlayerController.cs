@@ -719,6 +719,8 @@ public class PlayerController : MonoBehaviour
 		boosting = false;
 		boostTimer = 0;
 		transform.position = state.respawnPosition;
+		boostRight.SetActive (false);
+		boostLeft.SetActive (false);
 	}
 
 	//## INPUT ##//
