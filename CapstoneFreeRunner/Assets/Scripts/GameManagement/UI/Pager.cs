@@ -7,43 +7,65 @@ public class Pager : MonoBehaviour {
 	public GameObject pager;
 	public Text pagerText;
 	public static Pager self;
-
-	string[] introText = new string[] 
-	{
-		"... that was too close.", 
-		"Get Cam in here!", 
-		"Sorry, boss. I think Cam got disintegrated.", 
-		"Damn it! Now we have to start over from scratch..."
-	};
+	public CutsceneController cutsceneCallback;
+	private bool skipTextStage;
+	private string currentText;
 
 	void Start()
 	{
 		self = this;
-		//StartCoroutine ("IntroSequence");
 	}
 
-	public void DisplayPagerWithTextForTime(string text, float time)
+	void Update()
 	{
-		pager.SetActive (true);
+		if(InputWrapper.GetJump()) {
+			SkipText();
+		}
+	}
+
+	private void SkipText()
+	{
+		if (!skipTextStage) {
+			DisplayPagerWithText (currentText);
+		} else {
+			EndDisplay ();
+		}
+	}
+
+	public void ScrollPagerWithText(string text, CutsceneController callback)
+	{
+		cutsceneCallback = callback;
+		skipTextStage = false;
+		currentText = text;
+		if(!pager.activeSelf) pager.SetActive (true);
+		StartCoroutine ("TextScroll", text);
+	}
+
+	public void DisplayPagerWithText(string text)
+	{
+		skipTextStage = true;
+		currentText = text;
+		if(!pager.activeSelf) pager.SetActive (true);
 		pagerText.text = text;
-		Invoke ("DisablePager", time);
 	}
 
 	public void DisablePager()
 	{
-		pager.SetActive (false);
+		if(pager.activeSelf) pager.SetActive (false);
 		pagerText.text = "";
 	}
 
-	IEnumerator IntroSequence()
+	public void EndDisplay()
 	{
-		Debug.Log (introText.Length);
-		pager.SetActive (true);
-		for (int i = 0; i < introText.Length; i++) {
-			for (int j = 0; j < introText[i].Length; j++) {
-				pagerText.text = introText[i].Substring (0, j);
+		cutsceneCallback.NextPagerPrompt ();
+	}
+
+	IEnumerator TextScroll(string text)
+	{
+		for (int i = 0; i < text.Length + 1; i++) {
+			pagerText.text = text.Substring (0, i);
 				yield return null;
-			}
 		}
+		skipTextStage = true;
 	}
 }
