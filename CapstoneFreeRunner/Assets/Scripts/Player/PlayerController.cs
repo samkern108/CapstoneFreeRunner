@@ -164,7 +164,7 @@ public class PlayerController : MonoBehaviour
 	private float jumpSpeedSprint = 60f;
 
 	//## FALLING ##//
-	private float terminalVelocity = -28f, gravityFactor = 2f;
+	private float terminalVelocity = -28f, gravityFactor = 180f;
 
 	//## BOOSTING ##//
 	private float boostTimeMax = .2f, boostTimer = 0f, boostSpeed = 35f;
@@ -403,11 +403,12 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState ApplyGravity()
 	{
-		currentSpeedVector.y -= gravityFactor;
+		currentSpeedVector.y -= gravityFactor * Time.deltaTime;
 
-		if (currentSpeedVector.y > 0 && jumpButtonUp) {
+		/* This makes the player have a variable jump height.
+		 * if (currentSpeedVector.y > 0 && jumpButtonUp) {
 			currentSpeedVector.y /= 2;
-		}
+		}*/
 		if (currentSpeedVector.y < terminalVelocity)
 			currentSpeedVector.y = terminalVelocity;
 
@@ -594,7 +595,6 @@ public class PlayerController : MonoBehaviour
 		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 
 		if (hit.collider != null) {
-			Debug.Log (Vector3.Distance(transform.position, ceilingChecker.position) + "  " +  hit.distance);
 			transform.position -= new Vector3 (0,(Vector3.Distance(transform.position, ceilingChecker.position) - hit.distance)/3,0);
 			state.collidingCorner = Corner.noCorner;
 			state.onCeiling = true;
