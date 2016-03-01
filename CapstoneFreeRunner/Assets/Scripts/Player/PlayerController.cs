@@ -77,9 +77,12 @@ public class PlayerController : MonoBehaviour
 	//## UPDATE ##//
 	void Update () 
 	{
+		//1: Conduct Linecasts
+		Linecasts();
+
 		if (PlayerInputEnabled) 
 		{
-			//1: Update Input Values
+			//2: Update Input Values
 			vAxis = InputWrapper.GetVerticalAxis ();
 			hAxis = InputWrapper.GetHorizontalAxis ();
 			vWarp = InputWrapper.GetWarpVertical ();
@@ -87,9 +90,6 @@ public class PlayerController : MonoBehaviour
 			sprintButtonDown = InputWrapper.GetSprint ();
 			jumpButtonDown = InputWrapper.GetJump ();
 			jumpButtonUp = InputWrapper.GetAbortJump ();
-
-			//2: Conduct Linecasts
-			Linecasts();
 
 			//3: Handle Warping
 			if ((vWarp != 0 || hWarp != 0) && !state.drained && !state.falling) {
@@ -108,6 +108,7 @@ public class PlayerController : MonoBehaviour
 			else {
 				if (state.OnCorner()) {
 					Animate(MoveOnCorner ());
+					return;
 				}
 				else if (state.onWallFront) {
 					if (jumpButtonDown) {
@@ -180,7 +181,7 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState MoveOnCorner()
 	{
-		AnimationState anim = AnimationState.NONE;
+		AnimationState anim = AnimationState.JUMP;
 		currentSpeedVector = new Vector3 ();
 		if (state.falling) {
 			return anim;
@@ -190,7 +191,7 @@ public class PlayerController : MonoBehaviour
 		case Corner.bottomBack:
 			if (jumpButtonDown) {
 				Jump();
-			} else if (vAxis < .3f) {
+			} else if (vAxis < -.3f) {
 				cornerMoveData = new short[4]{ 1, 1, -1, -1 };
 				FlipPlayer ();
 				cornerChecker = floorCornerCheckBack.position;
@@ -208,7 +209,7 @@ public class PlayerController : MonoBehaviour
 			if (jumpButtonDown) {
 				JumpOffWalls ();
 			} 
-			else if (vAxis < .3f) {
+			else if (vAxis < -.3f) {
 				cornerMoveData = new short[4]{ 1, -1, -1, -1 };
 				cornerChecker = floorCornerCheckFront.position;
 				checkerX = groundChecker.position;
@@ -343,15 +344,16 @@ public class PlayerController : MonoBehaviour
 				return AnimationState.NONE;
 			}
 		}
-
+		Debug.Log (state.onGround + "   " + state.onCeiling);
 		float verticalSpeed = 0;
 		if (state.ValueInDirection(hAxis, .3f, false)) {
 			 state.leanOffWall = true;
 		} else {
 			state.leanOffWall = false;
 			currentSpeedVector.x = 0;
-			if(!(state.onGround && vAxis < 0) && !(state.onCeiling && vAxis > 0))
+			if (!(state.onGround && vAxis < 0) && !(state.onCeiling && vAxis > 0)) {
 				verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : (runSpeed - .1f));
+			}
         }
 
 		currentSpeedVector.y = verticalSpeed;
@@ -588,11 +590,14 @@ public class PlayerController : MonoBehaviour
 			transform.position += new Vector3 (0,(Vector3.Distance(transform.position, groundChecker.position) - hit.distance),0);
 			state.collidingCorner = Corner.noCorner;
 			state.onGround = true;
+			state.onCeiling = false;
 			return;
 		} else  
 			state.onGround = false;
 
 		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+
+		Debug.Log (hit.collider);
 
 		if (hit.collider != null) {
 			transform.position -= new Vector3 (0,(Vector3.Distance(transform.position, ceilingChecker.position) - hit.distance)/3,0);
