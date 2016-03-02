@@ -289,7 +289,7 @@ LineRenderer:
     m_EndColor:
       serializedVersion: 2
       rgba: 16777215
-  m_UseWorldSpace: 1
+  m_UseWorldSpace: 0
 --- !u!198 &19897796
 ParticleSystem:
   m_ObjectHideFlags: 1

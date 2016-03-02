@@ -4,9 +4,10 @@ using System.Collections;
 public class Laser : MonoBehaviour {
 
 	AudioSource AS;
-	public LineRenderer LR;
-	public LineRenderer WhiteLR;
+	private LineRenderer LR;
+	private LineRenderer WhiteLR;
 	public ParticleSystem PS;
+	public bool endAtDirectionHandle = false;
 
 	Transform DirectionHandle;
 	bool active;
@@ -22,11 +23,16 @@ public class Laser : MonoBehaviour {
 		DirectionHandle = FindDirectionHandle(this.transform, "DirectionHandle");
 		active = true;
 		LR = GetComponent<LineRenderer> ();
+		LR.useWorldSpace = true;
 		if (WhiteLR == null) {
 			LR.material = new Material (Shader.Find ("Particles/Additive"));
 		}
 		LR.SetColors(color, color);
 		z = transform.position.z;
+
+		if(endAtDirectionHandle) {
+			maxLazerLength = Vector2.Distance (transform.position, DirectionHandle.position);
+		}
 	}
 
 	void Update () {
@@ -59,8 +65,9 @@ public class Laser : MonoBehaviour {
 		if (active){
 			Vector3 dir = (DirectionHandle.position - transform.position).normalized;		
 			Ray2D ray = new Ray2D(transform.position, dir);
-			RaycastHit2D[] hitList = Physics2D.RaycastAll(ray.origin, ray.direction, maxLazerLength);
-			
+
+			RaycastHit2D[] hitList = Physics2D.RaycastAll (ray.origin, ray.direction, maxLazerLength);
+
 			//draw laser
 			UpdateLinePosition (0, ray.origin);
 

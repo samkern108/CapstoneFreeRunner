@@ -10,6 +10,7 @@ public class Pager : MonoBehaviour {
 	public CutsceneController cutsceneCallback;
 	private bool skipTextStage;
 	private string currentText;
+	private bool displaying = false;
 
 	void Start()
 	{
@@ -18,7 +19,7 @@ public class Pager : MonoBehaviour {
 
 	void Update()
 	{
-		if(InputWrapper.GetJump()) {
+		if(displaying && InputWrapper.GetJump()) {
 			SkipText();
 		}
 	}
@@ -39,13 +40,12 @@ public class Pager : MonoBehaviour {
 		currentText = text;
 		if(!pager.activeSelf) pager.SetActive (true);
 		StartCoroutine ("TextScroll", text);
+		displaying = true;
 	}
 
-	public void DisplayPagerWithText(string text)
+	private void DisplayPagerWithText(string text)
 	{
 		skipTextStage = true;
-		currentText = text;
-		if(!pager.activeSelf) pager.SetActive (true);
 		pagerText.text = text;
 	}
 
@@ -53,6 +53,7 @@ public class Pager : MonoBehaviour {
 	{
 		if(pager.activeSelf) pager.SetActive (false);
 		pagerText.text = "";
+		displaying = false;
 	}
 
 	public void EndDisplay()
