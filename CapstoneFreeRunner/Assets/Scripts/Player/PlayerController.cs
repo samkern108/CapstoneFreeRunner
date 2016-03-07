@@ -565,7 +565,35 @@ public class PlayerController : MonoBehaviour
 	//## WARPING ##//
 	private float maxWarpDistance = 2f;
 
-	private bool HandleWarp() 
+    private void WarpEffect() {
+        /*
+        switch (angle) {
+            case 0:
+            warpParticleEmitter1.transform.localPosition = new Vector3(0.5f, 0, 0);
+            warpParticleEmitter2.transform.localPosition = new Vector3(0.5f, 0, 0);
+            break;
+            case 90:
+            warpParticleEmitter1.transform.localPosition = new Vector3(0, -0.5f, 0);
+            warpParticleEmitter2.transform.localPosition = new Vector3(0, -0.5f, 0);
+            break;
+            case 180:
+            warpParticleEmitter1.transform.localPosition = new Vector3(0.5f, 0, 0);
+            warpParticleEmitter2.transform.localPosition = new Vector3(0.5f, 0, 0);
+            break;
+            case 270:
+            warpParticleEmitter1.transform.localPosition = new Vector3(0, 0.5f, 0);
+            warpParticleEmitter2.transform.localPosition = new Vector3(0, 0.5f, 0);
+            break;
+
+        }
+        */
+        //warpParticleEmitter1.transform.rotation = Quaternion.Euler(new Vector3(angle, 90, 0));
+        //warpParticleEmitter2.transform.rotation = Quaternion.Euler(new Vector3(angle, 90, 0));
+        warpParticleEmitter1.GetComponent<ParticleSystem>().Emit(25);
+        warpParticleEmitter2.GetComponent<ParticleSystem>().Emit(50);
+    }
+
+    private bool HandleWarp() 
 	{
 		Vector3 checker1 = new Vector3(), checker2 = new Vector3();
 		bool warpVertical = true;
@@ -596,14 +624,16 @@ public class PlayerController : MonoBehaviour
 
 				if (!warpVertical) {
 					if (size.x <= maxWarpDistance) {
-						transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, transform.position.z);
+                        WarpEffect();
+                        transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, transform.position.z);
 						bool flip = false;//Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 						FlipPlayer ();
 						return true;
 					}
 				} else {
 					if (size.y <= maxWarpDistance) {
-						transform.position = new Vector3 (transform.position.x, hitBounds.center.y + Mathf.Sign (vWarp) * ((size.y / 2) + ((playerHeight - .2f) / 2)), transform.position.z);
+                        WarpEffect();
+                        transform.position = new Vector3 (transform.position.x, hitBounds.center.y + Mathf.Sign (vWarp) * ((size.y / 2) + ((playerHeight - .2f) / 2)), transform.position.z);
 						return true;
 					}
 				}
