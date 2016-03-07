@@ -311,7 +311,11 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState HandleOnWallBack()
 	{
-		if (state.ValueInDirection(state.currentSpeedVector.x, 0, false)) {
+		if(!state.onGround && !state.onCeiling) {
+			FlipPlayer ();
+		}
+		//if the player's back is to the wall and they try to move backwards "through" it, we stop their motion and flip them.
+		else if (state.ValueInDirection (state.currentSpeedVector.x, 0, false)) {
 			state.currentSpeedVector.x = 0;
 			FlipPlayer ();
 		}
