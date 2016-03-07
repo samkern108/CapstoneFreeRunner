@@ -624,17 +624,19 @@ public class PlayerController : MonoBehaviour
 
 				if (!warpVertical) {
 					if (size.x <= maxWarpDistance) {
-                        WarpEffect();
+                       
                         transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, transform.position.z);
-						bool flip = false;//Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
+                        WarpEffect();
+                        bool flip = false;//Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 						FlipPlayer ();
 						return true;
 					}
 				} else {
 					if (size.y <= maxWarpDistance) {
-                        WarpEffect();
+                        
                         transform.position = new Vector3 (transform.position.x, hitBounds.center.y + Mathf.Sign (vWarp) * ((size.y / 2) + ((playerHeight - .2f) / 2)), transform.position.z);
-						return true;
+                        WarpEffect();
+                        return true;
 					}
 				}
 			}
