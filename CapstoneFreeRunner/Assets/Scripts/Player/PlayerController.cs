@@ -7,8 +7,10 @@ public class PlayerController : MonoBehaviour
 	public Transform raycastParent;
 
 	public GameObject boostParticle;
+    public GameObject warpParticleEmitter1;
+    public GameObject warpParticleEmitter2;
 
-	private Animator animator;
+    private Animator animator;
 
 	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
 	public static PlayerState state;
