@@ -6,11 +6,21 @@ public class Pager : MonoBehaviour {
 
 	public GameObject pager;
 	public Text pagerText;
+
+	public GameObject speaker;
+	public Text speakerText;
+
+	public GameObject bossTag;
+	public GameObject paulTag;
+	public GameObject youTag;
+
 	public static Pager self;
 	public CutsceneController cutsceneCallback;
 	private bool skipTextStage;
 	private string currentText;
 	private bool displaying = false;
+
+	private bool hidden = false;
 
 	void Start()
 	{
@@ -33,8 +43,30 @@ public class Pager : MonoBehaviour {
 		}
 	}
 
+	public void SetSpeaker(string text)
+	{
+		speakerText.text = text;
+		if (text.ToLower ().Equals ("boss")) {
+			bossTag.SetActive (true);
+			paulTag.SetActive (false);
+			youTag.SetActive (false);
+		} else if (text.ToLower ().Equals ("you")) {
+			paulTag.SetActive (false);
+			bossTag.SetActive (false);
+			youTag.SetActive (true);
+		}
+		else {
+			paulTag.SetActive (true);
+			bossTag.SetActive (false);
+			youTag.SetActive (false);
+		}
+	}
+
 	public void ScrollPagerWithText(string text, CutsceneController callback)
 	{
+		if (hidden) {
+			ShowWindows ();
+		}
 		cutsceneCallback = callback;
 		skipTextStage = false;
 		currentText = text;
@@ -59,6 +91,21 @@ public class Pager : MonoBehaviour {
 	public void EndDisplay()
 	{
 		cutsceneCallback.NextPagerPrompt ();
+	}
+
+	public void HideWindow()
+	{
+		pager.SetActive (false);
+		paulTag.SetActive (false);
+		bossTag.SetActive (false);
+		youTag.SetActive (false);
+		hidden = true;
+	}
+
+	public void ShowWindows()
+	{
+		pager.SetActive (true);
+		hidden = false;
 	}
 
 	IEnumerator TextScroll(string text)

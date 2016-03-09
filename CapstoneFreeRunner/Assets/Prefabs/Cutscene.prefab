@@ -17,6 +17,34 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!1 &193854
+GameObject:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  serializedVersion: 4
+  m_Component:
+  - 4: {fileID: 467248}
+  - 114: {fileID: 11461778}
+  m_Layer: 0
+  m_Name: ScriptedEvent
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &467248
+Transform:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 193854}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 485676}
+  m_RootOrder: 0
 --- !u!4 &485676
 Transform:
   m_ObjectHideFlags: 1
@@ -24,9 +52,10 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 150692}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.007357836, y: 0.21789253, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 467248}
   m_Father: {fileID: 0}
   m_RootOrder: 0
 --- !u!61 &6176484
@@ -56,9 +85,46 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   disabled: 0
   cutscenedialogue:
-  - Hey, kid.
-  - You deliver papers.
-  - Go do that thing.
+  - <Boss>
+  - '...'
+  - <Paul>
+  - '...'
+  - <Boss>
+  - '... Johnny?'
+  - XX
+  - I think we lost him.
+  - <Paul>
+  - I can try to reassemble him again...
+  - XX
+  - '... Nothing. I think he got vaporized.'
+  - <Boss>
+  - Any more paper boys get vaporized, and we'll be out of business!
+  - Who's going to deliver for us now?
+  - We're already losing subscribers across the universe by the minute!
+  - XX
+  - <Paul>
+  - Hey, I just work the machine.
+  - <Boss>
+  - You! Blue hat intern guy!
+  - XX
+  - <Boss>
+  - Yeah, you!
+  - XX
+  - <Boss>
+  - How would you like a raise?
+  - <You>
+  - '...'
+--- !u!114 &11461778
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 193854}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39dc86f9fb1ec4d9f937bea61e6ac322, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &100100000
 Prefab:
   m_ObjectHideFlags: 1
