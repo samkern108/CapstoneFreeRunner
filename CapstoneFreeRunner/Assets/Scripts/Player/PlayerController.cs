@@ -150,11 +150,15 @@ public class PlayerController : MonoBehaviour
 			}
 
 			//5: Apply Movement Vectors to Transform
-			intermediatePosition = transform.position + state.currentSpeedVector * Time.deltaTime;
+			/*intermediatePosition = transform.position + state.currentSpeedVector * Time.deltaTime;
 			raycastParent.position = intermediatePosition;
 			Linecasts (raycastParent.position);
 			transform.position = intermediatePosition;
-			raycastParent.position = transform.position;
+			raycastParent.position = transform.position;*/
+
+			transform.position = CheckNewPosition (transform.position + state.currentSpeedVector * Time.deltaTime, transform.position);
+
+			Linecasts (transform.position);
 		}
 	}
 
@@ -473,6 +477,23 @@ public class PlayerController : MonoBehaviour
 
 	private RaycastHit2D cornerHit;
 	private RaycastHit2D hit;
+
+	private Vector3 CheckNewPosition(Vector3 newPos, Vector3 oldPos)
+	{
+		Vector2 dir = (newPos - oldPos).normalized;
+		float distance = Vector2.Distance (newPos, oldPos);
+
+		RaycastHit2D raycast = Physics2D.Raycast (oldPos, dir, distance + 2, 1 << LayerMask.NameToLayer ("Wall"));
+
+		//Debug.Log (raycast.distance + "  " + distance + "   " + dir + "   " + raycast.collider);
+
+		if (raycast.collider == null || raycast.distance > distance) {
+			return newPos;
+		} else {
+			dir = new Vector2 (dir.x * playerWidth, dir.y * playerHeight);
+			return raycast.point + state.FacingRight(false) * dir;
+		}
+	}
 
 	// Maybe I can get LinecastNonAlloc to work someday.
 	private void Linecasts(Vector3 middle)
