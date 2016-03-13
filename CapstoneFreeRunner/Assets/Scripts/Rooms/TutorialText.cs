@@ -18,7 +18,7 @@ public class TutorialText : MonoBehaviour {
 	public void DisplayTutorialText(HintType h) {
 		hintText.enabled = true;
 
-		if (InputWrapper.IsGamepadConnected ()) {
+		if (InputWrapper.isGamepadConnected) {
 			DisplayForGamepad (h);
 		} else {
 			DisplayForKeyboard (h);

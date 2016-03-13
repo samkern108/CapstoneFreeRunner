@@ -357,7 +357,7 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState JumpOffWalls()
 	{
-		if (InputWrapper.IsGamepadConnected()) {
+		if (InputWrapper.isGamepadConnected) {
 			state.currentSpeedVector.y = wallJumpArc * vAxis;
 			state.currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
 		} else {
