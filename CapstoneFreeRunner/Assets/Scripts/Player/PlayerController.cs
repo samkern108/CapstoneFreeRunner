@@ -258,7 +258,7 @@ public class PlayerController : MonoBehaviour
 			case 1: //moving primarily in x
 				if (hit.collider != null)
 					moveX = hit.collider.transform.position.x + (state.FacingRight(false) * cornerMoveData[1]) * (hit.collider.bounds.size.x / 2);
-				Debug.Log (hit.collider.name + "  " + hit.collider.transform.position.x + " " + hit.collider.bounds.size.x);
+//				Debug.Log (hit.collider.name + "  " + hit.collider.transform.position.x + " " + hit.collider.bounds.size.x);
 				break;
 			case -1: //moving primarily in y
 				if(hit.collider != null)
@@ -361,8 +361,9 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState JumpOffWalls()
 	{
-		if (InputWrapper.isGamepadConnected) {
-			state.currentSpeedVector.y = wallJumpArc * vAxis;
+	if (InputWrapper.isGamepadConnected) {
+            state.currentSpeedVector.y = wallJumpArc; //* vAxis;
+
 			state.currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
 		} else {
 			if (vAxis > .1f) {
