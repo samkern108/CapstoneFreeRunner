@@ -2,22 +2,22 @@
 using System.Collections;
 using UnityEngine.UI;
 
-public enum HintType {jump, boostJump, warp, boostRun};
+public enum HintType {Warp, Jump, Boost, BoostUp, BoostRight, BoostLeft, Sprint};
 
 public class TutorialText : MonoBehaviour {
 
+	public Image image;
+	public Animator anim;
 	public static TutorialText self;
-	public Text hintText;
-	private bool textDisplayed;
 
 	void Start () {
+		image = this.GetComponent <Image>();
+		anim = this.GetComponent <Animator>();
+		image.enabled = false;
 		self = this;
-		hintText.enabled = false;
 	}
 
-	public void DisplayTutorialText(HintType h) {
-		hintText.enabled = true;
-
+	public void DisplayHint(HintType h) {
 		if (InputWrapper.isGamepadConnected) {
 			DisplayForGamepad (h);
 		} else {
@@ -26,40 +26,22 @@ public class TutorialText : MonoBehaviour {
 	}
 
 	private void DisplayForGamepad(HintType h) {
-		switch (h) {
-		case HintType.jump:
-			hintText.text = "Press A to Jump";
-			break;
-		case HintType.boostJump:
-			hintText.text = "Press A While Jumping To Boost";
-			break;
-		case HintType.warp:
-			hintText.text = "Run at a wall and press B to warp.";
-			break;
-		case HintType.boostRun:
-			hintText.text = "Hold right trigger to sprint.";
-			break;
-		}
+		Animate (h);
 	}
 
 	private void DisplayForKeyboard(HintType h) {
-		switch (h) {
-		case HintType.jump:
-			hintText.text = "Press Space to Jump";
-			break;
-		case HintType.boostJump:
-			hintText.text = "Press Space While Jumping To Boost";
-			break;
-		case HintType.warp:
-			hintText.text = "Run at a wall and press F to warp.";
-			break;
-		case HintType.boostRun:
-			hintText.text = "Hold shift to sprint.";
-			break;
-		}
+		Debug.Log ("Icons for keyboard NYI");
+		Animate (h);
 	}
 
-	public void SquelchTutorialText() {
-		hintText.enabled = false;
+	private void Animate(HintType t)
+	{
+		image.enabled = true;
+		Debug.Log (t + "   " + (int)t);
+		anim.SetInteger ("state", (int)t);
+	}
+
+	public void SquelchHint() {
+		image.enabled = false;
 	}
 }
