@@ -10,19 +10,9 @@ public class CutsceneController : MonoBehaviour {
 	public string[] cutscenedialogue;
 	private string speaker = "Boss";
 
-	ScriptedEvent[] scriptedEvents;
-
-	void Start()
-	{
-		scriptedEvents = this.GetComponentsInChildren <ScriptedEvent> ();
-		foreach(ScriptedEvent e in scriptedEvents) {
-			e.gameObject.SetActive (false);
-		}
-	}
-
 	void OnTriggerEnter2D(Collider2D col)
 	{
-		if (col.tag == "Player") {
+		if (PlayerPrefs.GetInt("") == 1 && col.tag == "Player") {
 			StartCutscene ();
 		}
 	}
@@ -61,7 +51,7 @@ public class CutsceneController : MonoBehaviour {
 			}
 			else if(lineAr[0] == '%' && lineAr[1] == '%'){
 				dialogueLine++;
-				BeginScriptedEvent (Int32.Parse(line.Substring(2)));
+				BeginScriptedEvent (line.Substring(2));
 				return;			}
 			else if (lineAr [0] == '<') {
 				SetSpeaker (line.Substring (1, line.Length - 2));
@@ -85,12 +75,14 @@ public class CutsceneController : MonoBehaviour {
 		Pager.self.ScrollPagerWithText (text, this);
 	}
 
-	private void BeginScriptedEvent(int id)
+	private void BeginScriptedEvent(string childname)
 	{
-		if (id < scriptedEvents.Length) {
-			scriptedEvents [id].gameObject.SetActive (true);
-			scriptedEvents [id].TriggerEventWithCallback (this.gameObject);
+		Transform t = transform.Find (childname);
+		ScriptedEvent se = t.GetComponent <ScriptedEvent>();
+		if (se == null) {
+			Debug.Log ("ERROR: NO SCRIPTED EVENT WITH NAME " + childname);
 		}
+		se.TriggerEventWithCallback (this.gameObject);
 	}
 
 	public void EndScriptedEvent()

@@ -25,6 +25,12 @@ public class Pager : MonoBehaviour {
 	void Start()
 	{
 		self = this;
+
+		bossTag.SetActive (false);
+		paulTag.SetActive (false);
+		youTag.SetActive (false);
+		speaker.SetActive (false);
+		pager.SetActive (false);
 	}
 
 	void Update()

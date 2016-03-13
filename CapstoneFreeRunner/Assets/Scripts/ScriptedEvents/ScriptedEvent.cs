@@ -5,15 +5,13 @@ public class ScriptedEvent : MonoBehaviour {
 
 	GameObject callback;
 
-	public void TriggerEventWithCallback(GameObject cb)
+	public virtual void TriggerEventWithCallback(GameObject cb)
 	{
 		callback = cb;
-		ReturnToCallback ();
 	}
-
-	public void ReturnToCallback()
+		
+	public virtual void EndEvent ()
 	{
 		callback.SendMessage ("EndScriptedEvent");
-		this.gameObject.SetActive (false);
 	}
 }

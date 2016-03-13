@@ -7,12 +7,14 @@ public class OptionsMenu : MonoBehaviour {
 	{
 		MusicEnabled,
 		SFXEnabled,
-		ShowChallengeTimeEnabled
+		ShowChallengeTimeEnabled,
+		PlayCutscenes
 	};
 
 	public static bool musicEnabled = true;
 	public static bool sfxEnabled = true;
 	public static bool showChallengeTime = true;
+	public static bool playCutscenes = true;
 
 	public void ToggleMusicEnabled()
 	{
@@ -30,6 +32,12 @@ public class OptionsMenu : MonoBehaviour {
 	{
 		showChallengeTime = !showChallengeTime;
 		SetPreference (Key.ShowChallengeTimeEnabled, showChallengeTime);
+	}
+
+	public void TogglePlayCutscenes()
+	{
+		playCutscenes = !playCutscenes;
+		SetPreference (Key.PlayCutscenes, playCutscenes);
 	}
 
 	private void SetPreference(Key key, bool value)
