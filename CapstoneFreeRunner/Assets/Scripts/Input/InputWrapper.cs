@@ -78,8 +78,8 @@ public class InputWrapper : MonoBehaviour {
 
 		JUMP = "Jump_MAC";
 		WARP = "Warp_MAC";
-		HAXIS = "Horizontal";
-		VAXIS = "Vertical";
+		HAXIS = "Horizontal_GAMEPAD";
+		VAXIS = "Vertical_GAMEPAD";
 		SPRINT = "Sprint_XBOX";
 		VWARP = "WarpVertical";
 		HWARP = "WarpHorizontal";
@@ -107,13 +107,16 @@ public class InputWrapper : MonoBehaviour {
 		DetermineInputType ();
 	}
 
-	/*void Update()
+	void Update()
 	{
-		joystickCheckTimer += Time.deltaTime;
+		if (GetMenuOpen ()) {
+			OptionsMenu.self.ToggleOpen();
+		}
+		/*joystickCheckTimer += Time.deltaTime;
 		if (joystickCheckTimer >= joystickCheckTimeout) {
 			DetermineInputType ();
-		}
-	}*/
+		}*/
+	}
 
 	public static void DetermineInputType()
 	{
@@ -121,12 +124,10 @@ public class InputWrapper : MonoBehaviour {
 
 		if (joysticks.Length > 0) {
 			isGamepadConnected = true;
-			Debug.Log (joysticks [0]);
+			AssignPSControls ();
+		} else {
+			AssignKeyboardControls ();
 		}
-
-		Debug.Log (Application.platform.ToString());
-
-		AssignMacXBOXControls ();
 	}
 
 	public static float GetHorizontalAxis()
@@ -164,6 +165,11 @@ public class InputWrapper : MonoBehaviour {
 		return warpType ? GetWarpHorizontalAxis () : GetWarpHorizontalButton ();
 	}
 
+	public static bool GetWarpButton()
+	{
+		return Input.GetButtonDown (WARP);
+	}
+
 	private static float GetWarpHorizontalButton()
 	{
 		if (!Input.GetButtonDown (WARP)) {
@@ -194,7 +200,7 @@ public class InputWrapper : MonoBehaviour {
 
 	public static bool GetMenuOpen()
 	{
-		return Input.GetKeyDown (MENU);
+		return Input.GetButtonDown (MENU);
 	}
 
 	public static bool Restart()
