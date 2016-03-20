@@ -16,6 +16,19 @@ public class OptionsMenu : MonoBehaviour {
 	public static bool showChallengeTime = true;
 	public static bool playCutscenes = true;
 
+	public GameObject optionsMenu;
+	public static OptionsMenu self;
+
+	public void Start()
+	{
+		self = this;
+	}
+
+	public void ToggleOpen()
+	{
+		optionsMenu.SetActive (!optionsMenu.activeSelf);
+	}
+
 	public void ToggleMusicEnabled()
 	{
 		musicEnabled = !musicEnabled;

@@ -46,7 +46,8 @@ public class DayManager : MonoBehaviour {
 		LoadDay (currentDay + 1);
 	}
 
-	public void LoadDay(int day) {
+	public void LoadDay(int day) 
+	{
 		days [day].SetActive(true);
 		days [currentDay].SetActive(false);
 		currentDay = day;
@@ -54,7 +55,7 @@ public class DayManager : MonoBehaviour {
 	}
 
 	public bool PaperRouteFinished() {
-		return StatsTracker.papersDelivered >= mailboxesPerDay[currentDay];
+		return StatsTracker.papersDelivered >= mailboxesPerDay[currentDay] - Mathf.Ceil(mailboxesPerDay[currentDay]/2);
 	}
 
 	public void ResetLevel() {

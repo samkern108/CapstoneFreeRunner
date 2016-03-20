@@ -12,7 +12,7 @@ public class CutsceneController : MonoBehaviour {
 
 	void OnTriggerEnter2D(Collider2D col)
 	{
-		if (PlayerPrefs.GetInt("") == 1 && col.tag == "Player") {
+		if (PlayerPrefs.GetInt(OptionsMenu.Key.PlayCutscenes.ToString()) == 0 && col.tag == "Player") {
 			StartCutscene ();
 		}
 	}

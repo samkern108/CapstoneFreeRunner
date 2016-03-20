@@ -76,7 +76,7 @@ public class PlayerController : MonoBehaviour
 
 	//## CURRENT INPUT VALUES ##//
 	private float hAxis = 0, vAxis = 0, hWarp = 0, vWarp = 0;
-	private bool sprintButtonDown, jumpButtonDown, jumpButtonUp;
+	private bool sprintButtonDown, jumpButtonDown, jumpButtonUp, warpButtonDown;
 
 	private Vector3 intermediatePosition;
 
@@ -92,12 +92,13 @@ public class PlayerController : MonoBehaviour
 			hAxis = InputWrapper.GetHorizontalAxis ();
 			vWarp = InputWrapper.GetWarpVertical ();
 			hWarp = InputWrapper.GetWarpHorizontal ();
+			warpButtonDown = InputWrapper.GetWarpButton ();
 			sprintButtonDown = InputWrapper.GetSprint ();
 			jumpButtonDown = InputWrapper.GetJump ();
 			jumpButtonUp = InputWrapper.GetAbortJump ();
 
 			//3: Handle Warping
-			if ((vWarp != 0 || hWarp != 0) && !state.drained) {// && !state.InAir()) {
+			if (warpButtonDown && !state.drained) {// && !state.InAir())  {
 				if (HandleWarp ()) return;
 			}
 
@@ -274,6 +275,9 @@ public class PlayerController : MonoBehaviour
 
 	private void MoveInAir()
 	{
+		if (state.ValueInDirection(hAxis, 0f, false))  
+			FlipPlayer ();
+		
 		state.currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
 	}
 
@@ -482,17 +486,15 @@ public class PlayerController : MonoBehaviour
 	private Vector3 CheckNewPosition(Vector3 newPos, Vector3 oldPos)
 	{
 		Vector2 dir = (newPos - oldPos).normalized;
-		float distance = Vector2.Distance (newPos, oldPos);
+		Vector2 playerDimensions = new Vector2 (dir.x * playerWidth, dir.y * playerHeight);
+		float distance = Vector2.Distance (newPos, oldPos);// + playerDimensions.magnitude;
 
 		RaycastHit2D raycast = Physics2D.Raycast (oldPos, dir, distance + 2, 1 << LayerMask.NameToLayer ("Wall"));
-
-		//Debug.Log (raycast.distance + "  " + distance + "   " + dir + "   " + raycast.collider);
 
 		if (raycast.collider == null || raycast.distance > distance) {
 			return newPos;
 		} else {
-			dir = new Vector2 (dir.x * playerWidth, dir.y * playerHeight);
-			return raycast.point + state.FacingRight(false) * dir;
+			return raycast.point + (state.FacingRight(false) * playerDimensions);
 		}
 	}
 
@@ -619,22 +621,25 @@ public class PlayerController : MonoBehaviour
 	{
 		Vector3 checker1 = new Vector3(), checker2 = new Vector3();
 		bool warpVertical = true;
+		int onGround = 0;
 
-		if(state.onWallFront && state.ValueInDirection(hWarp, .3f, true)) 
+		if(state.onWallFront) 
 		{
 			checker1 = wallCheckerBottom.position;
 			checker2 = wallCheckerTop.position;
 			warpVertical = false;
 		}
-		else if(state.onGround && vWarp < 0)
+		else if(state.onGround)
 		{
 			checker1 = transform.position;
 			checker2 = groundChecker.position;
+			onGround = -1;
 		}
-		else if(state.onCeiling && vWarp > 0)
+		else if(state.onCeiling)
 		{
 			checker1 = transform.position;
 			checker2 = ceilingChecker.position;
+			onGround = 1;
 		}
 
 		if (checker1 != new Vector3 ()) {
@@ -649,14 +654,13 @@ public class PlayerController : MonoBehaviour
                        
                         transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, transform.position.z);
                         WarpEffect();
-                        bool flip = false;//Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall")) || Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 						FlipPlayer ();
 						return true;
 					}
 				} else {
 					if (size.y <= maxWarpDistance) {
                         
-                        transform.position = new Vector3 (transform.position.x, hitBounds.center.y + Mathf.Sign (vWarp) * ((size.y / 2) + ((playerHeight - .2f) / 2)), transform.position.z);
+                        transform.position = new Vector3 (transform.position.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), transform.position.z);
                         WarpEffect();
                         return true;
 					}

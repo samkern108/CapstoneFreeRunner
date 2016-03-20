@@ -30,14 +30,12 @@ public class TutorialText : MonoBehaviour {
 	}
 
 	private void DisplayForKeyboard(HintType h) {
-		Debug.Log ("Icons for keyboard NYI");
 		Animate (h);
 	}
 
 	private void Animate(HintType t)
 	{
 		image.enabled = true;
-		Debug.Log (t + "   " + (int)t);
 		anim.SetInteger ("state", (int)t);
 	}
 
