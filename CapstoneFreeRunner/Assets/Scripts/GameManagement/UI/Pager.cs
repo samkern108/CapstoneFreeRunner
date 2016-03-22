@@ -16,10 +16,11 @@ public class Pager : MonoBehaviour {
 
 	public static Pager self;
 	public CutsceneController cutsceneCallback;
-	private bool skipTextStage;
-	private string currentText;
-	private bool displaying = false;
 
+	private string currentText;
+
+	private bool skipTextStage;
+	private bool displaying = false;
 	private bool hidden = false;
 
 	void Start()
@@ -33,15 +34,18 @@ public class Pager : MonoBehaviour {
 		if(displaying && InputWrapper.GetJump()) {
 			SkipText();
 		}
+		if (displaying && InputWrapper.GetWarpButton()) {
+			cutsceneCallback.EndCutscene ();
+			DisablePager ();
+		}
 	}
 
 	private void SkipText()
 	{
-		if (!skipTextStage) {
+		if (!skipTextStage)
 			DisplayPagerWithText (currentText);
-		} else {
+		else
 			EndDisplay ();
-		}
 	}
 
 	public void SetSpeaker(string text)

@@ -25,7 +25,7 @@ public class CutsceneController : MonoBehaviour {
 		}
 	}
 
-	private void EndCutscene()
+	public void EndCutscene()
 	{
 		DayManager.self.PauseGame (false);
 		this.disabled = true;
