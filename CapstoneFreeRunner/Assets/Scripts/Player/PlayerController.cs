@@ -3,6 +3,8 @@ using System.Collections;
 
 public class PlayerController : MonoBehaviour 
 {
+	public static float playerZLayer;
+
 	public Transform playerStartPosition;
 	public Transform raycastParent;
 
@@ -200,7 +202,7 @@ public class PlayerController : MonoBehaviour
 			} 
 			//move backwards while looking down a cliff
 			else if (state.ValueInDirection (hAxis, .3f, false)) { 
-				cornerMoveData = new short[4]{ 1, -1, 1, 1 };
+				cornerMoveData = new short[4]{ 1, 1, 1, 1 }; //x : -1
 			} 
 			cornerChecker = floorCornerCheckBack.position;
 			anim = AnimationState.FLOOR_CORNER;
@@ -215,7 +217,7 @@ public class PlayerController : MonoBehaviour
 			} 
 			//move up and over the corner of a cliff
 			else if (state.ValueInDirection (hAxis, .3f, true)) {
-				cornerMoveData = new short[4]{ 1, 1, 1, 1 };
+				cornerMoveData = new short[4]{ 1, -1, 1, 1 }; //x : 1
 			}
 			cornerChecker = floorCornerCheckFront.position;
 			anim = AnimationState.WALL_UP_CORNER;
@@ -231,7 +233,7 @@ public class PlayerController : MonoBehaviour
 			} 
 			//move backwards on the ceiling
 			else if (state.ValueInDirection (hAxis, .3f, false)) {
-				cornerMoveData = new short[4]{ 1, -1, -1, 1 };
+				cornerMoveData = new short[4]{ 1, 1, -1, 1 }; //x: -1
 			}
 
 			cornerChecker = ceilingCornerCheckBack.position;
@@ -247,7 +249,7 @@ public class PlayerController : MonoBehaviour
 			} 
 			//move under wall while clinging to it.
 			else if (state.ValueInDirection (hAxis, .3f, true)) {
-				cornerMoveData = new short[4]{ 1, 1, -1, 1 };
+				cornerMoveData = new short[4]{ 1, -1, -1, 1 }; // x: 1
 			}
 			cornerChecker = ceilingCornerCheckFront.position;
 			anim = AnimationState.WALL_DOWN_CORNER;
@@ -274,7 +276,7 @@ public class PlayerController : MonoBehaviour
 			{
 			case 1: //moving primarily in x
 				if (hit.collider != null)
-					moveX = hit.collider.transform.position.x + (state.FacingRight(false) * cornerMoveData[1]) * (hit.collider.bounds.size.x / 2);
+					moveX = hit.collider.transform.position.x + (state.FacingRight(true) * cornerMoveData[1]) * (hit.collider.bounds.size.x / 2);
 				break;
 			case -1: //moving primarily in y
 				if(hit.collider != null)
@@ -531,9 +533,6 @@ public class PlayerController : MonoBehaviour
 
 		hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 		if (hit.collider != null) {
-
-			//anticipatedPos.x = hit.transform.position.x + state.FacingRight(false) * (hit.collider.bounds.size.x/2 + playerWidth/2);
-
 			state.onWallFront = true;
 		} else  
 			state.onWallFront = false;
@@ -541,10 +540,6 @@ public class PlayerController : MonoBehaviour
 		hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 
 		if (hit.collider != null) {
-			//transform.position += new Vector3 (0,(Vector3.Distance(transform.position, groundChecker.position) - hit.distance),0);
-			//transform.position = new Vector3(transform.position.x, hit.collider.transform.position.y + hit.collider.bounds.size.y/2, transform.position.z);
-
-			//anticipatedPos.y = ;
 
 			state.collidingCorner = Corner.noCorner;
 			state.onGround = true;
@@ -556,8 +551,6 @@ public class PlayerController : MonoBehaviour
 		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
 
 		if (hit.collider != null) {
-			//transform.position -= new Vector3 (0,(Vector3.Distance(transform.position, ceilingChecker.position) - hit.distance),0);
-			//transform.position = new Vector3(transform.position.x, , transform.position.z);
 
 			state.collidingCorner = Corner.noCorner;
 			state.onCeiling = true;
@@ -675,7 +668,7 @@ public class PlayerController : MonoBehaviour
 				if (!warpVertical) {
 					if (size.x <= maxWarpDistance) {
                        
-                        transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, transform.position.z);
+						transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, playerZLayer);
                         WarpEffect();
 						FlipPlayer ();
 						return true;
@@ -683,7 +676,7 @@ public class PlayerController : MonoBehaviour
 				} else {
 					if (size.y <= maxWarpDistance) {
                         
-                        transform.position = new Vector3 (transform.position.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), transform.position.z);
+						transform.position = new Vector3 (transform.position.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), playerZLayer);
                         WarpEffect();
                         return true;
 					}
@@ -705,6 +698,7 @@ public class PlayerController : MonoBehaviour
 		Player = this.gameObject;
 		playerHeight = Vector2.Distance (groundChecker.position, ceilingChecker.position);
 		playerWidth = Vector2.Distance (wallCheckerTop.position, wallCheckerTopBack.position);
+		playerZLayer = transform.position.z;
 
 		Reset ();
 	}
@@ -713,7 +707,7 @@ public class PlayerController : MonoBehaviour
 	{
 		Animate (AnimationState.IDLE);
 		RaycastHit2D hit = Physics2D.Raycast (state.respawnPosition, Vector2.down, 100, 1 << LayerMask.NameToLayer ("Wall"));
-		transform.position = new Vector3(hit.point.x, hit.point.y + playerHeight/2, transform.position.z);
+		transform.position = new Vector3(hit.point.x, hit.point.y + playerHeight/2, playerZLayer);
 
 		boostParticle.SetActive (false);
 		PlayerInputEnabled = true;

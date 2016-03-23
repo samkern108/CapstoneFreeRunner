@@ -11,7 +11,6 @@ public class DayManager : MonoBehaviour {
 	public GameObject hero;
 	public GameObject mainCamera;
 
-	public float timer;
 	public bool paused;
 
 	public static DayManager self;
@@ -23,7 +22,6 @@ public class DayManager : MonoBehaviour {
 	void Start () {
 		Application.targetFrameRate = 60;
 		self = this;
-		timer = 0;
 
 		//(2): ADD NEXT DAY TO THIS LIST
 		days = new GameObject[]{ day1, day2, day3 };
@@ -34,14 +32,12 @@ public class DayManager : MonoBehaviour {
 			mailboxesPerDay [i] = days [i].GetComponentsInChildren<Mailbox> ().Length;
 		}
 		currentDay = 0;
-	}
 
-	public void Update(){
-		if(!paused) {
-			timer += Time.deltaTime;
-		}
+		//TODO we should call LoadDay here, but for testing purposes, we do not.
+		Timer.self.LoadChallengeTime (4, 56);
+		StatsTracker.self.ResetDelivered ();
 	}
-
+		
 	public void LoadNextDay() {
 		LoadDay (currentDay + 1);
 	}
@@ -52,6 +48,7 @@ public class DayManager : MonoBehaviour {
 		days [currentDay].SetActive(false);
 		currentDay = day;
 		StatsTracker.self.ResetDelivered ();
+		Timer.self.LoadChallengeTime (4, 56);
 	}
 
 	public bool PaperRouteFinished() {
@@ -71,5 +68,6 @@ public class DayManager : MonoBehaviour {
 	public void PauseGame(bool pause) {
 		paused = pause;
 		PlayerController.PlayerInputEnabled = !pause;
+		Timer.PauseTimer (pause);
 	}
 }
