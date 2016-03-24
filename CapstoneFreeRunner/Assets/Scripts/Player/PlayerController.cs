@@ -179,7 +179,7 @@ public class PlayerController : MonoBehaviour
 	private float boostTimeMax = .2f, boostTimer = 0f, boostSpeed = 35f;
 
 	float x, y;
-	Vector2 checkerX, checkerY, cornerChecker;
+	Vector2 cornerChecker;
 
 	short[] cornerMoveData = new short[4];
 
@@ -196,15 +196,16 @@ public class PlayerController : MonoBehaviour
 				Jump();
 			} 
 			//move down a cliff while looking at it
-			else if (vAxis < -.3f) { 
-				cornerMoveData = new short[4]{ 1, 1, -1, -1 };
+			else if (vAxis < -.15f) { 
 				FlipPlayer ();
+				cornerMoveData = new short[4]{ 1, 1, 1, -1 };
+				cornerChecker = floorCornerCheckFront.position;
 			} 
 			//move backwards while looking down a cliff
-			else if (state.ValueInDirection (hAxis, .3f, false)) { 
+			else if (state.ValueInDirection (hAxis, .15f, false)) { 
 				cornerMoveData = new short[4]{ 1, 1, 1, 1 }; //x : -1
+				cornerChecker = floorCornerCheckBack.position;
 			} 
-			cornerChecker = floorCornerCheckBack.position;
 			anim = AnimationState.FLOOR_CORNER;
 			break;
 		case Corner.bottomFront:
@@ -212,11 +213,11 @@ public class PlayerController : MonoBehaviour
 				JumpOffWalls ();
 			} 
 			//move down a wall while clinging to the top of it
-			else if (vAxis < -.3f) {
+			else if (vAxis < -.15f) {
 				cornerMoveData = new short[4]{ 1, -1, 1, -1 };
 			} 
 			//move up and over the corner of a cliff
-			else if (state.ValueInDirection (hAxis, .3f, true)) {
+			else if (state.ValueInDirection (hAxis, .15f, true)) {
 				cornerMoveData = new short[4]{ 1, -1, 1, 1 }; //x : 1
 			}
 			cornerChecker = floorCornerCheckFront.position;
@@ -227,16 +228,16 @@ public class PlayerController : MonoBehaviour
 				JumpOffCeiling ();
 			} 
 			//move up onto a wall when you're climbing on the ceiling
-			else if (vAxis > .3f) {
+			else if (vAxis > .15f) {
 				FlipPlayer ();
-				cornerMoveData = new short[4]{ 1, 1, 1, -1 };
+				cornerMoveData = new short[4]{ 1, 1, -1, -1 };
+				cornerChecker = ceilingCornerCheckFront.position;
 			} 
 			//move backwards on the ceiling
-			else if (state.ValueInDirection (hAxis, .3f, false)) {
+			else if (state.ValueInDirection (hAxis, .15f, false)) {
 				cornerMoveData = new short[4]{ 1, 1, -1, 1 }; //x: -1
+				cornerChecker = ceilingCornerCheckBack.position;
 			}
-
-			cornerChecker = ceilingCornerCheckBack.position;
 			anim = AnimationState.CEILING_CORNER;
 			break;
 		case Corner.topFront:
@@ -244,11 +245,11 @@ public class PlayerController : MonoBehaviour
 				JumpOffWalls ();
 			}
 			//move up on the wall while clinging to a low corner
-			else if (vAxis > .3f) {
+			else if (vAxis > .15f) {
 				cornerMoveData = new short[4]{ 1, -1, -1, -1 };
 			} 
 			//move under wall while clinging to it.
-			else if (state.ValueInDirection (hAxis, .3f, true)) {
+			else if (state.ValueInDirection (hAxis, .15f, true)) {
 				cornerMoveData = new short[4]{ 1, -1, -1, 1 }; // x: 1
 			}
 			cornerChecker = ceilingCornerCheckFront.position;
@@ -262,11 +263,6 @@ public class PlayerController : MonoBehaviour
 			float moveX = transform.position.x;
 			float moveY = transform.position.y;
 
-			//0: move 				(1 : yes, -1 : no)
-			//1: pos X 				(1 : +, -1 : -)
-			//2: pos Y 				(1 : +, -1 : -)
-			//3: primary direction 	(1 : x, -1 : y)
-
 			//0: move				(1 : yes, -1 : no)
 			//1: X					(1 : right, -1 : left)	which side of the collider should we move the player to?
 			//2: Y					(1 : top, -1 : bottom)
@@ -276,11 +272,17 @@ public class PlayerController : MonoBehaviour
 			{
 			case 1: //moving primarily in x
 				if (hit.collider != null)
-					moveX = hit.collider.transform.position.x + (state.FacingRight(true) * cornerMoveData[1]) * (hit.collider.bounds.size.x / 2);
+					moveX = hit.collider.transform.position.x + (state.FacingRight(true) * cornerMoveData[1]) * (hit.collider.bounds.size.x / 2 - playerWidth/8);
+				else {
+					Debug.Log ("Collider x is null");
+				}
 				break;
 			case -1: //moving primarily in y
-				if(hit.collider != null)
-					moveY = hit.collider.transform.position.y + cornerMoveData[2] * (hit.collider.bounds.size.y/2);
+				if (hit.collider != null) {
+					moveY = hit.collider.transform.position.y + cornerMoveData [2] * (hit.collider.bounds.size.y / 2);
+				} else {
+					Debug.Log ("Collider y is null for corner check: " + state.collidingCorner);
+				}
 				break;
 			}
 			intermediatePosition.x = moveX;
@@ -514,7 +516,6 @@ public class PlayerController : MonoBehaviour
 		} else {
 			//Debug.DrawRay(oldPos, dir * 100, (raycast.collider == null) ? Color.white : Color.red, 5f, false);
 
-			Debug.Log (state.currentSpeedVector);
 			//Debug.Log (raycast.distance + "  " + distance);
 			//Debug.Log (newPos + "  " + oldPos + "  " + (newPos - oldPos).magnitude + "  " + dir);
 			//Debug.Log (playerDimensions + "  " + playerDimensions.magnitude);*/
