@@ -4,6 +4,7 @@ using System.Collections;
 public class Mailbox : MonoBehaviour {
 
 	SpriteRenderer SR;
+	public GameObject mail;
 	bool delivered = false;
 
 	void Start(){
@@ -15,9 +16,10 @@ public class Mailbox : MonoBehaviour {
 		
 		if (collider.CompareTag ("Player") && !delivered) {
 			StatsTracker.self.DeliverPaper();
-			SR.color = Color.blue;
-            gameObject.GetComponent<ParticleSystem>().Emit(15);
+			SR.color = Color.magenta;
+            GetComponent<ParticleSystem>().Emit(15);
             delivered = true;
+			mail.SetActive (false);
 		}
 	}
 }
