@@ -3,11 +3,18 @@ using System.Collections;
 
 public class PlayerHealth : MonoBehaviour {
 
+	public static PlayerHealth self;
+
 	public static bool isDead = false;
 	private bool hit = false;
 	private bool invulnerable = false;
 	public GameObject deathParticleBlue;
 	public GameObject deathParticleYellow;
+
+	public void Start()
+	{
+		self = this;
+	}
 
 	public void PlayerHit(int damage)
 	{
@@ -20,7 +27,7 @@ public class PlayerHealth : MonoBehaviour {
 				deathParticleBlue.SetActive (true);
 				Invoke ("DisableDeathParticle", 5f);
 				SetInvulnerable(true);
-				GetComponent<SpriteRenderer> ().enabled = false;
+				GetComponentInChildren<SpriteRenderer> ().enabled = false;
 				return;
 			}
 			UIManager.self.DisplayHurtScreen ();
@@ -96,7 +103,7 @@ public class PlayerHealth : MonoBehaviour {
 		hit = false;
 		deathParticleYellow.SetActive (false);
 		deathParticleBlue.SetActive (false);
-		GetComponent<SpriteRenderer> ().enabled = true;
+		GetComponentInChildren<SpriteRenderer> ().enabled = true;
 		SetInvulnerable (false);
 	}
 }

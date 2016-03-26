@@ -5,10 +5,12 @@ public class PlayerController : MonoBehaviour
 {
 	public static float playerZLayer;
 
+	public GameObject sprite;
+
 	public Transform playerStartPosition;
 	public Transform raycastParent;
 
-	public GameObject boostParticle;
+	public ParticleSystem boostParticle;
     public GameObject warpParticleEmitter1;
     public GameObject warpParticleEmitter2;
 
@@ -441,8 +443,8 @@ public class PlayerController : MonoBehaviour
 
 			PlayerAudioManager.self.PlayBoostRelease ();
 
-			if (!boostParticle.activeSelf)
-				boostParticle.SetActive (true);
+			if (!boostParticle.gameObject.activeSelf)
+				boostParticle.gameObject.SetActive (true);
 			
 			return AnimationState.BOOST;
 		}
@@ -454,8 +456,7 @@ public class PlayerController : MonoBehaviour
 		boostTimer -= Time.deltaTime;
 
 		if (state.Colliding()) {
-			state.boosting = false;
-			boostParticle.SetActive(false);
+			StopBoosting ();
 			state.currentSpeedVector = new Vector3();
 			return AnimationState.NONE;
 		}
@@ -467,11 +468,28 @@ public class PlayerController : MonoBehaviour
 			FlipPlayer ();
 
 		state.currentSpeedVector = boostSpeed * boostDirection;
+
+		Vector3 lookAt = state.currentSpeedVector.normalized;
+
+		float rot_z = Mathf.Atan2(lookAt.y, lookAt.x) * Mathf.Rad2Deg;
+		//rot_z += ((Mathf.Sign (transform.localScale.x) == 1) ? 0 : 90);
+		rot_z += ((Mathf.Sign (transform.localScale.x) == 1) ? 0 : 180);
+		//sprite.transform.rotation = Quaternion.Euler (0f, 0f, rot_z);
+
+		//boostParticle.transform.rotation = Quaternion.Euler(0f, 0f, rot_z);
+		//boostParticle.startRotation = rot_z;// + ((Mathf.Sign(transform.localScale.x) == 1) ? 0 : 180);//Quaternion.Euler(0f, 0f, rot_z + ((Mathf.Sign(boostParticle.transform.localScale.x) == 1) ? 0 : 180) );
+
 		if (boostTimer <= 0) {
-			state.boosting = false;
-			boostParticle.SetActive(false);
+			StopBoosting ();
 		}
 		return AnimationState.BOOST;
+	}
+
+	private void StopBoosting()
+	{
+		state.boosting = false;
+		boostParticle.gameObject.SetActive(false);
+		sprite.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
 	}
 
 	private void FlipPlayer()
@@ -692,7 +710,7 @@ public class PlayerController : MonoBehaviour
 	void Start()
 	{
 		state = new PlayerState ();
-		animator = this.GetComponent<Animator>();
+		animator = this.GetComponentInChildren<Animator>();
 		state.facingRight = true;
 		state.respawnPosition = playerStartPosition.position;
 		PlayerTransform = this.transform;
@@ -710,7 +728,7 @@ public class PlayerController : MonoBehaviour
 		RaycastHit2D hit = Physics2D.Raycast (state.respawnPosition, Vector2.down, 100, 1 << LayerMask.NameToLayer ("Wall"));
 		transform.position = new Vector3(hit.point.x, hit.point.y + playerHeight/2, playerZLayer);
 
-		boostParticle.SetActive (false);
+		boostParticle.gameObject.SetActive (false);
 		PlayerInputEnabled = true;
 
 		state.boosting = false;
