@@ -3,16 +3,18 @@ using System.Collections;
 
 public class Laser : MonoBehaviour {
 
-	AudioSource AS;
-	private LineRenderer LR;
-	private LineRenderer WhiteLR;
+	public AudioSource AS;
+	public LineRenderer LR;
 	public ParticleSystem PS;
+	public Transform DirectionHandle;
+
 	public bool endAtDirectionHandle = false;
 
-	Transform DirectionHandle;
-	bool active;
-	float maxLazerLength = 1000;
-	Color color = Color.red;
+	//not used right now
+	private LineRenderer WhiteLR;
+
+	float maxLaserLength = 1000;
+
 	private bool disabled = false;
 	private float dist;
 	private float maxDist = 40;
@@ -21,19 +23,11 @@ public class Laser : MonoBehaviour {
 	private Vector2 previoushit;
 	
 	void Start () {
-		AS = GetComponent<AudioSource> ();
-		DirectionHandle = FindDirectionHandle(this.transform, "DirectionHandle");
-		active = true;
-		LR = GetComponent<LineRenderer> ();
 		LR.useWorldSpace = true;
-		if (WhiteLR == null) {
-			LR.material = new Material (Shader.Find ("Particles/Additive"));
-		}
-		LR.SetColors(color, color);
 		z = transform.position.z;
 
 		if(endAtDirectionHandle) {
-			maxLazerLength = Vector2.Distance (transform.position, DirectionHandle.position);
+			maxLaserLength = Vector2.Distance (transform.position, DirectionHandle.position);
 		}
 	}
 
@@ -56,6 +50,9 @@ public class Laser : MonoBehaviour {
 				disabled = true;
 			}
 		}
+
+		Raycast ();
+		AudioUpdate ();
 	}
 
 	private void AudioUpdate()
@@ -63,45 +60,45 @@ public class Laser : MonoBehaviour {
 		AS.volume = dist.Map (0, 30, .5f, 0);
 	}
 
+	Ray2D ray;
+	RaycastHit2D[] hitList;
+
 	void Raycast() {
-		if (active){
-			Vector3 dir = (DirectionHandle.position - transform.position).normalized;		
-			Ray2D ray = new Ray2D(transform.position, dir);
+		Vector3 dir = (DirectionHandle.position - transform.position).normalized;		
+		ray = new Ray2D(transform.position, dir);
 
-			RaycastHit2D[] hitList = Physics2D.RaycastAll (ray.origin, ray.direction, maxLazerLength);
+		hitList = Physics2D.RaycastAll (ray.origin, ray.direction, maxLaserLength);
 
-			//draw laser
-			UpdateLinePosition (0, ray.origin);
+		//draw laser
+		UpdateLinePosition (0, ray.origin);
 
-			foreach(RaycastHit2D hit in hitList) {
-				//if player enters laser
-				if (hit.collider.gameObject.tag == "Player") {
-					PlayerHealth.self.PlayerHit (2);
-				}
-				else if(!hit.collider.CompareTag("Background")){
-					if (hit.point != previoushit) {
-						previoushit = hit.point;
-
-						PS.transform.position = new Vector3 (hit.point.x, hit.point.y, z);
-						UpdateLinePosition (1, hit.point);
-
-						Vector3 hitNormal = hit.normal;
-						float rot_z = Mathf.Atan2 (hitNormal.y, hitNormal.x) * Mathf.Rad2Deg;
-						PS.transform.rotation = Quaternion.Euler (0f, 0f, rot_z - 90);
-
-						if (!PS.isPlaying)
-							PS.Play ();
-					}
-					return;
-				}
+		foreach(RaycastHit2D hit in hitList) {
+			//if player enters laser
+			if (hit.collider.gameObject.tag == "Player") {
+				PlayerHealth.self.PlayerHit (2);
 			}
-		//if the ray hit nothing
-		if(PS.isPlaying)
-			PS.Stop();
-			//if the ray hit nothing
-			Vector3 point = ray.GetPoint(maxLazerLength);
-			UpdateLinePosition (1, point);
+			else if(!hit.collider.CompareTag("Background")){
+				if (hit.point != previoushit) {
+					previoushit = hit.point;
+				
+					PS.transform.position = new Vector3 (hit.point.x, hit.point.y, z);
+					UpdateLinePosition (1, hit.point);
+					Vector3 hitNormal = hit.normal;
+					float rot_z = Mathf.Atan2 (hitNormal.y, hitNormal.x) * Mathf.Rad2Deg;
+					PS.transform.rotation = Quaternion.Euler (0f, 0f, rot_z - 90);
+				
+					if (!PS.isPlaying)
+						PS.Play ();
+				}
+				return;
+			}
 		}
+	//if the ray hit nothing
+	if(PS.isPlaying)
+		PS.Stop();
+		//if the ray hit nothing
+		Vector3 point = ray.GetPoint(maxLaserLength);
+		UpdateLinePosition (1, point);
 	}
 
 	private void UpdateLinePosition(int pos, Vector2 point)
