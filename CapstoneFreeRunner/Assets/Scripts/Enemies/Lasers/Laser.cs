@@ -17,6 +17,8 @@ public class Laser : MonoBehaviour {
 	private float dist;
 	private float maxDist = 40;
 	private float z;
+
+	private Vector2 previoushit;
 	
 	void Start () {
 		AS = GetComponent<AudioSource> ();
@@ -73,16 +75,23 @@ public class Laser : MonoBehaviour {
 
 			foreach(RaycastHit2D hit in hitList) {
 				//if player enters laser
-				if (hit.collider.gameObject.tag == "Player"){
-					hit.collider.gameObject.SendMessage("PlayerHit", 2);
-					return;
+				if (hit.collider.gameObject.tag == "Player") {
+					PlayerHealth.self.PlayerHit (2);
 				}
+				else if(!hit.collider.CompareTag("Background")){
+					if (hit.point != previoushit) {
+						previoushit = hit.point;
 
-				if(hit == true && !hit.collider.CompareTag("Background")){
-					PS.transform.position = new Vector3 (hit.point.x, hit.point.y, z);
-					if (!PS.isPlaying)
-						PS.Play ();
-					UpdateLinePosition (1, hit.point);
+						PS.transform.position = new Vector3 (hit.point.x, hit.point.y, z);
+						UpdateLinePosition (1, hit.point);
+
+						Vector3 hitNormal = hit.normal;
+						float rot_z = Mathf.Atan2 (hitNormal.y, hitNormal.x) * Mathf.Rad2Deg;
+						PS.transform.rotation = Quaternion.Euler (0f, 0f, rot_z - 90);
+
+						if (!PS.isPlaying)
+							PS.Play ();
+					}
 					return;
 				}
 			}
