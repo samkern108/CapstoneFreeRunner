@@ -11,19 +11,21 @@ public class Timer : MonoBehaviour {
 	public Text challengeText;
 
 	//this is inelegant, but it works. When you have time, you should rewrite it to use 1 double.
-	public static float timerMin = 0;
-	public static float timerSec = 0;
+	public float timerMin = 0;
+	public float timerSec = 0;
 
-	public static float challengeTimeMin = 0;
-	public static float challengeTimeSec = 0;
+	public float challengeTimeMin = 0;
+	public float challengeTimeSec = 0;
 	public static bool paused = false;
+
+	private string text;
 
 	public void Start()
 	{
 		self = this;
 	}
 
-	public static void ZeroTimer()
+	public void ZeroTimer()
 	{
 		timerMin = 0;
 		timerSec = 0;
@@ -43,19 +45,16 @@ public class Timer : MonoBehaviour {
 
 	void Update () {
 		if (!paused) {
-			UpdateTimer ();
+			timerSec += Time.deltaTime;
+
+			if (timerSec >= 60) {
+				timerSec %= 60;
+				timerMin++;
+			}
+
+			//TODO: This line allocates 200B!! What the hell?  Find a workaround.
+			text = timerMin + "." + Math.Round (timerSec, 1);
+			timerText.text = text;
 		}
-	}
-
-	private void UpdateTimer()
-	{
-		timerSec += Time.deltaTime;
-
-		if (timerSec >= 60) {
-			timerSec %= 60;
-			timerMin++;
-		}
-
-		timerText.text = timerMin + "." + Math.Round(timerSec,1);
 	}
 }
