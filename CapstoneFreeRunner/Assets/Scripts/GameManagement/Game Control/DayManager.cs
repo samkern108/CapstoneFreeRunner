@@ -10,6 +10,7 @@ public class DayManager : MonoBehaviour {
 	public GameObject[] days; 
 	public GameObject hero;
 	public GameObject mainCamera;
+    public GameObject daySwitch;
 
 	public bool paused;
 
@@ -39,6 +40,7 @@ public class DayManager : MonoBehaviour {
 	}
 		
 	public void LoadNextDay() {
+        daySwitch.SendMessage("NextDay",currentDay);
 		LoadDay (currentDay + 1);
 	}
 
