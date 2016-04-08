@@ -9,14 +9,8 @@ public class DaySwitch : MonoBehaviour {
     public GameObject text;
     private int dayNormalized;
 
-	// Use this for initialization
 	void Start () {
         daySwitchUI.SetActive(false);
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
 	}
 
     public void NextDay(int day) {

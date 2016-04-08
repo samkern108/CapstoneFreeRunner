@@ -658,23 +658,35 @@ public class PlayerController : MonoBehaviour
 		bool warpVertical = true;
 		int onGround = 0;
 
+		Debug.Log (Mathf.Abs(vAxis) + " : " + Mathf.Abs(hAxis));
+
 		if(state.onWallFront) 
 		{
 			checker1 = wallCheckerBottom.position;
 			checker2 = wallCheckerTop.position;
 			warpVertical = false;
 		}
-		else if(state.onGround)
+		if(state.onGround)
 		{
-			checker1 = transform.position;
-			checker2 = groundChecker.position;
-			onGround = -1;
+			Debug.Log (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)));
+
+			if (warpVertical || (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)))) {
+				checker1 = transform.position;
+				checker2 = groundChecker.position;
+				onGround = -1;	
+				warpVertical = true;
+			}
 		}
-		else if(state.onCeiling)
+		if(state.onCeiling)
 		{
-			checker1 = transform.position;
-			checker2 = ceilingChecker.position;
-			onGround = 1;
+			Debug.Log (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)));
+
+			if (warpVertical || (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)))) {
+				checker1 = transform.position;
+				checker2 = ceilingChecker.position;
+				onGround = 1;
+				warpVertical = true;
+			}
 		}
 
 		if (checker1 != new Vector3 ()) {
@@ -685,6 +697,7 @@ public class PlayerController : MonoBehaviour
 				Vector3 size = hitBounds.size;
 
 				if (!warpVertical) {
+
 					if (size.x <= maxWarpDistance) {
                        
 						transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, playerZLayer);
@@ -695,6 +708,11 @@ public class PlayerController : MonoBehaviour
 				} else {
 					if (size.y <= maxWarpDistance) {
                         
+						bool horizontalCheck = Physics2D.Raycast(transform.position, Vector2.right * state.FacingRight(true), Mathf.Abs(hAxis), 1 << LayerMask.NameToLayer ("Wall"));
+						if(horizontalCheck) {
+							return false;
+						}
+
 						transform.position = new Vector3 (transform.position.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), playerZLayer);
                         WarpEffect();
                         return true;
@@ -711,7 +729,7 @@ public class PlayerController : MonoBehaviour
 	{
 		state = new PlayerState ();
 		animator = this.GetComponentInChildren<Animator>();
-		state.facingRight = true;
+		state.facingRight = false;
 		state.respawnPosition = playerStartPosition.position;
 		PlayerTransform = this.transform;
 		Player = this.gameObject;

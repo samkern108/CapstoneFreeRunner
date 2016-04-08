@@ -40,7 +40,7 @@ public class DayManager : MonoBehaviour {
 	}
 		
 	public void LoadNextDay() {
-        daySwitch.SendMessage("NextDay",currentDay);
+       // daySwitch.SendMessage("NextDay",currentDay);
 		LoadDay (currentDay + 1);
 	}
 
@@ -50,6 +50,7 @@ public class DayManager : MonoBehaviour {
 		days [currentDay].SetActive(false);
 		currentDay = day;
 		StatsTracker.self.ResetDelivered ();
+		StatsTracker.self.SetTotal (mailboxesPerDay[currentDay]);
 		Timer.self.LoadChallengeTime (4, 56);
 	}
 

@@ -5,6 +5,7 @@ public class CameraController : MonoBehaviour {
 
 	public static CameraController self;
 	private Camera heroCamera;
+	public bool followingPlayer = false;
 
 	private float offsetX = 0;
 	private float offsetY = 0;
@@ -23,7 +24,7 @@ public class CameraController : MonoBehaviour {
 		}
 	}
 
-	void Start () {
+	void Awake () {
 		heroCamera = GetComponent <Camera>();
 		regularSize = heroCamera.orthographicSize;
 		speed = regularSize * 3;
@@ -32,7 +33,22 @@ public class CameraController : MonoBehaviour {
 
 	void LateUpdate () 
 	{
-		MoveCamera ();
+		if(followingPlayer) MoveCamera ();
+	}
+
+	public void DriftToPlayer()
+	{
+		StartCoroutine ("Drift",PlayerController.PlayerPosition);
+	}
+
+	IEnumerator Drift(Vector3 position)
+	{
+		position.z = heroCamera.transform.position.z;
+		for (float i = 0; i < 100; i++) {
+			heroCamera.transform.position = Vector3.Lerp (heroCamera.transform.position, position, i/100);
+			yield return null;
+		}
+		followingPlayer = true;
 	}
 
 	float targetSize;
@@ -48,6 +64,11 @@ public class CameraController : MonoBehaviour {
 		targetSize = regularSize * percentage;
 		dt = (targetSize - regularSize)/time;
 		StartCoroutine ("ZoomCoroutine", rTime);
+	}
+
+	public void SetCameraSize(float size)
+	{
+		heroCamera.orthographicSize = size;
 	}
 
 	public void ZoomCamera(float percentage, float time)
