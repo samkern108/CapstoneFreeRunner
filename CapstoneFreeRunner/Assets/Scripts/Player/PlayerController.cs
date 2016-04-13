@@ -188,7 +188,7 @@ public class PlayerController : MonoBehaviour
 	private AnimationState MoveOnCorner()
 	{
 		AnimationState anim = AnimationState.JUMP;
-		state.currentSpeedVector = new Vector3 ();
+		state.currentSpeedVector = Vector3.zero;
 
 		if (state.falling) return anim;
 
@@ -434,10 +434,10 @@ public class PlayerController : MonoBehaviour
 			boostTimer = boostTimeMax;
 			state.boosting = true;
 			canBoost = false;
-			state.currentSpeedVector = new Vector3 ();
+			state.currentSpeedVector = Vector3.zero;
 
 			if (hAxis == 0 && vAxis == 0)
-				boostDirection = new Vector2 (0, 1);
+				boostDirection = Vector2.up;
 			else 
 				boostDirection = new Vector2 (hAxis, vAxis).normalized;
 
@@ -457,7 +457,7 @@ public class PlayerController : MonoBehaviour
 
 		if (state.Colliding()) {
 			StopBoosting ();
-			state.currentSpeedVector = new Vector3();
+			state.currentSpeedVector = Vector3.zero;
 			return AnimationState.NONE;
 		}
 
@@ -505,7 +505,6 @@ public class PlayerController : MonoBehaviour
 	}
 
 	//## COLLISION CHECKING ##//
-	private float zMin, zMax;
 
 	public Transform groundChecker;
 	public Transform wallCheckerTop;
@@ -545,18 +544,15 @@ public class PlayerController : MonoBehaviour
 	// Maybe I can get LinecastNonAlloc to work someday.
 	private void Linecasts()
 	{
-		zMin = 15;
-		zMax = 40;
+		state.onWallBack = Physics2D.Linecast (wallCheckerBottomBack.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
 
-		state.onWallBack = Physics2D.Linecast (wallCheckerBottomBack.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
-
-		hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
 		if (hit.collider != null) {
 			state.onWallFront = true;
 		} else  
 			state.onWallFront = false;
 
-		hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 
 		if (hit.collider != null) {
 
@@ -567,7 +563,7 @@ public class PlayerController : MonoBehaviour
 		} else  
 			state.onGround = false;
 
-		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
 
 		if (hit.collider != null) {
 
@@ -578,20 +574,20 @@ public class PlayerController : MonoBehaviour
 			state.onCeiling = false;
 
 		if (!state.onCeiling && !state.onWallBack && !state.onWallFront && !state.onGround) {
-			cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+			cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"));
 			state.collidingCorner = Corner.bottomBack;
 
 			//This code is so ugly it makes my brain spasm
 			if (cornerHit.collider == null) {
-				cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+				cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"));
 				state.collidingCorner = Corner.bottomFront;
 			}
 			if (cornerHit.collider == null) {
-				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"));
 				state.collidingCorner = Corner.topBack;
 			}
 			if (cornerHit.collider == null) {
-				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"), zMin, zMax);
+				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"));
 				state.collidingCorner = Corner.topFront;
 			}
 			if (cornerHit.collider != null) {
@@ -602,12 +598,12 @@ public class PlayerController : MonoBehaviour
 		return;
 	}
 
-	void OnCollisionEnter2D (Collision2D collision) {
+	/*void OnCollisionEnter2D (Collision2D collision) {
 		float z = collision.transform.position.z;
 		if (z < zMin || z > zMax) {
 			Physics2D.IgnoreCollision(collision.collider, GetComponent<Collider2D>());
 		}
-	}
+	}*/
 
 
 	//## ANIMATION ##//
@@ -622,32 +618,9 @@ public class PlayerController : MonoBehaviour
 	}
 
 	//## WARPING ##//
-	private float maxWarpDistance = 2f;
 
-    private void WarpEffect() {
-        /*
-        switch (angle) {
-            case 0:
-            warpParticleEmitter1.transform.localPosition = new Vector3(0.5f, 0, 0);
-            warpParticleEmitter2.transform.localPosition = new Vector3(0.5f, 0, 0);
-            break;
-            case 90:
-            warpParticleEmitter1.transform.localPosition = new Vector3(0, -0.5f, 0);
-            warpParticleEmitter2.transform.localPosition = new Vector3(0, -0.5f, 0);
-            break;
-            case 180:
-            warpParticleEmitter1.transform.localPosition = new Vector3(0.5f, 0, 0);
-            warpParticleEmitter2.transform.localPosition = new Vector3(0.5f, 0, 0);
-            break;
-            case 270:
-            warpParticleEmitter1.transform.localPosition = new Vector3(0, 0.5f, 0);
-            warpParticleEmitter2.transform.localPosition = new Vector3(0, 0.5f, 0);
-            break;
-
-        }
-        */
-        //warpParticleEmitter1.transform.rotation = Quaternion.Euler(new Vector3(angle, 90, 0));
-        //warpParticleEmitter2.transform.rotation = Quaternion.Euler(new Vector3(angle, 90, 0));
+    private void WarpEffect() 
+	{
         warpParticleEmitter1.GetComponent<ParticleSystem>().Emit(25);
         warpParticleEmitter2.GetComponent<ParticleSystem>().Emit(50);
     }
@@ -657,9 +630,7 @@ public class PlayerController : MonoBehaviour
 		Vector3 checker1 = new Vector3(), checker2 = new Vector3();
 		bool warpVertical = true;
 		int onGround = 0;
-
-		Debug.Log (Mathf.Abs(vAxis) + " : " + Mathf.Abs(hAxis));
-
+	
 		if(state.onWallFront) 
 		{
 			checker1 = wallCheckerBottom.position;
@@ -668,8 +639,6 @@ public class PlayerController : MonoBehaviour
 		}
 		if(state.onGround)
 		{
-			Debug.Log (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)));
-
 			if (warpVertical || (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)))) {
 				checker1 = transform.position;
 				checker2 = groundChecker.position;
@@ -679,8 +648,6 @@ public class PlayerController : MonoBehaviour
 		}
 		if(state.onCeiling)
 		{
-			Debug.Log (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)));
-
 			if (warpVertical || (!warpVertical && (Mathf.Abs (hAxis) < Mathf.Abs (vAxis)))) {
 				checker1 = transform.position;
 				checker2 = ceilingChecker.position;
@@ -689,33 +656,43 @@ public class PlayerController : MonoBehaviour
 			}
 		}
 
-		if (checker1 != new Vector3 ()) {
+		if (checker1 != Vector3.zero) {
 			RaycastHit2D hit = Physics2D.Linecast (checker1, checker2, 1 << LayerMask.NameToLayer ("Wall"));
+			if (hit.collider.tag != "Warp") {
+				return false;
+			}
 
 			if (hit.collider != null) {
-				Bounds hitBounds = hit.collider.bounds;
-				Vector3 size = hitBounds.size;
+				Wall wall = hit.collider.GetComponent <Wall> ();
 
 				if (!warpVertical) {
+					//if the player is moving quickly toward a ceiling or floor, don't warp them through the wall.
+					bool verticalCheck = Physics2D.Raycast(transform.position, Vector2.up * Mathf.Sign(hAxis), Mathf.Abs(hAxis), 1 << LayerMask.NameToLayer ("Wall"));
+					if(verticalCheck) {
+						return false;
+					}
 
-					if (size.x <= maxWarpDistance) {
-                       
-						transform.position = new Vector3 (hitBounds.center.x + state.FacingRight (true) * (size.x / 2 + (playerWidth - .2f) / 2), transform.position.y, playerZLayer);
-                        WarpEffect();
+					Vector3 newPos = wall.WarpHorizontal (transform.position, state.FacingRight (true), playerWidth, playerZLayer);
+
+					if(transform.position != newPos) {
+						transform.position = newPos;
 						FlipPlayer ();
+						WarpEffect();
 						return true;
 					}
 				} else {
-					if (size.y <= maxWarpDistance) {
-                        
-						bool horizontalCheck = Physics2D.Raycast(transform.position, Vector2.right * state.FacingRight(true), Mathf.Abs(hAxis), 1 << LayerMask.NameToLayer ("Wall"));
-						if(horizontalCheck) {
-							return false;
-						}
+					//if the player is moving quickly toward a vertical wall, don't warp them through the floor.
+					bool horizontalCheck = Physics2D.Raycast(transform.position, Vector2.right * state.FacingRight(true), Mathf.Abs(hAxis), 1 << LayerMask.NameToLayer ("Wall"));
+					if(horizontalCheck) {
+						return false;
+					}
 
-						transform.position = new Vector3 (transform.position.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), playerZLayer);
-                        WarpEffect();
-                        return true;
+					Vector3 newPos = wall.WarpVertical (transform.position, onGround, playerHeight, playerZLayer);
+
+					if(transform.position != newPos) {
+						transform.position = newPos;
+						WarpEffect();
+						return true;
 					}
 				}
 			}
@@ -750,10 +727,8 @@ public class PlayerController : MonoBehaviour
 		PlayerInputEnabled = true;
 
 		state.boosting = false;
-		state.currentSpeedVector = new Vector3 ();
+		state.currentSpeedVector = Vector3.zero;
 		state.drained = false;
-
-		//Linecasts();
 	}
 
 	//## INPUT ##//
@@ -762,7 +737,7 @@ public class PlayerController : MonoBehaviour
 	{
 		get { return _playerInputEnabled; } 
 		set {_playerInputEnabled = value; if (!_playerInputEnabled)
-			state.currentSpeedVector = new Vector3 ();}
+			state.currentSpeedVector = Vector3.zero;}
 	}
 
 	//## STATIC REFERENCES TO PLAYER ##//

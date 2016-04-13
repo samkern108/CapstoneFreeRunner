@@ -20,7 +20,7 @@ public class DayManager : MonoBehaviour {
 	public int currentDay; 
 	public int[] mailboxesPerDay;
 
-	void Start () {
+	void Awake () {
 		Application.targetFrameRate = 60;
 		self = this;
 
@@ -35,7 +35,7 @@ public class DayManager : MonoBehaviour {
 		currentDay = 0;
 
 		//TODO we should call LoadDay here, but for testing purposes, we do not.
-		Timer.self.LoadChallengeTime (4, 56);
+//		Timer.self.LoadChallengeTime (4, 56);
 		StatsTracker.self.ResetDelivered ();
 	}
 		

@@ -43166,12 +43166,12 @@ Transform:
   m_Children:
   - {fileID: 1012104426}
   - {fileID: 781970345}
+  - {fileID: 1771521640}
   - {fileID: 1283210616}
   - {fileID: 1952764512}
   - {fileID: 870713081}
-  - {fileID: 1771521640}
-  - {fileID: 1143047663}
   - {fileID: 1054101481}
+  - {fileID: 1143047663}
   m_Father: {fileID: 1336011272}
   m_RootOrder: 1
 --- !u!1001 &728086729
@@ -44065,6 +44065,68 @@ MonoBehaviour:
   floor: 0
   companion: {fileID: 0}
   direction: 0
+--- !u!1001 &764555689
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 972542842}
+    m_Modifications:
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 15.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: -0.87
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_RootOrder
+      value: 11
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalScale.y
+      value: 7.465561
+      objectReference: {fileID: 0}
+    - target: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_LocalScale.x
+      value: 0.4304018
+      objectReference: {fileID: 0}
+    - target: {fileID: 125680, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_Name
+      value: XWall (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 125680, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_Icon
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 125680, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+      propertyPath: m_TagString
+      value: Untagged
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &766291774
 GameObject:
   m_ObjectHideFlags: 0
@@ -49919,6 +49981,10 @@ Prefab:
 Transform:
   m_PrefabParentObject: {fileID: 486186, guid: faae0d0dea43f3049b05e16f97f75557, type: 2}
   m_PrefabInternal: {fileID: 1678213118}
+--- !u!4 &908179366 stripped
+Transform:
+  m_PrefabParentObject: {fileID: 423242, guid: 8af63ce8309fc418aac3e8c8ae9917b0, type: 2}
+  m_PrefabInternal: {fileID: 764555689}
 --- !u!1001 &909085214
 Prefab:
   m_ObjectHideFlags: 0
@@ -53265,6 +53331,7 @@ Transform:
   - {fileID: 2037880348}
   - {fileID: 1703619518}
   - {fileID: 1949126375}
+  - {fileID: 908179366}
   m_Father: {fileID: 1336011272}
   m_RootOrder: 0
 --- !u!61 &972542843
@@ -58967,7 +59034,7 @@ Transform:
   m_LocalScale: {x: 3.8161569, y: 2.9215426, z: 1}
   m_Children: []
   m_Father: {fileID: 727145491}
-  m_RootOrder: 7
+  m_RootOrder: 6
 --- !u!212 &1054101482
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -99358,7 +99425,7 @@ Transform:
   m_LocalScale: {x: 3.852538, y: 2.8578742, z: 1}
   m_Children: []
   m_Father: {fileID: 727145491}
-  m_RootOrder: 5
+  m_RootOrder: 2
 --- !u!212 &1771521641
 SpriteRenderer:
   m_ObjectHideFlags: 0
