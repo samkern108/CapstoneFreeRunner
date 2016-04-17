@@ -35,8 +35,8 @@ public class TutorialText : MonoBehaviour {
 
 	private void Animate(HintType t)
 	{
-		image.enabled = true;
 		anim.SetInteger ("state", (int)t);
+		image.enabled = true;
 	}
 
 	public void SquelchHint() {

@@ -9,7 +9,7 @@ public class StatsTracker : MonoBehaviour {
 	public static StatsTracker self;
 	public static int papersDelivered = 0;
 
-	void Start () {
+	void Awake () {
 		self = this;
 	}
 

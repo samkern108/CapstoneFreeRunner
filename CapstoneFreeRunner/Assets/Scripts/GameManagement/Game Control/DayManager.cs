@@ -33,10 +33,13 @@ public class DayManager : MonoBehaviour {
 			mailboxesPerDay [i] = days [i].GetComponentsInChildren<Mailbox> ().Length;
 		}
 		currentDay = 0;
+	}
 
+	void Start() {
 		//TODO we should call LoadDay here, but for testing purposes, we do not.
-//		Timer.self.LoadChallengeTime (4, 56);
+		//		Timer.self.LoadChallengeTime (4, 56);
 		StatsTracker.self.ResetDelivered ();
+		StatsTracker.self.SetTotal (mailboxesPerDay[currentDay]);
 	}
 		
 	public void LoadNextDay() {
