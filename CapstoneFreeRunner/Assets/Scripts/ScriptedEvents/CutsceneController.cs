@@ -4,41 +4,39 @@ using System;
 
 public class CutsceneController : MonoBehaviour {
 
-	public bool disabled;
+	public bool disabled = false;
 	private int dialogueLine = 0;
 
+	private int eventNum = 0;
+
 	public string[] cutscenedialogue;
-	private string speaker = "Boss";
+	public ScriptedEvent[] events;
 
-	void OnTriggerEnter2D(Collider2D col)
-	{
-		if (PlayerPrefs.GetInt(OptionsMenu.Key.PlayCutscenes.ToString()) == 0 && col.tag == "Player") {
-			StartCutscene ();
-		}
-	}
+	public static string changeSpeaker = "<";
+	public static string pause = "XX";
+	public static string eventTrigger = "%%";
+	public static bool cutsceneOcurring = false;
 
-	private void StartCutscene()
+	public virtual void StartCutscene()
 	{
 		if(!disabled) {
 			DayManager.self.PauseGame (true);
-			NextPagerPrompt ();
+			NextCutsceneLine ();
 		}
 	}
 
-	public void EndCutscene()
+	public virtual void EndCutscene()
 	{
 		DayManager.self.PauseGame (false);
-		this.disabled = true;
-		this.gameObject.SetActive (false);
+		Pager.self.DisablePager ();
 	}
 
-	public void NextPagerPrompt()
+	private void NextCutsceneLine()
 	{
 		string line = "";
 		char[] lineAr;
 
 		if (dialogueLine >= cutscenedialogue.Length) {
-			Pager.self.DisablePager ();
 			EndCutscene ();
 		} else {
 			line = cutscenedialogue [dialogueLine];
@@ -46,23 +44,37 @@ public class CutsceneController : MonoBehaviour {
 			if (lineAr [0] == 'X' && lineAr [1] == 'X') {
 				Pager.self.HideWindow ();
 				dialogueLine++;
-				Invoke ("NextPagerPrompt",1f);
+				Invoke ("NextCutsceneLine",1f);
 				return;
 			}
 			else if(lineAr[0] == '%' && lineAr[1] == '%'){
 				dialogueLine++;
-				BeginScriptedEvent (line.Substring(2));
-				return;			}
+				BeginScriptedEvent (eventNum);
+				eventNum++;
+				return;			
+			}
 			else if (lineAr [0] == '<') {
-				SetSpeaker (line.Substring (1, line.Length - 2));
+				SetSpeaker (line.Substring (1, line.Length - 1));
 				Pager.self.pagerText.text = "";
 
-				Invoke("NextPagerPrompt", .5f);
-			} else {
+				Invoke("NextCutsceneLine", .5f);
+			} 
+			else {
 				DisplayDialogue (line);
 			}
 		}
 		dialogueLine++;
+	}
+		
+	//Event Callback
+	public void EndScriptedEvent()
+	{
+		NextCutsceneLine ();
+	}
+
+	private void DisplayDialogue(string text)
+	{
+		Pager.self.ScrollPagerWithText (text);
 	}
 
 	private void SetSpeaker(string text)
@@ -70,23 +82,25 @@ public class CutsceneController : MonoBehaviour {
 		Pager.self.SetSpeaker (text);
 	}
 
-	private void DisplayDialogue(string text)
+	private void BeginScriptedEvent(int i)
 	{
-		Pager.self.ScrollPagerWithText (text, this);
+		events[i].TriggerEventWithCallback (this.gameObject);
 	}
-
-	private void BeginScriptedEvent(string childname)
-	{
-		Transform t = transform.Find (childname);
-		ScriptedEvent se = t.GetComponent <ScriptedEvent>();
-		if (se == null) {
-			Debug.Log ("ERROR: NO SCRIPTED EVENT WITH NAME " + childname);
+		
+	//Effects of user input
+	void Update() {
+		if (!disabled) {
+			if (InputWrapper.GetJump ()) {
+				SkipText ();
+			}
+			if (InputWrapper.GetWarpButton ()) {
+				EndCutscene ();
+			}
 		}
-		se.TriggerEventWithCallback (this.gameObject);
 	}
 
-	public void EndScriptedEvent()
+	private void SkipText()
 	{
-		NextPagerPrompt ();
+		NextCutsceneLine ();
 	}
 }

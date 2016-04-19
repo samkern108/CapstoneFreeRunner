@@ -12,6 +12,11 @@ public class ScriptedEvent : MonoBehaviour {
 		
 	public virtual void EndEvent ()
 	{
+		gameObject.SetActive (false);
+	}
+
+	public virtual void ReturnToCaller()
+	{
 		callback.SendMessage ("EndScriptedEvent");
 	}
 }

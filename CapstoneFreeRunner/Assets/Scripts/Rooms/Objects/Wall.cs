@@ -4,7 +4,6 @@ using System.Collections;
 public class Wall : MonoBehaviour {
 
 	public bool warp;
-
 	public bool floor;
 
 	public enum Direction {ANY, UP, DOWN, LEFT, RIGHT}
@@ -22,6 +21,14 @@ public class Wall : MonoBehaviour {
 		
 	}*/
 
+	private void WarpEffects ()
+	{
+		if (companion != null) {
+			companion.transform.parent.gameObject.SetActive (true);
+			transform.parent.gameObject.SetActive (false);
+		}
+	}
+
 	public Vector3 WarpVertical(Vector3 heroPos, int onGround, float playerHeight, float playerZLayer)
 	{
 		Bounds hitBounds;
@@ -37,9 +44,11 @@ public class Wall : MonoBehaviour {
 			size = hitBounds.size;
 
 			if (size.y <= maxWarpDistance) {
+				WarpEffects ();
 				return new Vector3 (heroPos.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), playerZLayer);
 			}
 		}
+
 		return heroPos;
 	}
 
@@ -58,9 +67,11 @@ public class Wall : MonoBehaviour {
 			size = hitBounds.size;
 
 			if (size.x <= maxWarpDistance) {
+				WarpEffects ();
 				return new Vector3 (hitBounds.center.x + facingRight * (size.x / 2 + (playerWidth - .2f) / 2), heroPos.y, playerZLayer);
 			}
 		}
+
 		return heroPos;
 	}
 }

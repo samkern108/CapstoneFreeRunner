@@ -14,21 +14,29 @@ public class Background : MonoBehaviour {
 	private GameObject edgeMesh;
 
 	void Start () {
-		Bounds bounds = this.GetComponent <SpriteRenderer> ().bounds;
+		Vector3 bounds;
+		Vector2 min;
+		Vector2 max;
+		SpriteRenderer sr = this.GetComponent <SpriteRenderer> ();
+
+		bounds = sr.bounds.size;
+		min = sr.bounds.min;
+		max = sr.bounds.max;
+
 		if (exterior)
 			exteriorI *= -1;
 
 		if (up) {
-			InstantiateEdgeMesh (bounds.size.x, new Vector3 (bounds.min.x, bounds.max.y, -1), 0);
+			InstantiateEdgeMesh (bounds.x, new Vector3 (min.x, max.y, -1), 0);
 		}
 		if (down) {
-			InstantiateEdgeMesh (bounds.size.x, new Vector3 (bounds.max.x, bounds.min.y, -1), 180);
+			InstantiateEdgeMesh (bounds.x, new Vector3 (max.x, min.y, -1), 180);
 		}
 		if (left) {
-			InstantiateEdgeMesh (bounds.size.y, new Vector3 (bounds.min.x, bounds.min.y, -1), 90);
+			InstantiateEdgeMesh (bounds.y, new Vector3 (min.x, min.y, -1), 90);
 		}
 		if (right) {
-			InstantiateEdgeMesh (bounds.size.y, new Vector3 (bounds.max.x, bounds.max.y, -1), 270);
+			InstantiateEdgeMesh (bounds.y, new Vector3 (max.x, max.y, -1), 270);
 		}
 	}
 

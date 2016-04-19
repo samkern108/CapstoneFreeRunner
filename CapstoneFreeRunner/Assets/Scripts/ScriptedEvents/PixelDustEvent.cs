@@ -9,9 +9,10 @@ public class PixelDustEvent : ScriptedEvent {
 	public void Start()
 	{
 		ps = GetComponent <ParticleSystem>();
+		ps.Stop ();
+
 		sr = GetComponent<SpriteRenderer> ();
 		sr.enabled = false;
-		ps.Stop ();
 	}
 
 	public override void TriggerEventWithCallback(GameObject cb)
@@ -45,6 +46,6 @@ public class PixelDustEvent : ScriptedEvent {
 	public override void EndEvent()
 	{
 		ps.Stop ();
-		base.EndEvent ();
+		base.ReturnToCaller ();
 	}
 }

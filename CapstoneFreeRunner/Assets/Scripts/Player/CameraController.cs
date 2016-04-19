@@ -15,19 +15,12 @@ public class CameraController : MonoBehaviour {
 	private float shakeOffsetX = 0;
 	private float shakeOffsetY = 0;
 
-	private float speed;
 	private float regularSize;
-
-	void Reset() {
-		if (heroCamera.orthographicSize != regularSize) {
-			StartCoroutine ("RestoreSize",20);
-		}
-	}
 
 	void Awake () {
 		heroCamera = GetComponent <Camera>();
 		regularSize = heroCamera.orthographicSize;
-		speed = regularSize * 3;
+
 		self = this;
 	}
 
@@ -36,34 +29,24 @@ public class CameraController : MonoBehaviour {
 		if(followingPlayer) MoveCamera ();
 	}
 
-	public void DriftToPlayer()
+	private Vector3 targetPos;
+
+	public void DriftToPosition(Vector3 pos, float time)
 	{
-		StartCoroutine ("Drift",PlayerController.PlayerPosition);
+		targetPos = pos;
+		targetPos.z = heroCamera.transform.position.z;
+
+		StartCoroutine ("Drift", time);
 	}
 
-	IEnumerator Drift(Vector3 position)
+	IEnumerator Drift(float time)
 	{
-		position.z = heroCamera.transform.position.z;
-		for (float i = 0; i < 100; i++) {
-			heroCamera.transform.position = Vector3.Lerp (heroCamera.transform.position, position, i/100);
+		int i = 0;
+		while(heroCamera.transform.position != targetPos) {
+			i++;
+			heroCamera.transform.position = Vector3.Lerp (heroCamera.transform.position, targetPos, i/time);
 			yield return null;
 		}
-		followingPlayer = true;
-	}
-
-	float targetSize;
-	float dt;
-
-	/**
-	 * Zooms the camera by %1 percentage% over %2 time%, then restore over %3 time%
-	 * Example: to double size, percentage should be 2
-	 * time and rTime should be greater than one.
-	 **/
-	public void ZoomCamera(float percentage, float time, float rTime)
-	{
-		targetSize = regularSize * percentage;
-		dt = (targetSize - regularSize)/time;
-		StartCoroutine ("ZoomCoroutine", rTime);
 	}
 
 	public void SetCameraSize(float size)
@@ -71,11 +54,22 @@ public class CameraController : MonoBehaviour {
 		heroCamera.orthographicSize = size;
 	}
 
-	public void ZoomCamera(float percentage, float time)
+	float targetSize;
+	float dt;
+
+	/**
+	 * Zooms the camera to %1 size% over %2 time%.
+	 * if time is 0, the zoom will be immediate
+	 **/
+	public void ZoomCamera(float size, float time)
 	{
-		targetSize = regularSize * percentage;
-		dt = (targetSize - regularSize)/time;
-		StartCoroutine ("ZoomCoroutine", -1);
+		if (time <= 0) {
+			SetCameraSize (size);
+		} else {
+			targetSize = size;
+			dt = (targetSize - regularSize) / time;
+			StartCoroutine ("ZoomCoroutine");
+		}
 	}
 
 	public void RestoreSize(float restoreTime)
@@ -85,7 +79,7 @@ public class CameraController : MonoBehaviour {
 		StartCoroutine ("RestoreCoroutine", restoreTime);
 	}
 
-	IEnumerator ZoomCoroutine(float restoreTime)
+	IEnumerator ZoomCoroutine()
 	{
 		bool zooming = targetSize > regularSize;
 		float tempSize = regularSize;
@@ -93,9 +87,6 @@ public class CameraController : MonoBehaviour {
 			tempSize += dt;
 			heroCamera.orthographicSize = tempSize;
 			yield return null;
-		}
-		if (restoreTime != -1) {
-			StartCoroutine ("RestoreCoroutine", restoreTime);
 		}
 	}
 
@@ -124,7 +115,9 @@ public class CameraController : MonoBehaviour {
 		transform.position = new Vector3(PlayerController.PlayerPosition.x + shakeOffsetX, PlayerController.PlayerPosition.y + shakeOffsetY, -9);
 	}
 
-	/*void Update () {
+	/*
+	    private float speed = regularSize * 3;
+	    void Update () {
 		bool facingRight = PlayerController.state.facingRight;
 
 		if (PlayerController.state.onGround) {
@@ -152,4 +145,10 @@ public class CameraController : MonoBehaviour {
 		transform.position = PlayerController.state.position;
 		transform.position += new Vector3 (offsetX, offsetY, -9); //The -9 ensures that the camera is "in front of" the hero
 	}*/
+
+	void Reset() {
+		if (heroCamera.orthographicSize != regularSize) {
+			StartCoroutine ("RestoreSize",20);
+		}
+	}
 }

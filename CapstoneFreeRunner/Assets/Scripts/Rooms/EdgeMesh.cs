@@ -39,9 +39,6 @@ public class EdgeMesh : MonoBehaviour {
 
 	public void SetUpMesh (float length, float exteriorI) {
 		this.exteriorI = exteriorI;
-		//Vector3 t = transform.position;
-		//t.z = -1;
-		//transform.position = t;
 
 		vertices = AddVertices (length);
 
@@ -61,19 +58,17 @@ public class EdgeMesh : MonoBehaviour {
 
 	void Update () {
 		for (int i = 1; i < vertices.Length - 1; i+=2) {
-			this.vertices [i].y = vertices [i].y.Map (0, 8, exteriorI*(-.5f), exteriorI*.5f) * Random.value;
+			this.vertices [i].y = 0.5f*this.vertices [i].y+0.5f*vertices [i].y.Map (0, 8, exteriorI*(-.5f), exteriorI*.5f) * Random.value;
 		}
 
 		mesh.vertices = this.vertices;
 	}
 
 	void OnBecameVisible() {
-		Debug.Log ("Vis");
 		this.enabled = true;
 	}
 
 	void OnBecameInvisible() {
-		Debug.Log ("Invis");
 		this.enabled = false;
 	}
 }

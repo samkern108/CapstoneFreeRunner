@@ -107,6 +107,7 @@ public class InputWrapper : MonoBehaviour {
 		DetermineInputType ();
 	}
 
+	//TODO this is stupid 
 	void Update()
 	{
 		if (GetMenuOpen ()) {

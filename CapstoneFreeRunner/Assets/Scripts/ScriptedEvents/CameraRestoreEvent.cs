@@ -1,22 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class CameraZoomEvent : ScriptedEvent {
+public class CameraRestoreEvent : ScriptedEvent {
 
-	public float size = 4f;
-	public float time = 10f;
+	public float time = 20f;
 	public Transform driftPosition;
 
 	public override void TriggerEventWithCallback(GameObject cb)
 	{
 		base.TriggerEventWithCallback (cb);
 
-		CameraController.self.ZoomCamera (size, time);
+		CameraController.self.RestoreSize (time);
 		if (driftPosition != null) {
-			CameraController.self.DriftToPosition (driftPosition.position, 1000);
+			CameraController.self.DriftToPosition (driftPosition.position, 200);
 		}
 
-		EndEvent ();
+		Invoke ("EndEvent",2f);
 	}
 
 	public override void EndEvent()
