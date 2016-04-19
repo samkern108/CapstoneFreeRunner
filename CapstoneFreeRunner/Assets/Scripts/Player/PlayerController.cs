@@ -34,6 +34,7 @@ public class PlayerController : MonoBehaviour
 
 		public bool falling;
 		public bool boosting;
+		public bool sprintJump = false;
 
 		//## WARPING ##//
 		public bool drained;
@@ -102,8 +103,12 @@ public class PlayerController : MonoBehaviour
 			jumpButtonUp = InputWrapper.GetAbortJump ();
 
 			//3: Handle Warping
-			if (warpButtonDown && !state.drained) {// && !state.InAir())  {
+			if (warpButtonDown && !state.drained && !state.InAir()) {
 				if (HandleWarp ()) return;
+			}
+				
+			if (state.sprintJump && !state.InAir ()) {
+				state.sprintJump = false;
 			}
 
 			//4: Handle Regular Movement
@@ -260,7 +265,7 @@ public class PlayerController : MonoBehaviour
 		}
 
 		if(cornerMoveData[0] == 1) {
-			RaycastHit2D hit = Physics2D.Linecast (transform.position, cornerChecker, 1 << LayerMask.NameToLayer ("Wall"));
+			RaycastHit2D hit = Physics2D.Linecast (transform.position, cornerChecker, layerMask);
 
 			float moveX = transform.position.x;
 			float moveY = transform.position.y;
@@ -299,7 +304,7 @@ public class PlayerController : MonoBehaviour
 		if (state.ValueInDirection(hAxis, 0f, false))  
 			FlipPlayer ();
 		
-		state.currentSpeedVector.x = hAxis * (sprintButtonDown ? sprintSpeed : runSpeed);
+		state.currentSpeedVector.x = hAxis * (state.sprintJump ? sprintSpeed : runSpeed);
 	}
 
 	private AnimationState MoveOnGround()
@@ -383,6 +388,8 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState JumpOffCeiling()
 	{
+		if (sprintButtonDown)
+			state.sprintJump = true;
 		state.falling = true;
 		return AnimationState.JUMP;
 	}
@@ -391,7 +398,6 @@ public class PlayerController : MonoBehaviour
 	{
 		if (InputWrapper.isGamepadConnected) {
             state.currentSpeedVector.y = wallJumpArc; //* vAxis;
-			state.currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
 		} else {
 			if (vAxis > .1f)
 				state.currentSpeedVector.y = wallJumpArc;
@@ -399,14 +405,19 @@ public class PlayerController : MonoBehaviour
 				state.currentSpeedVector.y = 0;
 			else
 				state.currentSpeedVector.y = lowJumpArc;
-				
-			state.currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
 		}
+		if (sprintButtonDown)
+			state.sprintJump = true;
+
+		state.currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
+
 		return AnimationState.JUMP;
 	}
 
 	private AnimationState Jump()
 	{
+		if (sprintButtonDown)
+			state.sprintJump = true;
 		state.currentSpeedVector.y = jumpArc;
 		return AnimationState.JUMP;
 	}
@@ -469,11 +480,11 @@ public class PlayerController : MonoBehaviour
 
 		state.currentSpeedVector = boostSpeed * boostDirection;
 
-		Vector3 lookAt = state.currentSpeedVector.normalized;
+		//Vector3 lookAt = state.currentSpeedVector.normalized;
 
-		float rot_z = Mathf.Atan2(lookAt.y, lookAt.x) * Mathf.Rad2Deg;
+		//float rot_z = Mathf.Atan2(lookAt.y, lookAt.x) * Mathf.Rad2Deg;
 		//rot_z += ((Mathf.Sign (transform.localScale.x) == 1) ? 0 : 90);
-		rot_z += ((Mathf.Sign (transform.localScale.x) == 1) ? 0 : 180);
+		//rot_z += ((Mathf.Sign (transform.localScale.x) == 1) ? 0 : 180);
 		//sprite.transform.rotation = Quaternion.Euler (0f, 0f, rot_z);
 
 		//boostParticle.transform.rotation = Quaternion.Euler(0f, 0f, rot_z);
@@ -489,7 +500,7 @@ public class PlayerController : MonoBehaviour
 	{
 		state.boosting = false;
 		boostParticle.gameObject.SetActive(false);
-		sprite.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+		//sprite.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
 	}
 
 	private void FlipPlayer()
@@ -526,7 +537,7 @@ public class PlayerController : MonoBehaviour
 		Vector2 playerDimensions = new Vector2 (dir.x * (playerWidth/2), dir.y * (playerHeight/2));
 		float distance = Vector2.Distance (newPos, oldPos) + playerDimensions.magnitude;
 
-		RaycastHit2D raycast = Physics2D.Raycast (oldPos, dir, distance + playerDimensions.magnitude, 1 << LayerMask.NameToLayer ("Wall"));
+		RaycastHit2D raycast = Physics2D.Raycast (oldPos, dir, distance + playerDimensions.magnitude, layerMask);
 
 		if (raycast.collider == null || raycast.distance > distance) {
 			return newPos;
@@ -544,54 +555,48 @@ public class PlayerController : MonoBehaviour
 	// Maybe I can get LinecastNonAlloc to work someday.
 	private void Linecasts()
 	{
-		state.onWallBack = Physics2D.Linecast (wallCheckerBottomBack.position, wallCheckerBottom.position, 1 << LayerMask.NameToLayer ("Wall"));
+		state.onWallBack = Physics2D.Linecast (wallCheckerBottomBack.position, wallCheckerBottom.position, layerMask);
 
-		hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, 1 << LayerMask.NameToLayer ("Wall"));
+		hit = Physics2D.Linecast (wallCheckerBottom.position, wallCheckerTop.position, layerMask);
 		if (hit.collider != null) {
 			state.onWallFront = true;
 		} else  
 			state.onWallFront = false;
 
-		hit = Physics2D.Linecast (transform.position, groundChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
+		hit = Physics2D.Linecast (transform.position, groundChecker.position, layerMask);
 
-		if (hit.collider != null) {
-
+		if (hit.collider != null) 
+		{
 			state.collidingCorner = Corner.noCorner;
 			state.onGround = true;
 			state.onCeiling = false;
 			return;
-		} else  
-			state.onGround = false;
+		} 
+		else  state.onGround = false;
 
-		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, 1 << LayerMask.NameToLayer ("Wall"));
+		hit = Physics2D.Linecast (transform.position, ceilingChecker.position, layerMask);
 
-		if (hit.collider != null) {
-
+		if (hit.collider != null) 
+		{
 			state.collidingCorner = Corner.noCorner;
 			state.onCeiling = true;
 			return;
-		} else  
-			state.onCeiling = false;
+		} 
+		else  state.onCeiling = false;
 
-		if (!state.onCeiling && !state.onWallBack && !state.onWallFront && !state.onGround) {
-			cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"));
-			state.collidingCorner = Corner.bottomBack;
+		if (!state.onWallBack && !state.onWallFront) {
 
-			//This code is so ugly it makes my brain spasm
-			if (cornerHit.collider == null) {
-				cornerHit = Physics2D.Linecast (transform.position, floorCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"));
-				state.collidingCorner = Corner.bottomFront;
+			if(Physics2D.Linecast (transform.position, floorCornerCheckBack.position, layerMask)) {
+				state.collidingCorner = Corner.bottomBack;	return;
 			}
-			if (cornerHit.collider == null) {
-				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckBack.position, 1 << LayerMask.NameToLayer ("Wall"));
-				state.collidingCorner = Corner.topBack;
+			else if(Physics2D.Linecast (transform.position, floorCornerCheckFront.position, layerMask)) {
+				state.collidingCorner = Corner.bottomFront;	return;
 			}
-			if (cornerHit.collider == null) {
-				cornerHit = Physics2D.Linecast (transform.position, ceilingCornerCheckFront.position, 1 << LayerMask.NameToLayer ("Wall"));
-				state.collidingCorner = Corner.topFront;
+			else if(Physics2D.Linecast (transform.position, ceilingCornerCheckBack.position, layerMask)) {
+				state.collidingCorner = Corner.topBack;		return;
 			}
-			if (cornerHit.collider != null) {
-				return;
+			else if(Physics2D.Linecast (transform.position, ceilingCornerCheckFront.position, layerMask)) {
+				state.collidingCorner = Corner.topFront;	return;
 			}
 		}
 		state.collidingCorner = Corner.noCorner;
@@ -657,7 +662,7 @@ public class PlayerController : MonoBehaviour
 		}
 
 		if (checker1 != Vector3.zero) {
-			RaycastHit2D hit = Physics2D.Linecast (checker1, checker2, 1 << LayerMask.NameToLayer ("Wall"));
+			RaycastHit2D hit = Physics2D.Linecast (checker1, checker2, layerMask);
 			if (hit.collider.tag != "Warp") {
 				return false;
 			}
@@ -667,7 +672,7 @@ public class PlayerController : MonoBehaviour
 
 				if (!warpVertical) {
 					//if the player is moving quickly toward a ceiling or floor, don't warp them through the wall.
-					bool verticalCheck = Physics2D.Raycast(transform.position, Vector2.up * Mathf.Sign(hAxis), Mathf.Abs(hAxis), 1 << LayerMask.NameToLayer ("Wall"));
+					bool verticalCheck = Physics2D.Raycast(transform.position, Vector2.up * Mathf.Sign(hAxis), Mathf.Abs(hAxis), layerMask);
 					if(verticalCheck) {
 						return false;
 					}
@@ -682,7 +687,7 @@ public class PlayerController : MonoBehaviour
 					}
 				} else {
 					//if the player is moving quickly toward a vertical wall, don't warp them through the floor.
-					bool horizontalCheck = Physics2D.Raycast(transform.position, Vector2.right * state.FacingRight(true), Mathf.Abs(hAxis), 1 << LayerMask.NameToLayer ("Wall"));
+					bool horizontalCheck = Physics2D.Raycast(transform.position, Vector2.right * state.FacingRight(true), Mathf.Abs(hAxis), layerMask);
 					if(horizontalCheck) {
 						return false;
 					}
@@ -702,7 +707,7 @@ public class PlayerController : MonoBehaviour
 
 
 	//## INITIALIZING THE CONTROLLER ##//
-	void Start()
+	void Awake()
 	{
 		state = new PlayerState ();
 		animator = this.GetComponentInChildren<Animator>();
@@ -713,21 +718,25 @@ public class PlayerController : MonoBehaviour
 		playerHeight = Vector2.Distance (groundChecker.position, ceilingChecker.position);
 		playerWidth = Vector2.Distance (wallCheckerTop.position, wallCheckerTopBack.position);
 		playerZLayer = transform.position.z;
+		layerMask = 1 << LayerMask.NameToLayer ("Wall");
 
 		Reset ();
 	}
 
+	int layerMask;
+
 	public void Reset()
 	{
-		Animate (AnimationState.IDLE);
-		RaycastHit2D hit = Physics2D.Raycast (state.respawnPosition, Vector2.down, 100, 1 << LayerMask.NameToLayer ("Wall"));
+		state.currentSpeedVector = Vector3.zero;
+		state.boosting = false;
+
+		RaycastHit2D hit = Physics2D.Raycast (state.respawnPosition, Vector2.down, 100, layerMask);
 		transform.position = new Vector3(hit.point.x, hit.point.y + playerHeight/2, playerZLayer);
 
-		boostParticle.gameObject.SetActive (false);
 		PlayerInputEnabled = true;
 
-		state.boosting = false;
-		state.currentSpeedVector = Vector3.zero;
+		Animate (AnimationState.IDLE);
+		boostParticle.gameObject.SetActive (false);
 		state.drained = false;
 	}
 
