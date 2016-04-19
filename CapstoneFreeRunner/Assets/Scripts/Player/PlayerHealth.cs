@@ -50,14 +50,6 @@ public class PlayerHealth : MonoBehaviour {
 			yield return null;
 		}
 	}
-
-	private void DeathZoom() {
-		CameraController.self.ZoomCamera(.2f, 40, -1);
-	}
-
-	private void IonBeamZoom() {
-		CameraController.self.ZoomCamera(.5f, 20, 20);
-	}
 		
 	public void PlayerDrainEnter()
 	{
@@ -65,7 +57,6 @@ public class PlayerHealth : MonoBehaviour {
 			PlayerController.state.drained = true;
 			UIManager.self.DisplayDisableScreen ();
 			PlayerAudioManager.self.PlayDisable ();
-			IonBeamZoom ();
 		}
 	}
 

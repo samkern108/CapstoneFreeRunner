@@ -16,4 +16,8 @@ public class TutorialTextZone : MonoBehaviour {
             TutorialText.self.SquelchHint ();
 		}
 	}
+
+	void OnDisable() {
+		TutorialText.self.SquelchHint ();
+	}
 }
