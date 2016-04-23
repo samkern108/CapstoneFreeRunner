@@ -11,7 +11,7 @@ public class Wall : MonoBehaviour {
 	public GameObject companion;
 	public Direction direction = Direction.ANY;
 
-	public static float maxWarpDistance = 1f;
+	public static float maxWarpDistance = 3f;
 
 	public static Sprite singleGradient;
 	public static Sprite doubleGradient;
@@ -23,21 +23,23 @@ public class Wall : MonoBehaviour {
 
 	private void WarpEffects ()
 	{
-		if (companion != null) {
-			companion.transform.parent.gameObject.SetActive (true);
+		/*if (companion != null && transform.parent != companion.transform.parent) {
 			transform.parent.gameObject.SetActive (false);
-		}
+			companion.transform.parent.gameObject.SetActive (true);
+		}*/
 	}
 
 	public Vector3 WarpVertical(Vector3 heroPos, int onGround, float playerHeight, float playerZLayer)
 	{
 		Bounds hitBounds;
 		Vector3 size;
+		Vector3 diff = new Vector3();
 
 		if (direction.Equals(Direction.ANY) || (onGround == 1) && direction.Equals (Direction.DOWN) || (onGround != 1) && direction.Equals (Direction.UP)) {
 
 			if (companion != null) {
 				hitBounds = companion.GetComponent <BoxCollider2D> ().bounds;
+				diff = hitBounds.center - GetComponent<BoxCollider2D> ().bounds.center;
 			} else {
 				hitBounds = GetComponent<BoxCollider2D> ().bounds;
 			}
@@ -45,7 +47,7 @@ public class Wall : MonoBehaviour {
 
 			if (size.y <= maxWarpDistance) {
 				WarpEffects ();
-				return new Vector3 (heroPos.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), playerZLayer);
+				return new Vector3 (heroPos.x + diff.x, hitBounds.center.y + onGround * ((size.y / 2) + ((playerHeight - .2f) / 2)), playerZLayer);
 			}
 		}
 
@@ -56,11 +58,14 @@ public class Wall : MonoBehaviour {
 	{
 		Bounds hitBounds;
 		Vector3 size;
+		Vector3 diff = new Vector3 ();
 
 		if (direction.Equals(Direction.ANY) || (facingRight == 1) && direction.Equals (Direction.LEFT) || (facingRight != 1) && direction.Equals (Direction.RIGHT)) {
 
 			if (companion != null) {
 				hitBounds = companion.GetComponent <BoxCollider2D> ().bounds;
+				diff = hitBounds.center - GetComponent<BoxCollider2D> ().bounds.center;
+
 			} else {
 				hitBounds = GetComponent<BoxCollider2D> ().bounds;
 			}
@@ -68,7 +73,7 @@ public class Wall : MonoBehaviour {
 
 			if (size.x <= maxWarpDistance) {
 				WarpEffects ();
-				return new Vector3 (hitBounds.center.x + facingRight * (size.x / 2 + (playerWidth - .2f) / 2), heroPos.y, playerZLayer);
+				return new Vector3 (hitBounds.center.x + facingRight * (size.x / 2 + (playerWidth - .2f) / 2), heroPos.y + diff.y, playerZLayer);
 			}
 		}
 

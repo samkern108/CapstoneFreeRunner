@@ -14,6 +14,8 @@ public class PlayerController : MonoBehaviour
     public GameObject warpParticleEmitter1;
     public GameObject warpParticleEmitter2;
 
+	public static bool boostEnabled = false;
+
     private Animator animator;
 
 	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
@@ -21,8 +23,8 @@ public class PlayerController : MonoBehaviour
 	public class PlayerState
 	{
 		//## POSITION ##//
-		public Vector3 respawnPosition;
 		public Vector3 currentSpeedVector;
+		public Transform respawnPoint;
 
 		//## RAYCASTING ##//
 		public bool onWallBack;
@@ -152,7 +154,7 @@ public class PlayerController : MonoBehaviour
 				if (state.InAir ()) {
 					MoveInAir ();
 					Animate(ApplyGravity ());
-					if (jumpButtonDown && !(state.falling && state.Colliding())) {
+					if (boostEnabled && jumpButtonDown && !(state.falling && state.Colliding())) {
 						Animate(BoostJump ());
 					}
 				}
@@ -542,12 +544,6 @@ public class PlayerController : MonoBehaviour
 		if (raycast.collider == null || raycast.distance > distance) {
 			return newPos;
 		} else {
-			//Debug.DrawRay(oldPos, dir * 100, (raycast.collider == null) ? Color.white : Color.red, 5f, false);
-
-			//Debug.Log (raycast.distance + "  " + distance);
-			//Debug.Log (newPos + "  " + oldPos + "  " + (newPos - oldPos).magnitude + "  " + dir);
-			//Debug.Log (playerDimensions + "  " + playerDimensions.magnitude);*/
-
 			return raycast.point + new Vector2(-playerDimensions.x, -playerDimensions.y);
 		}
 	}
@@ -712,7 +708,7 @@ public class PlayerController : MonoBehaviour
 		state = new PlayerState ();
 		animator = this.GetComponentInChildren<Animator>();
 		state.facingRight = false;
-		state.respawnPosition = playerStartPosition.position;
+		state.respawnPoint = playerStartPosition;
 		PlayerTransform = this.transform;
 		Player = this.gameObject;
 		playerHeight = Vector2.Distance (groundChecker.position, ceilingChecker.position);
@@ -727,17 +723,20 @@ public class PlayerController : MonoBehaviour
 
 	public void Reset()
 	{
-		state.currentSpeedVector = Vector3.zero;
 		state.boosting = false;
 
-		RaycastHit2D hit = Physics2D.Raycast (state.respawnPosition, Vector2.down, 100, layerMask);
-		transform.position = new Vector3(hit.point.x, hit.point.y + playerHeight/2, playerZLayer);
+		state.respawnPoint.parent.gameObject.SetActive(true);
+
+		RaycastHit2D hit = Physics2D.Raycast (state.respawnPoint.position, -1 * state.respawnPoint.up, 100, layerMask);
+		transform.position = new Vector3(hit.point.x, hit.point.y + playerHeight/2 - .001f, playerZLayer);
 
 		PlayerInputEnabled = true;
 
 		Animate (AnimationState.IDLE);
 		boostParticle.gameObject.SetActive (false);
 		state.drained = false;
+
+		state.currentSpeedVector = Vector3.zero;
 	}
 
 	//## INPUT ##//
@@ -764,5 +763,10 @@ public class PlayerController : MonoBehaviour
 	{
 		set { if(_player == null) _player = value; }
 		get { return _player; }
+	}
+
+	public static void SetRespawnPoint(Transform t)
+	{
+		state.respawnPoint = t;
 	}
 } 

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class OptionsMenu : MonoBehaviour {
 
@@ -61,5 +62,10 @@ public class OptionsMenu : MonoBehaviour {
 	private void SetPreference(Key key, int value)
 	{
 		PlayerPrefs.SetInt (key.ToString(), value);
+	}
+
+	public void RestartDemo()
+	{
+		SceneManager.LoadScene ("TitleScreen");
 	}
 }

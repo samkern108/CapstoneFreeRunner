@@ -4,7 +4,7 @@ using System;
 
 public class CutsceneController : MonoBehaviour {
 
-	public bool disabled = false;
+	private bool triggered = false;
 	private int dialogueLine = 0;
 
 	private int eventNum = 0;
@@ -19,19 +19,18 @@ public class CutsceneController : MonoBehaviour {
 
 	public virtual void StartCutscene()
 	{
-		if(!disabled) {
-			DayManager.self.PauseGame (true);
-			NextCutsceneLine ();
-		}
+		DayManager.self.PauseGame (true);
+		triggered = true;
 	}
 
 	public virtual void EndCutscene()
 	{
+		Destroy (this.gameObject);
 		DayManager.self.PauseGame (false);
 		Pager.self.DisablePager ();
 	}
 
-	private void NextCutsceneLine()
+	public void NextCutsceneLine()
 	{
 		string line = "";
 		char[] lineAr;
@@ -89,13 +88,13 @@ public class CutsceneController : MonoBehaviour {
 		
 	//Effects of user input
 	void Update() {
-		if (!disabled) {
-			if (InputWrapper.GetJump ()) {
+		if (triggered) {
+			if (InputWrapper.GetProgressCutscene()) {
 				SkipText ();
 			}
-			if (InputWrapper.GetWarpButton ()) {
+			/*if (InputWrapper.GetWarpButton ()) {
 				EndCutscene ();
-			}
+			}*/
 		}
 	}
 

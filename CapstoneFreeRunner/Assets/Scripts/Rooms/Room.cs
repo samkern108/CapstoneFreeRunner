@@ -7,18 +7,18 @@ public class Room : MonoBehaviour {
 	private Vector3 originalScale;
 
 	void Start () {
-		gameObject.SetActive (initiallyActive);
+		//gameObject.SetActive (initiallyActive);
 		originalScale = this.transform.localScale;
 	}
 
 	public void RoomDisappearEffect()
 	{
-		StartCoroutine ("RoomDisappear");
+		//StartCoroutine ("RoomDisappear");
 	}
 
 	public void RoomAppearEffect()
 	{
-		StartCoroutine ("RoomAppear");
+		//StartCoroutine ("RoomAppear");
 	}
 
 	IEnumerator RoomDisappear()

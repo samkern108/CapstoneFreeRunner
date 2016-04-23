@@ -29,6 +29,8 @@ public class InputWrapper : MonoBehaviour {
 	private static string VWARP = "WarpVertical";
 	private static string HWARP = "WarpHorizontal";
 	private static string MENU = "Menu";
+	private static string CANCEL = "Cancel";
+	private static string CUTSCENE = "Cutscene";
 
 	private static void AssignKeyboardControls()
 	{
@@ -202,6 +204,11 @@ public class InputWrapper : MonoBehaviour {
 	public static bool GetMenuOpen()
 	{
 		return Input.GetButtonDown (MENU);
+	}
+
+	public static bool GetProgressCutscene()
+	{
+		return Input.GetButtonDown (CUTSCENE);
 	}
 
 	public static bool Restart()
