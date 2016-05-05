@@ -114,8 +114,13 @@ public class PlayerController : MonoBehaviour
 			}
 
 			//4: Handle Regular Movement
-			if(state.boosting) {
-				Animate(HandleBoost());
+			if (state.boosting) {
+				Animate (HandleBoost ());
+			} else if (wallSlide) {
+				if (jumpButtonUp)
+					wallSlide = false;
+				else 
+					WallSlide ();
 			}
 			else {
 				if (state.OnCorner()) {
@@ -192,6 +197,7 @@ public class PlayerController : MonoBehaviour
 
 	short[] cornerMoveData = new short[4];
 
+
 	private AnimationState MoveOnCorner()
 	{
 		AnimationState anim = AnimationState.JUMP;
@@ -203,12 +209,6 @@ public class PlayerController : MonoBehaviour
 		case Corner.bottomBack:
 			if (jumpButtonDown) {
 				Jump();
-			} 
-			//move down a cliff while looking at it
-			else if (vAxis < -.15f) { 
-				FlipPlayer ();
-				cornerMoveData = new short[4]{ 1, 1, 1, -1 };
-				cornerChecker = floorCornerCheckFront.position;
 			} 
 			//move backwards while looking down a cliff
 			else if (state.ValueInDirection (hAxis, .15f, false)) { 
@@ -225,22 +225,12 @@ public class PlayerController : MonoBehaviour
 			else if (vAxis < -.15f) {
 				cornerMoveData = new short[4]{ 1, -1, 1, -1 };
 			} 
-			//move up and over the corner of a cliff
-			else if (state.ValueInDirection (hAxis, .15f, true)) {
-				cornerMoveData = new short[4]{ 1, -1, 1, 1 }; //x : 1
-			}
 			cornerChecker = floorCornerCheckFront.position;
 			anim = AnimationState.WALL_UP_CORNER;
 			break;
 		case Corner.topBack:
 			if (jumpButtonDown) {
 				JumpOffCeiling ();
-			} 
-			//move up onto a wall when you're climbing on the ceiling
-			else if (vAxis > .15f) {
-				FlipPlayer ();
-				cornerMoveData = new short[4]{ 1, 1, -1, -1 };
-				cornerChecker = ceilingCornerCheckFront.position;
 			} 
 			//move backwards on the ceiling
 			else if (state.ValueInDirection (hAxis, .15f, false)) {
@@ -257,10 +247,6 @@ public class PlayerController : MonoBehaviour
 			else if (vAxis > .15f) {
 				cornerMoveData = new short[4]{ 1, -1, -1, -1 };
 			} 
-			//move under wall while clinging to it.
-			else if (state.ValueInDirection (hAxis, .15f, true)) {
-				cornerMoveData = new short[4]{ 1, -1, -1, 1 }; // x: 1
-			}
 			cornerChecker = ceilingCornerCheckFront.position;
 			anim = AnimationState.WALL_DOWN_CORNER;
 			break;
@@ -374,14 +360,9 @@ public class PlayerController : MonoBehaviour
 
 		float verticalSpeed = 0;
 
-		if (state.ValueInDirection(hAxis, .3f, false)) {
-			state.leanOffWall = true;
-		} else {
-			state.leanOffWall = false;
-			state.currentSpeedVector.x = 0;
-			if (!(state.onGround && vAxis < 0) && !(state.onCeiling && vAxis > 0)) {
-				verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : (runSpeed - .1f));
-			}
+		state.currentSpeedVector.x = 0;
+		if (!(state.onGround && vAxis < 0) && !(state.onCeiling && vAxis > 0)) {
+			verticalSpeed = vAxis * (sprintButtonDown ? sprintSpeed : (runSpeed - .1f));
 		}
 
 		state.currentSpeedVector.y = verticalSpeed;
@@ -398,22 +379,35 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState JumpOffWalls()
 	{
-		if (InputWrapper.isGamepadConnected) {
-            state.currentSpeedVector.y = wallJumpArc; //* vAxis;
-		} else {
+		if (Mathf.Abs (hAxis) > .1f) {
 			if (vAxis > .1f)
 				state.currentSpeedVector.y = wallJumpArc;
-			else if (vAxis < -.1f)
-				state.currentSpeedVector.y = 0;
 			else
 				state.currentSpeedVector.y = lowJumpArc;
+		} else {
+			wallSlide = true;
+			return WallSlide ();
 		}
+		
 		if (sprintButtonDown)
 			state.sprintJump = true;
 
 		state.currentSpeedVector.x = state.FacingRight(false) * (sprintButtonDown ? jumpSpeedSprint : jumpSpeed);
 
 		return AnimationState.JUMP;
+	}
+
+	bool wallSlide;
+
+	private AnimationState WallSlide()
+	{
+		if (state.onGround) {
+			wallSlide = false;
+			return AnimationState.IDLE;
+		} else {
+			state.currentSpeedVector.y = -10f;
+		}
+		return AnimationState.IDLE_WALL;
 	}
 
 	private AnimationState Jump()
