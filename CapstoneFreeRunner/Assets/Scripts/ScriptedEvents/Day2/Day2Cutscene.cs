@@ -6,11 +6,13 @@ public class Day2Cutscene : CutsceneController {
 	private string boss = "Boss";
 	private string brad = "Brad";
 
+	public GameObject Day1;
+	public GameObject Day2;
+
 	void Start()
 	{
 		cutscenedialogue = new string[]
 		{
-			eventTrigger,
 			changeSpeaker + boss,
 			"You're alive!",
 			"(ehem)",
@@ -18,6 +20,7 @@ public class Day2Cutscene : CutsceneController {
 			"Ready for the next batch?",
 			pause,
 			"What are you talking about? You just had a break!",
+			eventTrigger,
 			"Get back out there!"
 		};
 	}
@@ -25,6 +28,8 @@ public class Day2Cutscene : CutsceneController {
 	public override void StartCutscene()
 	{
 		base.StartCutscene ();
+		Day1.SetActive(false);
+		Day2.SetActive(true);
 		this.NextCutsceneLine ();
 	}
 

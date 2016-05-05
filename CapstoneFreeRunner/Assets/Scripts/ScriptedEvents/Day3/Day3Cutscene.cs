@@ -10,15 +10,10 @@ public class Day3Cutscene : CutsceneController {
 	{
 		cutscenedialogue = new string[]
 		{
-			eventTrigger,
 			changeSpeaker + boss,
-			"You're alive!",
-			"(ehem)",
-			"Excellent work.",
-			"Ready for the next batch?",
-			pause,
-			"What are you talking about? You just had a break!",
-			"Get back out there!"
+			"Well, that's all we have for this demo! Thanks for playing!",
+			"Remember to leave us feedback on the index cards!",
+			"Press ESC to return to the menu!"
 		};
 	}
 
