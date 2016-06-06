@@ -45,13 +45,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\2DLightAsset\Scripts\2DLight\Editor\DynamicLightEditor.cs" />
+     <Compile Include="Assets\2DLightAsset\Scripts\2DLight\Editor\DynamicLightMenu.cs" />
      <Compile Include="Assets\XInput\Editor\XboxCtrlrInput\InputManagerReplacer.cs" />
      <None Include="Assets\Fonts I Stole\vanadine\readme.txt" />
+     <None Include="Assets\2DLightAsset\Shaders\Gradient-NoTexture-Radial-SingleColor-ToTransparent-RegularUV-AlphaBlend.shader" />
      <None Include="Assets\Fonts I Stole\quantum\quantum.txt" />
      <None Include="Assets\Fonts I Stole\gang_bang_crime\Copyright_Licence.txt" />
      <None Include="Assets\Fonts I Stole\gang_bang_crime\ReadMe.txt" />
      <None Include="Assets\Fonts I Stole\ruthless_one\License - READ THIS.txt" />
      <None Include="Assets\Fonts I Stole\ghang\License - READ THIS.txt" />
+     <None Include="Assets\2DLightAsset\Shaders\Gradient-ZFighting.shader" />
      <None Include="Assets\Fonts I Stole\alpha_male_modern\ReadMe.txt" />
      <None Include="Assets\Fonts I Stole\audiowide\OFL.txt" />
  <Reference Include="UnityEditor.Advertisements">
@@ -78,6 +82,9 @@
  <Reference Include="UnityEditor.TreeEditor">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/TreeEditor/Editor/UnityEditor.TreeEditor.dll</HintPath>
  </Reference>
+ <Reference Include="pseudoSinCos">
+ <HintPath>/Users/samkern/Documents/Code/Capstone/Free Runner/CapstoneFreeRunner/Assets/2DLightAsset/Scripts/Helpers/pseudoSinCos.dll</HintPath>
+ </Reference>
  <Reference Include="XInputDotNetPure">
  <HintPath>/Users/samkern/Documents/Code/Capstone/Free Runner/CapstoneFreeRunner/Assets/XInput/Plugins/x86_64/XInputDotNetPure.dll</HintPath>
  </Reference>
@@ -97,6 +104,8 @@
   <ItemGroup>
     <ProjectReference Include="Assembly-CSharp.csproj">
       <Project>{B464ED31-0F03-2ED1-2E16-68584806BCC0}</Project>      <Name>Assembly-CSharp</Name>    </ProjectReference>
+    <ProjectReference Include="Assembly-UnityScript.unityproj">
+      <Project>{84487E6A-C76E-0883-70CB-56395FD6CEE8}</Project>      <Name>Assembly-UnityScript</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

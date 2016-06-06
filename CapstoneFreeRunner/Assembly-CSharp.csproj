@@ -45,6 +45,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\2DLightAsset\Examples\RigidBodyInterpolationSolution\FollowLight2d.cs" />
+     <Compile Include="Assets\2DLightAsset\Scripts\2DLight\DynamicLight.cs" />
+     <Compile Include="Assets\2DLightAsset\Scripts\Helpers\interface_touch.cs" />
+     <Compile Include="Assets\2DLightAsset\Scripts\Helpers\interface_touch2.cs" />
+     <Compile Include="Assets\2DLightAsset\Scripts\rotate.cs" />
      <Compile Include="Assets\ActivateCutscene.cs" />
      <Compile Include="Assets\EnableBoost.cs" />
      <Compile Include="Assets\Scripts\Enemies\Hit Player\DamagePlayer.cs" />
@@ -112,11 +117,13 @@
      <Compile Include="Assets\Scripts\Switches&amp;Timers\TimedActivation.cs" />
      <Compile Include="Assets\XInput\XboxCtrlrInput\XboxCtrlrInput.cs" />
      <None Include="Assets\Fonts I Stole\vanadine\readme.txt" />
+     <None Include="Assets\2DLightAsset\Shaders\Gradient-NoTexture-Radial-SingleColor-ToTransparent-RegularUV-AlphaBlend.shader" />
      <None Include="Assets\Fonts I Stole\quantum\quantum.txt" />
      <None Include="Assets\Fonts I Stole\gang_bang_crime\Copyright_Licence.txt" />
      <None Include="Assets\Fonts I Stole\gang_bang_crime\ReadMe.txt" />
      <None Include="Assets\Fonts I Stole\ruthless_one\License - READ THIS.txt" />
      <None Include="Assets\Fonts I Stole\ghang\License - READ THIS.txt" />
+     <None Include="Assets\2DLightAsset\Shaders\Gradient-ZFighting.shader" />
      <None Include="Assets\Fonts I Stole\alpha_male_modern\ReadMe.txt" />
      <None Include="Assets\Fonts I Stole\audiowide\OFL.txt" />
  <Reference Include="UnityEngine.UI">
@@ -124,6 +131,9 @@
  </Reference>
  <Reference Include="UnityEngine.Networking">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/Networking/UnityEngine.Networking.dll</HintPath>
+ </Reference>
+ <Reference Include="pseudoSinCos">
+ <HintPath>/Users/samkern/Documents/Code/Capstone/Free Runner/CapstoneFreeRunner/Assets/2DLightAsset/Scripts/Helpers/pseudoSinCos.dll</HintPath>
  </Reference>
  <Reference Include="XInputDotNetPure">
  <HintPath>/Users/samkern/Documents/Code/Capstone/Free Runner/CapstoneFreeRunner/Assets/XInput/Plugins/x86_64/XInputDotNetPure.dll</HintPath>

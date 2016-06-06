@@ -11,12 +11,12 @@ public class PlayerController : MonoBehaviour
 	public Transform raycastParent;
 
 	public ParticleSystem boostParticle;
-    public GameObject warpParticleEmitter1;
-    public GameObject warpParticleEmitter2;
+	public GameObject warpParticleEmitter1;
+	public GameObject warpParticleEmitter2;
 
 	public static bool boostEnabled = false;
 
-    private Animator animator;
+	private Animator animator;
 
 	public enum Corner {topFront, topBack, bottomFront, bottomBack, noCorner};
 	public static PlayerState state;
@@ -108,7 +108,7 @@ public class PlayerController : MonoBehaviour
 			if (warpButtonDown && !state.drained && !state.InAir()) {
 				if (HandleWarp ()) return;
 			}
-				
+
 			if (state.sprintJump && !state.InAir ()) {
 				state.sprintJump = false;
 			}
@@ -126,7 +126,7 @@ public class PlayerController : MonoBehaviour
 				if (state.OnCorner()) {
 					Animate(MoveOnCorner ());
 					transform.position = intermediatePosition;
-//					Linecasts ();
+					//					Linecasts ();
 					//return;
 				}
 				else if (state.onWallFront) {
@@ -164,9 +164,9 @@ public class PlayerController : MonoBehaviour
 					}
 				}
 			}
-				
+
 			if(!canBoost && state.Colliding()) {
-					canBoost = true;
+				canBoost = true;
 			}
 
 			//5: Apply Movement Vectors to Transform
@@ -210,6 +210,12 @@ public class PlayerController : MonoBehaviour
 			if (jumpButtonDown) {
 				Jump();
 			} 
+			//move down a cliff while looking at it
+			else if (vAxis < -.15f) { 
+				FlipPlayer ();
+				cornerMoveData = new short[4]{ 1, 1, 1, -1 };
+				cornerChecker = floorCornerCheckFront.position;
+			} 
 			//move backwards while looking down a cliff
 			else if (state.ValueInDirection (hAxis, .15f, false)) { 
 				cornerMoveData = new short[4]{ 1, 1, 1, 1 }; //x : -1
@@ -225,12 +231,22 @@ public class PlayerController : MonoBehaviour
 			else if (vAxis < -.15f) {
 				cornerMoveData = new short[4]{ 1, -1, 1, -1 };
 			} 
+			//move up and over the corner of a cliff
+			else if (state.ValueInDirection (hAxis, .15f, true)) {
+				cornerMoveData = new short[4]{ 1, -1, 1, 1 }; //x : 1
+			}
 			cornerChecker = floorCornerCheckFront.position;
 			anim = AnimationState.WALL_UP_CORNER;
 			break;
 		case Corner.topBack:
 			if (jumpButtonDown) {
 				JumpOffCeiling ();
+			} 
+			//move up onto a wall when you're climbing on the ceiling
+			else if (vAxis > .15f) {
+				FlipPlayer ();
+				cornerMoveData = new short[4]{ 1, 1, -1, -1 };
+				cornerChecker = ceilingCornerCheckFront.position;
 			} 
 			//move backwards on the ceiling
 			else if (state.ValueInDirection (hAxis, .15f, false)) {
@@ -247,6 +263,10 @@ public class PlayerController : MonoBehaviour
 			else if (vAxis > .15f) {
 				cornerMoveData = new short[4]{ 1, -1, -1, -1 };
 			} 
+			//move under wall while clinging to it.
+			else if (state.ValueInDirection (hAxis, .15f, true)) {
+				cornerMoveData = new short[4]{ 1, -1, -1, 1 }; // x: 1
+			}
 			cornerChecker = ceilingCornerCheckFront.position;
 			anim = AnimationState.WALL_DOWN_CORNER;
 			break;
@@ -291,13 +311,13 @@ public class PlayerController : MonoBehaviour
 	{
 		if (state.ValueInDirection(hAxis, 0f, false))  
 			FlipPlayer ();
-		
+
 		state.currentSpeedVector.x = hAxis * (state.sprintJump ? sprintSpeed : runSpeed);
 	}
 
 	private AnimationState MoveOnGround()
 	{
-		 state.falling = false;
+		state.falling = false;
 
 		if (!state.onWallFront)
 			state.currentSpeedVector.y = 0;
@@ -322,7 +342,7 @@ public class PlayerController : MonoBehaviour
 	{
 		if (state.currentSpeedVector.y > 0)
 			state.currentSpeedVector.y = 0;
-		
+
 		if (state.ValueInDirection(hAxis, 0f, false))
 			FlipPlayer ();
 
@@ -388,7 +408,7 @@ public class PlayerController : MonoBehaviour
 			wallSlide = true;
 			return WallSlide ();
 		}
-		
+
 		if (sprintButtonDown)
 			state.sprintJump = true;
 
@@ -401,11 +421,11 @@ public class PlayerController : MonoBehaviour
 
 	private AnimationState WallSlide()
 	{
-		if (state.onGround) {
+		if (state.onGround || !Physics2D.Linecast (transform.position, wallCheckerBottom.position, layerMask)) {
 			wallSlide = false;
 			return AnimationState.IDLE;
 		} else {
-			state.currentSpeedVector.y = -10f;
+			state.currentSpeedVector.y = -16f;
 		}
 		return AnimationState.IDLE_WALL;
 	}
@@ -452,7 +472,7 @@ public class PlayerController : MonoBehaviour
 
 			if (!boostParticle.gameObject.activeSelf)
 				boostParticle.gameObject.SetActive (true);
-			
+
 			return AnimationState.BOOST;
 		}
 		return AnimationState.NONE;
@@ -502,9 +522,9 @@ public class PlayerController : MonoBehaviour
 	private void FlipPlayer()
 	{
 		state.facingRight = !state.facingRight;
-		Vector3 scale = transform.localScale;
+		Vector3 scale = raycastParent.localScale;
 		scale.x *= -1;
-		transform.localScale = scale;
+		raycastParent.localScale = scale;
 
 		scale = boostParticle.transform.localScale;
 		scale.x *= -1;
@@ -614,18 +634,18 @@ public class PlayerController : MonoBehaviour
 
 	//## WARPING ##//
 
-    private void WarpEffect() 
+	private void WarpEffect() 
 	{
-        warpParticleEmitter1.GetComponent<ParticleSystem>().Emit(25);
-        warpParticleEmitter2.GetComponent<ParticleSystem>().Emit(50);
-    }
+		warpParticleEmitter1.GetComponent<ParticleSystem>().Emit(25);
+		warpParticleEmitter2.GetComponent<ParticleSystem>().Emit(50);
+	}
 
-    private bool HandleWarp() 
+	private bool HandleWarp() 
 	{
 		Vector3 checker1 = new Vector3(), checker2 = new Vector3();
 		bool warpVertical = true;
 		int onGround = 0;
-	
+
 		if(state.onWallFront) 
 		{
 			checker1 = wallCheckerBottom.position;
@@ -719,7 +739,7 @@ public class PlayerController : MonoBehaviour
 	{
 		state.boosting = false;
 
-		state.respawnPoint.parent.gameObject.SetActive(true);
+		//state.respawnPoint.parent.gameObject.SetActive(true);
 
 		RaycastHit2D hit = Physics2D.Raycast (state.respawnPoint.position, -1 * state.respawnPoint.up, 100, layerMask);
 		transform.position = new Vector3(hit.point.x, hit.point.y + playerHeight/2 - .001f, playerZLayer);
